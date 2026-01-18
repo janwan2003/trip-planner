@@ -31,27 +31,26 @@ export function BestDates({ trip }: BestDatesProps) {
     return null;
   }
   
-  // Sort dates by availability count
-  const sortedDates = dates
+  // Get dates with availability (keep chronological order for grouping)
+  const datesWithAvailability = dates
     .map(date => ({
       date,
       count: availability[date]?.length || 0,
       names: availability[date] || [],
     }))
-    .filter(d => d.count > 0)
-    .sort((a, b) => b.count - a.count);
+    .filter(d => d.count > 0);
 
-  if (sortedDates.length === 0) {
+  if (datesWithAvailability.length === 0) {
     return null;
   }
 
-  const maxCount = sortedDates[0].count;
+  const maxCount = Math.max(...datesWithAvailability.map(d => d.count));
 
-  // Group consecutive dates with the same availability
+  // Group consecutive dates with the same availability (in chronological order)
   const dateRanges: DateRange[] = [];
   let currentRange: DateRange | null = null;
 
-  for (const item of sortedDates) {
+  for (const item of datesWithAvailability) {
     if (!currentRange) {
       currentRange = {
         startDate: item.date,
