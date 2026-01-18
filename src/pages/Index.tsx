@@ -52,7 +52,7 @@ const Index = () => {
             <div>
               <h3 className="font-display font-semibold text-lg mb-3">WeGoWhen</h3>
               <p className="text-sm text-muted-foreground">
-                The best way to plan your trips with friends and family.
+                The best way to plan your trips.
               </p>
             </div>
 

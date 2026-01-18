@@ -19,12 +19,8 @@ export default function About() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">Our Mission</h2>
             <p className="mb-4">
-              WeGoWhen makes planning group trips effortless. We believe that coordinating schedules 
-              shouldn't be the hardest part of planning an adventure with friends and family.
-            </p>
-            <p className="mb-4">
-              Our platform simplifies the process of finding dates that work for everyone, so you can 
-              spend less time messaging back and forth, and more time looking forward to your trip.
+              WeGoWhen help planning group trips by simplifying the process of coordinating everyone's availability.
+              Our goal is to make a very easy-to-use tool that removes the hassle from group trip planning, so you can focus on enjoying your time with friends and family.
             </p>
           </section>
 
@@ -64,14 +60,13 @@ export default function About() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">Our Technology</h2>
             <p className="mb-4">
-              WeGoWhen is built with modern web technologies to ensure a fast, reliable, and 
-              secure experience:
+              WeGoWhen is built with modern web technologies:
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li>React-based frontend for smooth, responsive interactions</li>
-              <li>Secure cloud database for reliable data storage</li>
-              <li>End-to-end encryption for trip links</li>
-              <li>Progressive web app features for offline capability</li>
+              <li>React 18 with TypeScript for a type-safe, responsive interface</li>
+              <li>Supabase for secure cloud database storage</li>
+              <li>Tailwind CSS and shadcn/ui for modern, accessible design</li>
+              <li>Hosted on GitHub Pages for reliable availability</li>
             </ul>
           </section>
 
@@ -98,10 +93,10 @@ export default function About() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">Join Thousands of Happy Travelers</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">Start Planning Today</h2>
             <p className="mb-4">
-              WeGoWhen has helped coordinate thousands of group trips around the world. 
-              From weekend getaways to month-long adventures, we're here to make planning simple.
+              WeGoWhen is a new tool designed to simplify group trip planning. We're continuously 
+              improving and adding features based on user feedback.
             </p>
             <p className="mb-4">
               Ready to plan your next adventure? <Link to="/" className="text-primary hover:underline font-semibold">Create a trip now</Link>

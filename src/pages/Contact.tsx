@@ -17,55 +17,28 @@ export default function Contact() {
         <div className="prose prose-slate max-w-none">
           <h1 className="text-4xl font-display font-bold mb-6">Contact Us</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            We're here to help! Get in touch with us for support, feedback, or general inquiries.
+            Have feedback or need support? We're working on setting up dedicated contact channels.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 not-prose">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="w-5 h-5 text-primary" />
-                  Email Support
-                </CardTitle>
-                <CardDescription>Get help with any issues or questions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-4">
-                  For support inquiries, bug reports, or general questions, please email us at:
-                </p>
-                <a 
-                  href="mailto:support@wegowhen.com" 
-                  className="text-primary hover:underline font-semibold"
-                >
-                  support@wegowhen.com
-                </a>
-                <p className="text-xs text-muted-foreground mt-2">
-                  We typically respond within 24-48 hours
-                </p>
-              </CardContent>
-            </Card>
-
+          <div className="mb-12 not-prose">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5 text-primary" />
-                  Feedback & Suggestions
+                  Get in Touch
                 </CardTitle>
-                <CardDescription>Help us improve WeGoWhen</CardDescription>
+                <CardDescription>Contact options coming soon</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm mb-4">
-                  Have ideas for new features or improvements? We'd love to hear from you:
+                  We're currently setting up official support and feedback channels. In the meantime, 
+                  you can use the app and provide feedback through the following ways:
                 </p>
-                <a 
-                  href="mailto:feedback@wegowhen.com" 
-                  className="text-primary hover:underline font-semibold"
-                >
-                  feedback@wegowhen.com
-                </a>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Your input helps shape our roadmap
-                </p>
+                <ul className="list-disc pl-6 space-y-2 text-sm">
+                  <li>Use the app and explore its features</li>
+                  <li>Check back soon for direct contact options</li>
+                  <li>Report critical bugs using the information below</li>
+                </ul>
               </CardContent>
             </Card>
           </div>
@@ -104,8 +77,8 @@ export default function Contact() {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="text-xl font-semibold mb-2">How is my data protected?</h3>
                 <p className="text-muted-foreground">
-                  Your trip data is stored securely with enterprise-grade encryption. Only people with 
-                  your unique trip link can access your trip. See our{' '}
+                  Your trip data is stored securely using Supabase with Row Level Security (RLS) policies. 
+                  Only people with your unique trip link can access your trip. See our{' '}
                   <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for details.
                 </p>
               </div>
@@ -113,8 +86,8 @@ export default function Contact() {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="text-xl font-semibold mb-2">Can I delete a trip?</h3>
                 <p className="text-muted-foreground">
-                  Trips that haven't been accessed for 24 months are automatically archived. If you need 
-                  immediate deletion, please contact us at support@wegowhen.com with your trip link.
+                  Currently, trips are stored indefinitely. Manual deletion features are not yet available. 
+                  Trips that haven't been accessed for extended periods may be archived in the future.
                 </p>
               </div>
 
@@ -129,39 +102,26 @@ export default function Contact() {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="text-xl font-semibold mb-2">Can I use WeGoWhen offline?</h3>
                 <p className="text-muted-foreground">
-                  Basic functionality works offline, but you'll need an internet connection to sync 
-                  changes and see updates from other participants.
+                  You need an internet connection to create trips, load existing trips, and save changes. 
+                  Offline functionality is not currently supported.
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">Business Inquiries</h2>
-            <p className="mb-4">
-              For partnership opportunities, press inquiries, or business-related questions:
-            </p>
-            <a 
-              href="mailto:business@wegowhen.com" 
-              className="text-primary hover:underline font-semibold text-lg"
-            >
-              business@wegowhen.com
-            </a>
-          </section>
-
           <section className="mb-8 bg-muted/30 p-6 rounded-lg">
-            <h2 className="text-2xl font-display font-semibold mb-4">Report a Bug</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">Found a Bug?</h2>
             <p className="mb-4">
-              Found something that's not working right? Help us improve by reporting bugs:
+              If you encounter any issues while using WeGoWhen:
             </p>
-            <ol className="list-decimal pl-6 space-y-2">
-              <li>Email us at <a href="mailto:support@wegowhen.com" className="text-primary hover:underline">support@wegowhen.com</a></li>
-              <li>Include a description of the issue</li>
-              <li>Let us know what device and browser you're using</li>
-              <li>Share the trip link if relevant (optional)</li>
-            </ol>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Try refreshing the page</li>
+              <li>Clear your browser cache if the problem persists</li>
+              <li>Check your internet connection for sync issues</li>
+              <li>Note the specific steps that caused the issue for future reference</li>
+            </ul>
             <p className="text-sm text-muted-foreground mt-4">
-              We appreciate your help in making WeGoWhen better for everyone!
+              We're working on establishing official bug reporting channels. Thank you for your patience!
             </p>
           </section>
         </div>
