@@ -32,20 +32,24 @@ export function AvailabilityCalendar({
   
   const dates = getDatesBetween(startDate, endDate);
   
-  // Calculate availability based on selected participants
+  // Calculate availability based on selected participants (empty means all)
   const getFilteredAvailability = (date: string): number => {
-    if (selectedParticipants.length === 0) return 0;
-    return selectedParticipants.filter(participantName => {
+    const activeParticipants = selectedParticipants.length === 0 
+      ? participants.map(p => p.name)
+      : selectedParticipants;
+    
+    return activeParticipants.filter(participantName => {
       const participant = participants.find(p => p.name === participantName);
       return participant?.availableDates.includes(date);
     }).length;
   };
   
   const getHeatLevel = (date: string): 'none' | 'low' | 'medium' | 'high' => {
-    if (readOnly && selectedParticipants.length > 0) {
-      // Use filtered count based on selected participants
+    if (readOnly && participants.length > 0) {
+      // Use filtered count based on selected participants (or all if none selected)
+      const activeCount = selectedParticipants.length === 0 ? participants.length : selectedParticipants.length;
       const count = getFilteredAvailability(date);
-      const ratio = count / selectedParticipants.length;
+      const ratio = count / activeCount;
       
       if (ratio === 0) return 'none';
       if (ratio < 0.5) return 'low';
@@ -149,7 +153,7 @@ export function AvailabilityCalendar({
               {monthDates.map(date => {
                 const isSelected = selectedDates.includes(date);
                 const heatLevel = getHeatLevel(date);
-                const availableCount = readOnly && selectedParticipants.length > 0
+                const availableCount = readOnly && participants.length > 0
                   ? getFilteredAvailability(date)
                   : (availability?.[date]?.length || 0);
                 const dateObj = parseISO(date);
@@ -189,7 +193,11 @@ export function AvailabilityCalendar({
                     
                     {/* Tooltip for hover */}
                     {readOnly && availableCount > 0 && (() => {
-                      const availableNames = selectedParticipants.filter(name => {
+                      const activeParticipants = selectedParticipants.length === 0
+                        ? participants.map(p => p.name)
+                        : selectedParticipants;
+                      
+                      const availableNames = activeParticipants.filter(name => {
                         const participant = participants.find(p => p.name === name);
                         return participant?.availableDates.includes(date);
                       });

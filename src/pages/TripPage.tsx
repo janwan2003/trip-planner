@@ -28,13 +28,6 @@ export default function TripPage() {
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Initialize selected participants to all participants by default
-  useEffect(() => {
-    if (trip && selectedParticipants.length === 0) {
-      setSelectedParticipants(trip.participants.map(p => p.name));
-    }
-  }, [trip]);
-
   useEffect(() => {
     const loadTrip = async () => {
       if (tripId) {
@@ -319,9 +312,9 @@ export default function TripPage() {
                 <CardHeader>
                   <CardTitle className="font-display">Group Availability</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {selectedParticipants.length === trip.participants.length
-                      ? 'Click participant names to filter availability'
-                      : `Showing availability for: ${selectedParticipants.join(', ')}`}
+                    {selectedParticipants.length === 0
+                      ? 'Showing all participants'
+                      : `Filtered to: ${selectedParticipants.join(', ')}`}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -386,6 +379,7 @@ export default function TripPage() {
             <Card className="shadow-soft animate-fade-in">
               <CardHeader>
                 <CardTitle className="font-display text-lg">Participants</CardTitle>
+                <p className="text-xs text-muted-foreground">Click to filter by subset</p>
               </CardHeader>
               <CardContent>
                 <ParticipantsList 
