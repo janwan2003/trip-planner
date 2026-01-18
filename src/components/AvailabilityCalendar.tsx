@@ -151,17 +151,17 @@ export function AvailabilityCalendar({
                     )}
                   >
                     <span className="font-medium">{format(dateObj, 'd')}</span>
-                    {readOnly && availableCount > 0 && (
+                    {availableCount > 0 && (
                       <span className={cn(
                         "text-[10px] font-medium",
-                        heatLevel === 'high' ? "text-primary-foreground/80" : "text-muted-foreground"
+                        readOnly && heatLevel === 'high' ? "text-primary-foreground/80" : "text-muted-foreground"
                       )}>
                         {availableCount}
                       </span>
                     )}
                     
                     {/* Tooltip for hover */}
-                    {readOnly && availability?.[date] && availability[date].length > 0 && (
+                    {availability?.[date] && availability[date].length > 0 && (
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
                         <div className="bg-card border shadow-soft rounded-lg px-3 py-2 text-xs whitespace-nowrap">
                           <div className="font-medium mb-1">{format(dateObj, 'MMM d, yyyy')}</div>
