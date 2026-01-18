@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { getDatesBetween } from '@/lib/tripStore';
+import { getDatesBetween, Participant } from '@/lib/tripStore';
 import { format, parseISO, getDay, startOfMonth, isSameMonth } from 'date-fns';
 
 interface AvailabilityCalendarProps {
@@ -11,6 +11,8 @@ interface AvailabilityCalendarProps {
   readOnly?: boolean;
   availability?: Record<string, string[]>;
   totalParticipants?: number;
+  selectedParticipants?: string[];
+  participants?: Participant[];
 }
 
 export function AvailabilityCalendar({
@@ -21,12 +23,23 @@ export function AvailabilityCalendar({
   readOnly = false,
   availability,
   totalParticipants = 0,
+  selectedParticipants = [],
+  participants = [],
 }: AvailabilityCalendarProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartValue, setDragStartValue] = useState<boolean | null>(null);
   const draggedDatesRef = useRef<Set<string>>(new Set());
   
   const dates = getDatesBetween(startDate, endDate);
+  
+  // Check if date is available for all selected participants
+  const isDateAvailableForSelected = (date: string): boolean => {
+    if (selectedParticipants.length === 0) return false;
+    return selectedParticipants.every(participantName => {
+      const participant = participants.find(p => p.name === participantName);
+      return participant?.availableDates.includes(date);
+    });
+  };
   
   const getHeatLevel = (date: string): 'none' | 'low' | 'medium' | 'high' => {
     if (!availability || totalParticipants === 0) return 'none';
@@ -126,6 +139,7 @@ export function AvailabilityCalendar({
                 const heatLevel = getHeatLevel(date);
                 const availableCount = availability?.[date]?.length || 0;
                 const dateObj = parseISO(date);
+                const isHighlightedForParticipant = readOnly && isDateAvailableForSelected(date);
                 
                 return (
                   <button
@@ -144,10 +158,11 @@ export function AvailabilityCalendar({
                       readOnly && "cursor-default",
                       isSelected && "bg-success-light border-2 border-success text-foreground font-semibold",
                       !isSelected && !readOnly && "bg-muted hover:bg-muted/80 border border-transparent",
-                      readOnly && heatLevel === 'none' && "bg-muted",
-                      readOnly && heatLevel === 'low' && "bg-heat-low",
-                      readOnly && heatLevel === 'medium' && "bg-heat-medium",
-                      readOnly && heatLevel === 'high' && "bg-heat-high text-primary-foreground",
+                      isHighlightedForParticipant && "ring-2 ring-primary ring-offset-1 bg-primary/20 font-semibold scale-105",
+                      !isHighlightedForParticipant && readOnly && heatLevel === 'none' && "bg-muted",
+                      !isHighlightedForParticipant && readOnly && heatLevel === 'low' && "bg-heat-low",
+                      !isHighlightedForParticipant && readOnly && heatLevel === 'medium' && "bg-heat-medium",
+                      !isHighlightedForParticipant && readOnly && heatLevel === 'high' && "bg-heat-high text-primary-foreground",
                     )}
                   >
                     <span className="font-medium">{format(dateObj, 'd')}</span>

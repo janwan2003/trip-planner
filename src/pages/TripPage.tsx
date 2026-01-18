@@ -25,6 +25,7 @@ export default function TripPage() {
   const [hasSharedLink, setHasSharedLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -107,6 +108,14 @@ export default function TripPage() {
       title: "Link copied!",
       description: "Share this link with your friends.",
     });
+  };
+
+  const handleToggleParticipant = (participantName: string) => {
+    setSelectedParticipants(prev => 
+      prev.includes(participantName)
+        ? prev.filter(name => name !== participantName)
+        : [...prev, participantName]
+    );
   };
 
   // Check if current selection differs from saved state
@@ -303,10 +312,23 @@ export default function TripPage() {
                 <CardHeader>
                   <CardTitle className="font-display">Group Availability</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Hover over dates to see who's available
+                    {selectedParticipants.length > 0 
+                      ? `Showing dates available for: ${selectedParticipants.join(', ')}`
+                      : 'Click participant names to highlight their available dates'}
                   </p>
                 </CardHeader>
                 <CardContent>
+                  {selectedParticipants.length > 0 && (
+                    <div className="mb-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedParticipants([])}
+                      >
+                        Clear Selection
+                      </Button>
+                    </div>
+                  )}
                   <AvailabilityCalendar
                     startDate={trip.startDate}
                     endDate={trip.endDate}
@@ -315,6 +337,8 @@ export default function TripPage() {
                     readOnly
                     availability={availability}
                     totalParticipants={trip.participants.length}
+                    selectedParticipants={selectedParticipants}
+                    participants={trip.participants}
                   />
                   
                   <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
@@ -371,6 +395,8 @@ export default function TripPage() {
                 <ParticipantsList 
                   participants={trip.participants} 
                   currentUser={hasJoined ? userName : undefined}
+                  selectedParticipants={selectedParticipants}
+                  onToggleParticipant={handleToggleParticipant}
                 />
               </CardContent>
             </Card>
