@@ -163,12 +163,17 @@ export function BestDates({ trip }: BestDatesProps) {
 
   const maxCount = Math.max(...filteredRanges.map(r => r.count), 0);
 
-  // Sort: first by people count (desc), then chronologically (asc)
+  // Sort: first by people count (desc), then by length (desc), then chronologically (asc)
   const sortedRanges = filteredRanges.sort((a, b) => {
     // First priority: number of people
     if (b.count !== a.count) return b.count - a.count;
     
-    // Second priority: chronological order
+    // Second priority: length of period
+    const aLength = differenceInDays(parseISO(a.endDate), parseISO(a.startDate)) + 1;
+    const bLength = differenceInDays(parseISO(b.endDate), parseISO(b.startDate)) + 1;
+    if (bLength !== aLength) return bLength - aLength;
+    
+    // Third priority: chronological order
     return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
   });
 
