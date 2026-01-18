@@ -126,24 +126,29 @@ export function BestDates({ trip }: BestDatesProps) {
   }
 
   // Remove ranges that are subsets of larger ranges with the same people
-  // A range is dominated if there exists another range with the same participants that contains it
+  // Also remove ranges where the same date range exists with MORE people
   const maximalRanges = allRanges.filter(range => {
     const rangeKey = [...range.names].sort().join(',');
     const rangeStart = parseISO(range.startDate).getTime();
     const rangeEnd = parseISO(range.endDate).getTime();
     
-    // Check if any other range with same participants contains this one
     for (const other of allRanges) {
       if (other === range) continue;
-      const otherKey = [...other.names].sort().join(',');
-      if (otherKey !== rangeKey) continue;
       
       const otherStart = parseISO(other.startDate).getTime();
       const otherEnd = parseISO(other.endDate).getTime();
+      const otherKey = [...other.names].sort().join(',');
       
-      // If other strictly contains this range, this range is not maximal
-      if (otherStart <= rangeStart && otherEnd >= rangeEnd && 
-          (otherStart < rangeStart || otherEnd > rangeEnd)) {
+      // Case 1: Same participants, other range strictly contains this one
+      if (otherKey === rangeKey) {
+        if (otherStart <= rangeStart && otherEnd >= rangeEnd && 
+            (otherStart < rangeStart || otherEnd > rangeEnd)) {
+          return false;
+        }
+      }
+      
+      // Case 2: Same date range but other has MORE people - this range is dominated
+      if (otherStart === rangeStart && otherEnd === rangeEnd && other.count > range.count) {
         return false;
       }
     }
@@ -158,17 +163,12 @@ export function BestDates({ trip }: BestDatesProps) {
 
   const maxCount = Math.max(...filteredRanges.map(r => r.count), 0);
 
-  // Sort: first by people count (desc), then by length (desc), then by start date (asc)
+  // Sort: first by people count (desc), then chronologically (asc)
   const sortedRanges = filteredRanges.sort((a, b) => {
     // First priority: number of people
     if (b.count !== a.count) return b.count - a.count;
     
-    // Second priority: length of period
-    const aLength = differenceInDays(parseISO(a.endDate), parseISO(a.startDate)) + 1;
-    const bLength = differenceInDays(parseISO(b.endDate), parseISO(b.startDate)) + 1;
-    if (bLength !== aLength) return bLength - aLength;
-    
-    // Third priority: chronological order
+    // Second priority: chronological order
     return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
   });
 
