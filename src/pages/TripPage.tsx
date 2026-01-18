@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Trip, getTrip, addParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
+import { Trip, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
 import { Tutorial } from '@/components/Tutorial';
-import { Copy, Check, ArrowLeft, Calendar, Users, Loader2 } from 'lucide-react';
+import { Copy, Check, ArrowLeft, Calendar, Users, Loader2, Pencil, LogOut } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +26,8 @@ export default function TripPage() {
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -108,6 +110,90 @@ export default function TripPage() {
       title: "Link copied!",
       description: "Share this link with your friends.",
     });
+  };
+
+  const handleEditName = () => {
+    setEditedName(userName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveNewName = async () => {
+    if (!trip || !editedName.trim() || editedName.trim() === userName) {
+      setIsEditingName(false);
+      return;
+    }
+
+    // Check if name already exists
+    const nameExists = trip.participants.some(
+      p => p.name.toLowerCase() === editedName.trim().toLowerCase() && 
+           p.name.toLowerCase() !== userName.toLowerCase()
+    );
+
+    if (nameExists) {
+      toast({
+        title: "Name already taken",
+        description: "Someone else is already using this name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedTrip = await updateParticipantName(trip.id, userName, editedName.trim());
+      if (updatedTrip) {
+        setTrip(updatedTrip);
+        setUserName(editedName.trim());
+        toast({
+          title: "Name updated!",
+          description: `You are now known as ${editedName.trim()}.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating name:', error);
+      toast({
+        title: "Error updating name",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+      setIsEditingName(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!trip || !userName) return;
+
+    if (!confirm('Are you sure you want to withdraw from this trip? Your availability will be removed.')) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedTrip = await removeParticipant(trip.id, userName);
+      if (updatedTrip) {
+        setTrip(updatedTrip);
+        setHasJoined(false);
+        setUserName('');
+        setSelectedDates([]);
+        setSavedDates([]);
+        setHasSavedAvailability(false);
+        toast({
+          title: "Withdrawn from trip",
+          description: "Your availability has been removed.",
+        });
+      }
+    } catch (error) {
+      console.error('Error withdrawing:', error);
+      toast({
+        title: "Error withdrawing",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleToggleParticipant = (participantName: string) => {
@@ -242,11 +328,46 @@ export default function TripPage() {
             ) : (
               <Card className="animate-scale-in shadow-warm border-0">
                 <CardHeader>
-                  <div>
-                    <CardTitle className="font-display">Mark Your Availability</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Hi {userName}! Click and drag to select dates you're available.
-                    </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="font-display">Mark Your Availability</CardTitle>
+                      {isEditingName ? (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className="h-8 text-sm w-40"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveNewName();
+                              if (e.key === 'Escape') setIsEditingName(false);
+                            }}
+                          />
+                          <Button size="sm" variant="ghost" onClick={handleSaveNewName} disabled={isSaving}>
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Hi <button 
+                            onClick={handleEditName}
+                            className="font-medium text-foreground hover:underline inline-flex items-center gap-1"
+                          >
+                            {userName}
+                            <Pencil className="w-3 h-3" />
+                          </button>! Click and drag to select dates you're available.
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleWithdraw}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="Withdraw from trip"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>

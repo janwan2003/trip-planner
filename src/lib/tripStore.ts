@@ -203,6 +203,112 @@ export const addParticipant = async (
   }
 };
 
+export const updateParticipantName = async (
+  tripId: string,
+  oldName: string,
+  newName: string
+): Promise<Trip | null> => {
+  if (!isSupabaseConfigured()) {
+    const trip = getTripLocal(tripId);
+    if (!trip) return null;
+    
+    const existingIndex = trip.participants.findIndex(
+      p => p.name.toLowerCase() === oldName.toLowerCase()
+    );
+    
+    if (existingIndex >= 0) {
+      trip.participants[existingIndex].name = newName;
+      saveTripLocal(trip);
+    }
+    
+    return trip;
+  }
+
+  try {
+    const { data: existingParticipant } = await supabase!
+      .from('participants')
+      .select('id')
+      .eq('trip_id', tripId)
+      .ilike('name', oldName)
+      .maybeSingle();
+
+    if (existingParticipant) {
+      await supabase!
+        .from('participants')
+        .update({
+          name: newName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingParticipant.id);
+    }
+
+    return await getTrip(tripId);
+  } catch (error) {
+    console.error('Error updating participant name:', error);
+    
+    const trip = getTripLocal(tripId);
+    if (!trip) return null;
+    
+    const existingIndex = trip.participants.findIndex(
+      p => p.name.toLowerCase() === oldName.toLowerCase()
+    );
+    
+    if (existingIndex >= 0) {
+      trip.participants[existingIndex].name = newName;
+      saveTripLocal(trip);
+    }
+    
+    return trip;
+  }
+};
+
+export const removeParticipant = async (
+  tripId: string,
+  participantName: string
+): Promise<Trip | null> => {
+  if (!isSupabaseConfigured()) {
+    const trip = getTripLocal(tripId);
+    if (!trip) return null;
+    
+    trip.participants = trip.participants.filter(
+      p => p.name.toLowerCase() !== participantName.toLowerCase()
+    );
+    
+    saveTripLocal(trip);
+    return trip;
+  }
+
+  try {
+    const { data: existingParticipant } = await supabase!
+      .from('participants')
+      .select('id')
+      .eq('trip_id', tripId)
+      .ilike('name', participantName)
+      .maybeSingle();
+
+    if (existingParticipant) {
+      await supabase!
+        .from('participants')
+        .delete()
+        .eq('id', existingParticipant.id);
+    }
+
+    return await getTrip(tripId);
+  } catch (error) {
+    console.error('Error removing participant:', error);
+    
+    const trip = getTripLocal(tripId);
+    if (!trip) return null;
+    
+    trip.participants = trip.participants.filter(
+      p => p.name.toLowerCase() !== participantName.toLowerCase()
+    );
+    
+    saveTripLocal(trip);
+    return trip;
+  }
+};
+
 export const getDatesBetween = (startDate: string, endDate: string): string[] => {
   const dates: string[] = [];
   const start = new Date(startDate);
