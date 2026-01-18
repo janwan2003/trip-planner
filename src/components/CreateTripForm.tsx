@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MapPin, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
 import { useToast } from '@/hooks/use-toast';
-import { DateRangePicker } from '@/components/DateRangePicker';
+import { ModernDateInput } from '@/components/ModernDateInput';
 
 export function CreateTripForm() {
   const navigate = useNavigate();
@@ -55,11 +55,6 @@ export function CreateTripForm() {
     }
   };
 
-  const handleDateChange = (start: string, end: string) => {
-    setStartDate(start);
-    setEndDate(end);
-  };
-
   return (
     <Card className="w-full max-w-md animate-fade-in shadow-warm border-0">
       <CardHeader className="text-center pb-2">
@@ -86,13 +81,21 @@ export function CreateTripForm() {
             />
           </div>
           
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Travel Dates</Label>
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onDateChange={handleDateChange}
+          <div className="grid grid-cols-2 gap-4">
+            <ModernDateInput
+              label="Start Date"
+              value={startDate}
+              onChange={setStartDate}
               disabled={isCreating}
+              placeholder="Start date"
+            />
+            <ModernDateInput
+              label="End Date"
+              value={endDate}
+              onChange={setEndDate}
+              minDate={startDate}
+              disabled={isCreating || !startDate}
+              placeholder="End date"
             />
           </div>
           
