@@ -21,6 +21,7 @@ export default function TripPage() {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [hasJoined, setHasJoined] = useState(false);
   const [hasSavedAvailability, setHasSavedAvailability] = useState(false);
+  const [hasSharedLink, setHasSharedLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -97,6 +98,7 @@ export default function TripPage() {
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
     setCopied(true);
+    setHasSharedLink(true);
     setTimeout(() => setCopied(false), 2000);
     toast({
       title: "Link copied!",
@@ -314,7 +316,7 @@ export default function TripPage() {
             <Tutorial 
               completedSteps={[
                 1, // Trip created
-                ...(copied || trip.participants.length > 1 ? [2] : []), // Link shared
+                ...(hasSharedLink || trip.participants.length > 1 ? [2] : []), // Link shared
                 ...(hasSavedAvailability ? [3] : []), // Availability saved
                 ...(trip.participants.length > 1 ? [4] : []), // Best dates available
               ]}

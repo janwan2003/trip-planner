@@ -5,17 +5,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="py-6 px-4">
+      <header className="py-3 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">
-          <div className="w-56 h-56">
+          <div className="w-16 h-16">
             <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-3xl font-display font-semibold">TripSync</h1>
+          <h1 className="text-2xl font-display font-semibold">TripSync</h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 py-6">
         <div className="container max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Tutorial Section - Left */}
@@ -45,7 +45,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-6 px-4 text-center text-sm text-muted-foreground">
         <p>Share the link. Mark your dates. Go on adventures.</p>
-        <p className="text-xs mt-1 opacity-60">v1.3.1</p>
+        <p className="text-xs mt-1 opacity-60">v1.3.2</p>
       </footer>
     </div>
   );

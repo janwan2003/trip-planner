@@ -57,7 +57,7 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
     {
       icon: Users,
       number: 3,
-      title: 'Mark Availability',
+      title: 'Mark and Save Availability',
       description: 'Everyone selects their available dates',
     },
     {
@@ -77,11 +77,11 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
           </h3>
           <Button
             variant="ghost"
-            size="icon"
-            className="h-6 w-6"
+            size="sm"
             onClick={handleHide}
+            className="text-xs"
           >
-            <X className="w-4 h-4" />
+            Hide Tutorial
           </Button>
         </div>
         <div className="space-y-4">
