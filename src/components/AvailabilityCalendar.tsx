@@ -161,10 +161,10 @@ export function AvailabilityCalendar({
                     )}
                     
                     {/* Tooltip for hover */}
-                    {availability?.[date] && availability[date].length > 0 && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-                        <div className="bg-card border shadow-soft rounded-lg px-3 py-2 text-xs whitespace-nowrap">
-                          <div className="font-medium mb-1">{format(dateObj, 'MMM d, yyyy')}</div>
+                    {readOnly && availability?.[date] && availability[date].length > 0 && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                        <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs whitespace-nowrap">
+                          <div className="font-medium mb-1 text-popover-foreground">{format(dateObj, 'MMM d, yyyy')}</div>
                           <div className="text-muted-foreground">
                             {availability[date].join(', ')}
                           </div>
