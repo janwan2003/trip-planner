@@ -19,6 +19,7 @@ export default function TripPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [savedDates, setSavedDates] = useState<string[]>([]);
   const [hasJoined, setHasJoined] = useState(false);
   const [hasSavedAvailability, setHasSavedAvailability] = useState(false);
   const [hasSharedLink, setHasSharedLink] = useState(false);
@@ -50,6 +51,7 @@ export default function TripPage() {
     
     if (existingParticipant) {
       setSelectedDates(existingParticipant.availableDates);
+      setSavedDates(existingParticipant.availableDates);
       setHasSavedAvailability(existingParticipant.availableDates.length > 0);
     }
     
@@ -77,6 +79,7 @@ export default function TripPage() {
       
       if (updatedTrip) {
         setTrip(updatedTrip);
+        setSavedDates(selectedDates);
         setHasSavedAvailability(true);
         toast({
           title: "Availability saved!",
@@ -105,6 +108,16 @@ export default function TripPage() {
       description: "Share this link with your friends.",
     });
   };
+
+  // Check if current selection differs from saved state
+  const hasUnsavedChanges = () => {
+    if (selectedDates.length !== savedDates.length) return true;
+    const sortedSelected = [...selectedDates].sort();
+    const sortedSaved = [...savedDates].sort();
+    return sortedSelected.some((date, index) => date !== sortedSaved[index]);
+  };
+
+  const isSaveDisabled = selectedDates.length === 0 || isSaving || !hasUnsavedChanges();
 
   if (isLoading) {
     return (
@@ -259,17 +272,24 @@ export default function TripPage() {
                   <div className="sticky bottom-4 mt-6 z-10">
                     <Button 
                       onClick={handleSave} 
-                      disabled={selectedDates.length === 0 || isSaving}
+                      disabled={isSaveDisabled}
                       size="lg"
-                      className="w-full px-8 font-semibold shadow-2xl hover:shadow-xl transition-all"
+                      variant={hasUnsavedChanges() ? "default" : "secondary"}
+                      className={`w-full px-8 font-semibold transition-all ${
+                        hasUnsavedChanges() 
+                          ? 'shadow-2xl hover:shadow-xl' 
+                          : 'opacity-60 cursor-not-allowed'
+                      }`}
                     >
                       {isSaving ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                           Saving...
                         </>
-                      ) : (
+                      ) : hasUnsavedChanges() ? (
                         'Save Availability'
+                      ) : (
+                        'No Changes to Save'
                       )}
                     </Button>
                   </div>
