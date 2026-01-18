@@ -7,8 +7,8 @@ const Index = () => {
       {/* Header */}
       <header className="py-6 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">
-          <div className="w-56 h-56 rounded-xl overflow-hidden">
-            <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-cover" />
+          <div className="w-56 h-56">
+            <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-display font-semibold">TripSync</h1>
         </div>
@@ -45,7 +45,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-6 px-4 text-center text-sm text-muted-foreground">
         <p>Share the link. Mark your dates. Go on adventures.</p>
-        <p className="text-xs mt-1 opacity-60">v1.2.8</p>
+        <p className="text-xs mt-1 opacity-60">v1.2.9</p>
       </footer>
     </div>
   );
