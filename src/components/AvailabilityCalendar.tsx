@@ -183,21 +183,19 @@ export function AvailabilityCalendar({
                         const count = readOnly && participants.length > 0 ? getFilteredAvailability(date) : (availability?.[date]?.length || 0);
                         const ratio = count / activeCount;
                         
-                        // Interpolate between heat-low and heat-high based on ratio
-                        // heat-low: 40 20% 94% (light mode) / 25 15% 20% (dark mode)
-                        // heat-high: 168 76% 42% (light mode) / 168 76% 60% (dark mode)
+                        // Interpolate from muted to primary (orange) based on ratio
                         const isDark = document.documentElement.classList.contains('dark');
                         if (isDark) {
-                          // Dark mode: interpolate from 25,15%,20% to 168,76%,60%
-                          const h = 25 + (168 - 25) * ratio;
-                          const s = 15 + (76 - 15) * ratio;
-                          const l = 20 + (60 - 20) * ratio;
+                          // Dark mode: muted (25,15%,20%) to primary (16,65%,55%)
+                          const h = 25 + (16 - 25) * ratio;
+                          const s = 15 + (65 - 15) * ratio;
+                          const l = 20 + (55 - 20) * ratio;
                           return `hsl(${h}, ${s}%, ${l}%)`;
                         } else {
-                          // Light mode: interpolate from 40,20%,94% to 168,76%,42%
-                          const h = 40 + (168 - 40) * ratio;
-                          const s = 20 + (76 - 20) * ratio;
-                          const l = 94 - (94 - 42) * ratio;
+                          // Light mode: muted (40,20%,94%) to primary (16,65%,55%)
+                          const h = 40 + (16 - 40) * ratio;
+                          const s = 20 + (65 - 20) * ratio;
+                          const l = 94 - (94 - 55) * ratio;
                           return `hsl(${h}, ${s}%, ${l}%)`;
                         }
                       })()

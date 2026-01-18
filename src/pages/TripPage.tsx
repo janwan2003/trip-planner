@@ -345,7 +345,7 @@ export default function TripPage() {
                   <div className="mt-4">
                     {/* Dynamic gradient legend */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className="flex-1 h-3 rounded-full bg-gradient-to-r from-heat-low via-heat-medium to-heat-high" />
+                      <div className="flex-1 h-3 rounded-full bg-gradient-to-r from-muted to-primary" />
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>1 person</span>

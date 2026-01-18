@@ -99,7 +99,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Share the link. Mark your dates. Go on adventures.
             </p>
-            <p className="text-xs mt-2 opacity-60">v1.6.5</p>
+            <p className="text-xs mt-2 opacity-60">v1.6.6</p>
           </div>
         </div>
       </footer>

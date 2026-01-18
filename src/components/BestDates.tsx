@@ -93,6 +93,18 @@ export function BestDates({ trip }: BestDatesProps) {
     return rangeLength >= minDays;
   });
 
+  console.log('BestDates Debug:', {
+    totalRanges: dateRanges.length,
+    minDays,
+    filteredRanges: filteredRanges.length,
+    allRanges: dateRanges.map(r => ({
+      start: r.startDate,
+      end: r.endDate,
+      days: differenceInDays(parseISO(r.endDate), parseISO(r.startDate)) + 1,
+      count: r.count
+    }))
+  });
+
   // Sort: first by people count (desc), then by length (desc), then by start date (asc)
   const sortedRanges = filteredRanges.sort((a, b) => {
     // First priority: number of people
