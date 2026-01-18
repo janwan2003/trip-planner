@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
+import { Tutorial } from '@/components/Tutorial';
 import { Copy, Check, ArrowLeft, Calendar, Users, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -133,7 +134,7 @@ export default function TripPage() {
       <header className="py-4 px-4 border-b">
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
+            <div className="w-20 h-20 rounded-xl overflow-hidden">
               <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-display font-semibold">TripSync</span>
@@ -301,6 +302,16 @@ export default function TripPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Tutorial */}
+            <Tutorial 
+              completedSteps={[
+                1, // Trip created
+                ...(copied || trip.participants.length > 1 ? [2] : []), // Link shared
+                ...(hasJoined ? [3] : []), // Availability marked
+                ...(trip.participants.length > 1 ? [4] : []), // Best dates available
+              ]}
+            />
+            
             {/* Best Dates */}
             <Card className="shadow-soft animate-fade-in">
               <CardContent className="pt-6">

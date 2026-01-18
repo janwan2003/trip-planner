@@ -1,7 +1,12 @@
 import { Calendar, Users, Share2, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
-export function Tutorial() {
+interface TutorialProps {
+  completedSteps?: number[];
+}
+
+export function Tutorial({ completedSteps = [] }: TutorialProps) {
   const steps = [
     {
       icon: Calendar,
@@ -38,15 +43,33 @@ export function Tutorial() {
         <div className="space-y-4">
           {steps.map((step) => {
             const Icon = step.icon;
+            const isCompleted = completedSteps.includes(step.number);
             return (
-              <div key={step.number} className="flex gap-3 items-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-                  {step.number}
+              <div 
+                key={step.number} 
+                className={cn(
+                  "flex gap-3 items-start transition-opacity",
+                  isCompleted && "opacity-40"
+                )}
+              >
+                <div className={cn(
+                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
+                  isCompleted 
+                    ? "bg-muted text-muted-foreground" 
+                    : "bg-primary text-primary-foreground"
+                )}>
+                  {isCompleted ? <Check className="w-4 h-4" /> : step.number}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon className="w-4 h-4 text-primary flex-shrink-0" />
-                    <h4 className="font-medium text-sm text-foreground">
+                    <Icon className={cn(
+                      "w-4 h-4 flex-shrink-0",
+                      isCompleted ? "text-muted-foreground" : "text-primary"
+                    )} />
+                    <h4 className={cn(
+                      "font-medium text-sm",
+                      isCompleted ? "text-muted-foreground" : "text-foreground"
+                    )}>
                       {step.title}
                     </h4>
                   </div>
