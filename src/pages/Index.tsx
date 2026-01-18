@@ -61,12 +61,12 @@ const Index = () => {
               <h4 className="font-medium mb-3">Company</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="https://github.com/janwan2003/trip-planner" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="/#/about" className="text-muted-foreground hover:text-foreground transition-colors">
                     About
                   </a>
                 </li>
                 <li>
-                  <a href="https://github.com/janwan2003/trip-planner/issues" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="/#/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                     Contact
                   </a>
                 </li>
@@ -96,7 +96,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Share the link. Mark your dates. Go on adventures.
             </p>
-            <p className="text-xs mt-2 opacity-60">v1.5.0</p>
+            <p className="text-xs mt-2 opacity-60">v1.5.1</p>
           </div>
         </div>
       </footer>
