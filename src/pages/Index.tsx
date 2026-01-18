@@ -45,9 +45,60 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 px-4 text-center text-sm text-muted-foreground">
-        <p>Share the link. Mark your dates. Go on adventures.</p>
-        <p className="text-xs mt-1 opacity-60">v1.4.1</p>
+      <footer className="border-t border-border/40 bg-muted/30 py-12 px-4 mt-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <h3 className="font-display font-semibold text-lg mb-3">TripSync</h3>
+              <p className="text-sm text-muted-foreground">
+                The best way to plan your trips with friends and family.
+              </p>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="font-medium mb-3">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="https://github.com/janwan2003/trip-planner" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/janwan2003/trip-planner/issues" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="font-medium mb-3">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/#/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="/#/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-border/40 pt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Share the link. Mark your dates. Go on adventures.
+            </p>
+            <p className="text-xs mt-2 opacity-60">v1.4.2</p>
+          </div>
+        </div>
       </footer>
     </div>
   );
