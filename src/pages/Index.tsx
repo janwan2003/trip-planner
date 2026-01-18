@@ -10,7 +10,9 @@ const Index = () => {
           <div className="w-16 h-16">
             <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-display font-semibold">TripSync</h1>
+          <div className="h-8">
+            <img src="/trip-planner/text-logo.png" alt="TripSync" className="h-full object-contain" />
+          </div>
         </div>
       </header>
 
@@ -45,7 +47,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-6 px-4 text-center text-sm text-muted-foreground">
         <p>Share the link. Mark your dates. Go on adventures.</p>
-        <p className="text-xs mt-1 opacity-60">v1.3.2</p>
+        <p className="text-xs mt-1 opacity-60">v1.3.3</p>
       </footer>
     </div>
   );
