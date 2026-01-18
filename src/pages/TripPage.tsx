@@ -181,10 +181,20 @@ export default function TripPage() {
       <main className="container max-w-6xl mx-auto px-4 py-8">
         {/* Trip Header */}
         <div className="mb-8 animate-fade-in">
-          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </Link>
+          {hasJoined && (
+            <button
+              onClick={() => {
+                setHasJoined(false);
+                setUserName('');
+                setSelectedDates([]);
+                setSavedDates([]);
+              }}
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to trip view
+            </button>
+          )}
           <h1 className="text-3xl font-display font-bold mb-2">{trip.name}</h1>
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-1">
