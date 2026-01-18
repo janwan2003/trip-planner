@@ -139,3 +139,21 @@
     @apply bg-[hsl(var(--success-light))] border-[hsl(var(--success))];
   }
 }
+
+/* Modern date range picker styling */
+.rdp-day_range_start,
+.rdp-day_range_end {
+  @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+}
+
+.rdp-day_range_middle {
+  @apply bg-primary/20 text-foreground;
+}
+
+.rdp-day_selected:not(.rdp-day_range_middle) {
+  @apply bg-primary text-primary-foreground font-semibold;
+}
+
+.rdp-day_today:not(.rdp-day_selected) {
+  @apply font-bold text-primary;
+}

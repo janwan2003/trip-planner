@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
 import { useToast } from '@/hooks/use-toast';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 export function CreateTripForm() {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ export function CreateTripForm() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const endDateRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +55,10 @@ export function CreateTripForm() {
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const handleDateChange = (start: string, end: string) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   return (
     <Card className="w-full max-w-md animate-fade-in shadow-warm border-0">
@@ -83,53 +86,14 @@ export function CreateTripForm() {
             />
           </div>
           
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-sm font-medium flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-primary" />
-                Select Date Range
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative">
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      // Auto-focus end date after selecting start date
-                      setTimeout(() => endDateRef.current?.focus(), 100);
-                    }}
-                    min={today}
-                    className="h-11 text-center font-medium"
-                    required
-                    disabled={isCreating}
-                    placeholder="Start"
-                  />
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-muted-foreground">
-                    {!startDate && 'Start Date'}
-                  </div>
-                </div>
-                
-                <div className="relative">
-                  <Input
-                    ref={endDateRef}
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate || today}
-                    className="h-11 text-center font-medium"
-                    required
-                    disabled={isCreating || !startDate}
-                    placeholder="End"
-                  />
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-muted-foreground">
-                    {!endDate && 'End Date'}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Travel Dates</Label>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onDateChange={handleDateChange}
+              disabled={isCreating}
+            />
           </div>
           
           <Button type="submit" variant="hero" className="w-full mt-6" disabled={isCreating}>
