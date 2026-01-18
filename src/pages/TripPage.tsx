@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
-import { Plane, Copy, Check, ArrowLeft, Calendar, Users, Loader2 } from 'lucide-react';
+import { Copy, Check, ArrowLeft, Calendar, Users, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -133,8 +133,8 @@ export default function TripPage() {
       <header className="py-4 px-4 border-b">
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Plane className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden">
+              <img src="/favicon.png" alt="TripSync Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-display font-semibold">TripSync</span>
           </Link>
