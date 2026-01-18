@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">1. Introduction</h2>
             <p className="mb-4">
-              TripSync ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
+              WeGoWhen ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
               explains how we collect, use, and safeguard your information when you use our Service.
             </p>
           </section>

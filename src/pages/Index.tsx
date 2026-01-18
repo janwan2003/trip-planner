@@ -8,10 +8,10 @@ const Index = () => {
       <header className="py-3 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">
           <div className="w-16 h-16">
-            <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-contain" />
+            <img src="/trip-planner/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
           </div>
           <div className="h-8">
-            <img src="/trip-planner/text-logo.png" alt="TripSync" className="h-full object-contain" />
+            <img src="/trip-planner/text-logo.png" alt="WeGoWhen" className="h-full object-contain" />
           </div>
         </div>
       </header>
@@ -50,7 +50,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Brand */}
             <div>
-              <h3 className="font-display font-semibold text-lg mb-3">TripSync</h3>
+              <h3 className="font-display font-semibold text-lg mb-3">WeGoWhen</h3>
               <p className="text-sm text-muted-foreground">
                 The best way to plan your trips with friends and family.
               </p>
@@ -96,7 +96,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Share the link. Mark your dates. Go on adventures.
             </p>
-            <p className="text-xs mt-2 opacity-60">v1.4.2</p>
+            <p className="text-xs mt-2 opacity-60">v1.5.0</p>
           </div>
         </div>
       </footer>

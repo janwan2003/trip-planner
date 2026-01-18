@@ -20,7 +20,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">1. Acceptance of Terms</h2>
             <p className="mb-4">
-              By accessing and using TripSync ("the Service"), you accept and agree to be bound by the terms and 
+              By accessing and using WeGoWhen ("the Service"), you accept and agree to be bound by the terms and 
               provisions of this agreement. If you do not agree to these terms, please do not use the Service.
             </p>
           </section>
@@ -28,7 +28,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">2. Description of Service</h2>
             <p className="mb-4">
-              TripSync is a collaborative trip planning tool that allows users to coordinate availability and 
+              WeGoWhen is a collaborative trip planning tool that allows users to coordinate availability and 
               plan group trips. The Service provides calendar-based availability tracking and trip coordination features.
             </p>
           </section>
@@ -56,7 +56,7 @@ export default function TermsOfService() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">5. Intellectual Property</h2>
             <p className="mb-4">
-              The Service, including its original content, features, and functionality, is owned by TripSync 
+              The Service, including its original content, features, and functionality, is owned by WeGoWhen 
               and is protected by international copyright, trademark, and other intellectual property laws.
             </p>
           </section>
