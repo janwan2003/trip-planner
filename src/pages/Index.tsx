@@ -11,8 +11,10 @@ const Index = () => {
           <div className="w-16 h-16">
             <img src="/trip-planner/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
           </div>
-          <div className="h-8">
-            <img src="/trip-planner/text-logo.png" alt="WeGoWhen" className="h-full object-contain" />
+          <div className="h-8 flex items-center">
+            <span className="font-display font-semibold text-2xl select-none">
+              WeGoWhen
+            </span>
           </div>
         </div>
       </header>
@@ -97,7 +99,7 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Share the link. Mark your dates. Go on adventures.
             </p>
-            <p className="text-xs mt-2 opacity-60">v1.5.6</p>
+            <p className="text-xs mt-2 opacity-60">v1.5.7</p>
           </div>
         </div>
       </footer>

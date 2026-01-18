@@ -164,8 +164,10 @@ export default function TripPage() {
             <div className="w-16 h-16">
               <img src="/trip-planner/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
             </div>
-            <div className="h-8">
-              <img src="/trip-planner/text-logo.png" alt="WeGoWhen" className="h-full object-contain" />
+            <div className="h-8 flex items-center">
+              <span className="font-display font-semibold text-2xl select-none">
+                WeGoWhen
+              </span>
             </div>
           </Link>
           
