@@ -144,6 +144,17 @@
 .rdp-day_range_start,
 .rdp-day_range_end {
   @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  border-radius: 0.375rem !important;
+}
+
+.rdp-day_range_start {
+  border-top-left-radius: 0.375rem !important;
+  border-bottom-left-radius: 0.375rem !important;
+}
+
+.rdp-day_range_end {
+  border-top-right-radius: 0.375rem !important;
+  border-bottom-right-radius: 0.375rem !important;
 }
 
 .rdp-day_range_middle {
@@ -154,6 +165,11 @@
   @apply bg-primary text-primary-foreground font-semibold;
 }
 
+/* Today should have distinct styling - border instead of background */
 .rdp-day_today:not(.rdp-day_selected) {
-  @apply font-bold text-primary;
+  @apply font-bold border-2 border-primary bg-transparent text-primary;
+}
+
+.rdp-day_today.rdp-day_selected {
+  @apply font-bold;
 }

@@ -34,6 +34,7 @@ export function DateRangePicker({
     return undefined;
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [selectionStep, setSelectionStep] = useState<'start' | 'end'>('start');
 
   useEffect(() => {
     if (date?.from && date?.to) {
@@ -46,7 +47,9 @@ export function DateRangePicker({
 
   const formatDateRange = () => {
     if (!date?.from) return 'Select date range';
-    if (!date.to) return format(date.from, 'dd/MM/yyyy');
+    if (!date.to) {
+      return `${format(date.from, 'dd/MM/yyyy')} - Select end date`;
+    }
     return `${format(date.from, 'dd/MM/yyyy')} - ${format(date.to, 'dd/MM/yyyy')}`;
   };
 
@@ -66,6 +69,15 @@ export function DateRangePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
+        <div className="p-3 border-b">
+          <p className="text-sm font-medium text-muted-foreground">
+            {!date?.from 
+              ? 'Click to select start date' 
+              : !date?.to 
+                ? 'Click to select end date'
+                : 'Selected range'}
+          </p>
+        </div>
         <Calendar
           initialFocus
           mode="range"
@@ -73,9 +85,13 @@ export function DateRangePicker({
           selected={date}
           onSelect={(newDate) => {
             setDate(newDate);
-            // Auto-close when both dates are selected
-            if (newDate?.from && newDate?.to) {
-              setTimeout(() => setIsOpen(false), 300);
+            // Update selection step based on what's selected
+            if (!newDate?.from) {
+              setSelectionStep('start');
+            } else if (newDate?.from && !newDate?.to) {
+              setSelectionStep('end');
+            } else if (newDate?.from && newDate?.to) {
+              setSelectionStep('start');
             }
           }}
           numberOfMonths={2}
