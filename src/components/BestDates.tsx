@@ -31,89 +31,132 @@ export function BestDates({ trip }: BestDatesProps) {
     return null;
   }
   
-  // Get dates with availability (keep chronological order for grouping)
-  const datesWithAvailability = dates
-    .map(date => ({
-      date,
-      count: availability[date]?.length || 0,
-      names: availability[date] || [],
-    }))
-    .filter(d => d.count > 0);
+  // Build availability map: date -> set of names
+  const availabilityMap = new Map<string, Set<string>>();
+  for (const date of dates) {
+    const names = availability[date] || [];
+    if (names.length > 0) {
+      availabilityMap.set(date, new Set(names));
+    }
+  }
 
-  if (datesWithAvailability.length === 0) {
+  if (availabilityMap.size === 0) {
     return null;
   }
 
-  const maxCount = Math.max(...datesWithAvailability.map(d => d.count));
-
-  // Find all consecutive date sequences (regardless of who's available)
-  const dateRanges: DateRange[] = [];
-  let currentRange: DateRange | null = null;
-
-  for (const item of datesWithAvailability) {
-    if (!currentRange) {
-      currentRange = {
-        startDate: item.date,
-        endDate: item.date,
-        count: item.count,
-        names: item.names,
-      };
-    } else {
-      const prevDate = parseISO(currentRange.endDate);
-      const currDate = parseISO(item.date);
-      const daysDiff = differenceInDays(currDate, prevDate);
-      
-      // Just check if consecutive (extend range with current item's data)
-      if (daysDiff === 1) {
-        currentRange.endDate = item.date;
-        // Update to minimum count in the range
-        currentRange.count = Math.min(currentRange.count, item.count);
-        // Combine names (intersection of all days in range)
-        const currentNames = new Set(currentRange.names);
-        currentRange.names = item.names.filter(name => currentNames.has(name));
-      } else {
-        dateRanges.push(currentRange);
-        currentRange = {
-          startDate: item.date,
-          endDate: item.date,
-          count: item.count,
-          names: item.names,
-        };
-      }
+  // Get all unique participant sets (as sorted string keys)
+  const allParticipants = new Set<string>();
+  for (const names of availabilityMap.values()) {
+    for (const name of names) {
+      allParticipants.add(name);
     }
   }
+
+  // Generate all non-empty subsets of participants (power set minus empty)
+  const participantList = Array.from(allParticipants);
+  const participantSubsets: Set<string>[] = [];
   
-  if (currentRange) {
-    dateRanges.push(currentRange);
+  // Only consider subsets of size 1 to all participants
+  for (let mask = 1; mask < (1 << participantList.length); mask++) {
+    const subset = new Set<string>();
+    for (let i = 0; i < participantList.length; i++) {
+      if (mask & (1 << i)) {
+        subset.add(participantList[i]);
+      }
+    }
+    participantSubsets.push(subset);
   }
 
-  // Filter ranges by minimum days - keep full ranges that meet the minimum
-  const filteredRanges = dateRanges.filter(range => {
+  // Sort subsets by size descending (prefer larger groups)
+  participantSubsets.sort((a, b) => b.size - a.size);
+
+  // For each participant subset, find maximal consecutive ranges where ALL are available
+  const allRanges: DateRange[] = [];
+  
+  for (const subset of participantSubsets) {
+    // Find dates where ALL members of this subset are available
+    const validDates: string[] = [];
+    for (const date of dates) {
+      const available = availabilityMap.get(date);
+      if (available) {
+        let allPresent = true;
+        for (const name of subset) {
+          if (!available.has(name)) {
+            allPresent = false;
+            break;
+          }
+        }
+        if (allPresent) {
+          validDates.push(date);
+        }
+      }
+    }
+
+    if (validDates.length === 0) continue;
+
+    // Group into consecutive ranges
+    let rangeStart = validDates[0];
+    let rangeEnd = validDates[0];
+
+    for (let i = 1; i < validDates.length; i++) {
+      const prevDate = parseISO(rangeEnd);
+      const currDate = parseISO(validDates[i]);
+      const daysDiff = differenceInDays(currDate, prevDate);
+
+      if (daysDiff === 1) {
+        rangeEnd = validDates[i];
+      } else {
+        allRanges.push({
+          startDate: rangeStart,
+          endDate: rangeEnd,
+          count: subset.size,
+          names: Array.from(subset),
+        });
+        rangeStart = validDates[i];
+        rangeEnd = validDates[i];
+      }
+    }
+    // Push the last range
+    allRanges.push({
+      startDate: rangeStart,
+      endDate: rangeEnd,
+      count: subset.size,
+      names: Array.from(subset),
+    });
+  }
+
+  // Remove ranges that are subsets of larger ranges with the same people
+  // A range is dominated if there exists another range with the same participants that contains it
+  const maximalRanges = allRanges.filter(range => {
+    const rangeKey = [...range.names].sort().join(',');
+    const rangeStart = parseISO(range.startDate).getTime();
+    const rangeEnd = parseISO(range.endDate).getTime();
+    
+    // Check if any other range with same participants contains this one
+    for (const other of allRanges) {
+      if (other === range) continue;
+      const otherKey = [...other.names].sort().join(',');
+      if (otherKey !== rangeKey) continue;
+      
+      const otherStart = parseISO(other.startDate).getTime();
+      const otherEnd = parseISO(other.endDate).getTime();
+      
+      // If other strictly contains this range, this range is not maximal
+      if (otherStart <= rangeStart && otherEnd >= rangeEnd && 
+          (otherStart < rangeStart || otherEnd > rangeEnd)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  // Filter by minimum days
+  const filteredRanges = maximalRanges.filter(range => {
     const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
     return rangeLength >= minDays;
   });
 
-  console.log('BestDates Debug:', {
-    tripDates: `${trip.startDate} to ${trip.endDate}`,
-    totalDates: dates.length,
-    datesWithAvailability: datesWithAvailability.length,
-    minDays,
-    totalRanges: dateRanges.length,
-    filteredRanges: filteredRanges.length,
-    allRanges: dateRanges.map(r => ({
-      start: r.startDate,
-      end: r.endDate,
-      days: differenceInDays(parseISO(r.endDate), parseISO(r.startDate)) + 1,
-      count: r.count,
-      names: r.names.join(', ')
-    })),
-    filteredOnly: filteredRanges.map(r => ({
-      start: r.startDate,
-      end: r.endDate,
-      days: differenceInDays(parseISO(r.endDate), parseISO(r.startDate)) + 1,
-      count: r.count
-    }))
-  });
+  const maxCount = Math.max(...filteredRanges.map(r => r.count), 0);
 
   // Sort: first by people count (desc), then by length (desc), then by start date (asc)
   const sortedRanges = filteredRanges.sort((a, b) => {
