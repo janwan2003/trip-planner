@@ -242,6 +242,8 @@ export default function TripPage() {
                     endDate={trip.endDate}
                     selectedDates={selectedDates}
                     onToggleDate={handleToggleDate}
+                    availability={availability}
+                    totalParticipants={trip.participants.length}
                   />
                   
                   <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
