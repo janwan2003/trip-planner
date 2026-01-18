@@ -110,7 +110,7 @@ export function BestDates({ trip }: BestDatesProps) {
                 {isRange ? (
                   <>
                     <div className="text-base font-display font-semibold">
-                      {format(startDateObj, 'd')}-{format(endDateObj, 'd')} {format(endDateObj, 'MMM')}
+                      {format(startDateObj, 'd MMM')} - {format(endDateObj, 'd MMM')}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {differenceInDays(endDateObj, startDateObj) + 1} days
