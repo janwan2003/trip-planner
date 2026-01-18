@@ -93,10 +93,20 @@ export function BestDates({ trip }: BestDatesProps) {
   });
 
   console.log('BestDates Debug:', {
-    totalRanges: dateRanges.length,
+    tripDates: `${trip.startDate} to ${trip.endDate}`,
+    totalDates: dates.length,
+    datesWithAvailability: datesWithAvailability.length,
     minDays,
+    totalRanges: dateRanges.length,
     filteredRanges: filteredRanges.length,
     allRanges: dateRanges.map(r => ({
+      start: r.startDate,
+      end: r.endDate,
+      days: differenceInDays(parseISO(r.endDate), parseISO(r.startDate)) + 1,
+      count: r.count,
+      names: r.names.join(', ')
+    })),
+    filteredOnly: filteredRanges.map(r => ({
       start: r.startDate,
       end: r.endDate,
       days: differenceInDays(parseISO(r.endDate), parseISO(r.startDate)) + 1,
