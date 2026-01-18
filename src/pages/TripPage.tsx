@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Trip, getTrip, addParticipant, getAvailabilityCount } from '@/lib/tripStore';
+import { Trip, getTrip, addParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,24 +8,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
-import { Plane, Copy, Check, ArrowLeft, Calendar, Users } from 'lucide-react';
+import { Plane, Copy, Check, ArrowLeft, Calendar, Users, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const [trip, setTrip] = useState<Trip | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [hasJoined, setHasJoined] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (tripId) {
-      const loadedTrip = getTrip(tripId);
-      setTrip(loadedTrip);
-    }
+    const loadTrip = async () => {
+      if (tripId) {
+        setIsLoading(true);
+        const loadedTrip = await getTrip(tripId);
+        setTrip(loadedTrip);
+        setIsLoading(false);
+      }
+    };
+    
+    loadTrip();
   }, [tripId]);
 
   const handleJoin = (e: React.FormEvent) => {
@@ -52,20 +60,33 @@ export default function TripPage() {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!trip || !userName) return;
     
-    const updatedTrip = addParticipant(trip.id, {
-      name: userName,
-      availableDates: selectedDates,
-    });
-    
-    if (updatedTrip) {
-      setTrip(updatedTrip);
-      toast({
-        title: "Availability saved!",
-        description: `Your dates have been updated.`,
+    setIsSaving(true);
+
+    try {
+      const updatedTrip = await addParticipant(trip.id, {
+        name: userName,
+        availableDates: selectedDates,
       });
+      
+      if (updatedTrip) {
+        setTrip(updatedTrip);
+        toast({
+          title: "Availability saved!",
+          description: `Your dates have been updated.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving availability:', error);
+      toast({
+        title: "Error saving",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -78,6 +99,17 @@ export default function TripPage() {
       description: "Share this link with your friends.",
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading trip...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!trip) {
     return (
@@ -171,14 +203,40 @@ export default function TripPage() {
                   <div>
                     <CardTitle className="font-display">Mark Your Availability</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Hi {userName}! Click on the days you're available.
+                      Hi {userName}! Click and drag to select dates you're available.
                     </p>
                   </div>
-                  <Button onClick={handleSave} disabled={selectedDates.length === 0}>
-                    Save
+                  <Button onClick={handleSave} disabled={selectedDates.length === 0 || isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save'
+                    )}
                   </Button>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4 flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDates(getDatesBetween(trip.startDate, trip.endDate))}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDates([])}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  
                   <AvailabilityCalendar
                     startDate={trip.startDate}
                     endDate={trip.endDate}

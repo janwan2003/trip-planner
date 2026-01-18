@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+# TripSync - Collaborative Trip Planner
 
-## Project info
+Find the perfect dates for group trips by coordinating everyone's availability.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Live Demo
 
-## How can I edit this code?
+[https://janwan2003.github.io/trip-planner/](https://janwan2003.github.io/trip-planner/)
 
-There are several ways of editing your application.
+## ✨ Features
 
-**Use Lovable**
+- 📅 **Calendar-based availability** - Visual calendar interface for marking available dates
+- 🖱️ **Drag to select** - Hold and drag to select multiple consecutive dates
+- 📊 **Heat map visualization** - See at a glance when most people are available
+- 🔗 **Easy sharing** - One-click link sharing for inviting friends
+- 💾 **Persistent storage** - Works with localStorage by default, Supabase for multi-device sync
+- 📱 **Responsive design** - Works seamlessly on mobile and desktop
+- 🎨 **Beautiful UI** - Built with shadcn/ui and Tailwind CSS
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: shadcn/ui (Radix UI primitives)
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (optional) or localStorage (default)
+- **Routing**: React Router
+- **Date Handling**: date-fns
+- **State Management**: React Query
 
-**Use your preferred IDE**
+## 📦 Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Clone the repository
+git clone https://github.com/janwan2003/trip-planner.git
+cd trip-planner
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🔧 Configuration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Using with Supabase (Optional)
 
-**Use GitHub Codespaces**
+TripSync works out of the box with localStorage. For multi-device synchronization and sharing:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Create a [Supabase](https://supabase.com) project
+2. Run the SQL script from `supabase-schema.sql` in your Supabase SQL editor
+3. Copy `.env.example` to `.env`
+4. Add your Supabase credentials:
 
-## What technologies are used for this project?
+```env
+VITE_SUPABASE_URL=your-project-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
 
-This project is built with:
+The app automatically falls back to localStorage if Supabase is not configured.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🚀 Deployment
 
-## How can I deploy this project?
+### GitHub Pages
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+This project is configured for automatic deployment to GitHub Pages via GitHub Actions.
 
-## Can I connect a custom domain to my Lovable project?
+1. Push changes to the `main` branch
+2. GitHub Actions will automatically build and deploy
+3. Your site will be live at `https://yourusername.github.io/trip-planner/`
 
-Yes, you can!
+### Manual Build
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+npm run build
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The built files will be in the `dist/` directory.
+
+## 📖 Usage
+
+1. **Create a trip**: Set trip name and date range
+2. **Share the link**: Copy and share the trip URL with participants
+3. **Mark availability**: Each person selects their available dates by clicking or dragging
+4. **Find best dates**: View the heat map to see when everyone is available
+
+## 🎯 Features in Detail
+
+### Drag-to-Select Calendar
+- Click and hold on a date, then drag to select multiple dates
+- Perfect for marking long availability periods
+- Visual feedback during selection
+
+### Multi-Month View
+- Calendar automatically adapts to show all months in the date range
+- Month headers appear when spanning multiple months
+- Proper week alignment for each month
+
+### Availability Heat Map
+- Color-coded visualization showing participation levels
+- Tooltips showing participant names on hover
+- Easy identification of optimal dates
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## 📄 License
+
+MIT License - feel free to use this project for any purpose.
+
+## 🙏 Acknowledgments
+
+- Built with [shadcn/ui](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- Inspired by Doodle and When2Meet

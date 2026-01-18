@@ -4,30 +4,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, MapPin } from 'lucide-react';
+import { CalendarDays, MapPin, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
+import { useToast } from '@/hooks/use-toast';
 
 export function CreateTripForm() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !startDate || !endDate) return;
+
+    if (new Date(endDate) < new Date(startDate)) {
+      toast({
+        title: "Invalid dates",
+        description: "End date must be after start date.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    const trip: Trip = {
-      id: generateTripId(),
-      name,
-      startDate,
-      endDate,
-      participants: [],
-    };
-    
-    saveTrip(trip);
-    navigate(`/trip/${trip.id}`);
+    setIsCreating(true);
+
+    try {
+      const trip: Trip = {
+        id: generateTripId(),
+        name,
+        startDate,
+        endDate,
+        participants: [],
+      };
+      
+      await saveTrip(trip);
+      navigate(`/trip/${trip.id}`);
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      toast({
+        title: "Error creating trip",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setIsCreating(false);
+    }
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -49,11 +73,12 @@ export function CreateTripForm() {
             <Label htmlFor="name" className="text-sm font-medium">Trip Name</Label>
             <Input
               id="name"
-              placeholder="Summer Adventure 2025"
+              placeholder="Summer Adventure 2026"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="h-11"
               required
+              disabled={isCreating}
             />
           </div>
           
@@ -70,6 +95,7 @@ export function CreateTripForm() {
                   min={today}
                   className="h-11 pl-10"
                   required
+                  disabled={isCreating}
                 />
               </div>
             </div>
@@ -86,13 +112,21 @@ export function CreateTripForm() {
                   min={startDate || today}
                   className="h-11 pl-10"
                   required
+                  disabled={isCreating}
                 />
               </div>
             </div>
           </div>
           
-          <Button type="submit" variant="hero" className="w-full mt-6">
-            Create Trip
+          <Button type="submit" variant="hero" className="w-full mt-6" disabled={isCreating}>
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Trip'
+            )}
           </Button>
         </form>
       </CardContent>
