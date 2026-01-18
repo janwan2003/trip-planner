@@ -88,32 +88,39 @@ export function BestDates({ trip }: BestDatesProps) {
     dateRanges.push(currentRange);
   }
 
-  // Generate all possible sub-periods within min/max days constraints
-  const allPossibleRanges: DateRange[] = [];
+  // Filter and process ranges - prefer longest non-overlapping periods
+  const filteredRanges: DateRange[] = [];
   
   for (const range of dateRanges) {
     const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
-    const effectiveMaxDays = Math.min(maxDays, rangeLength);
     
-    // Generate sub-periods of different lengths
-    for (let length = minDays; length <= effectiveMaxDays; length++) {
-      // For each length, generate all possible starting positions
-      for (let offset = 0; offset <= rangeLength - length; offset++) {
+    // If range fits within min/max, keep it as-is (no sub-periods)
+    if (rangeLength >= minDays && rangeLength <= maxDays) {
+      filteredRanges.push(range);
+    }
+    // If range is too long, split it into maxDays chunks
+    else if (rangeLength > maxDays) {
+      for (let offset = 0; offset <= rangeLength - maxDays; offset += maxDays) {
         const subStartDate = format(addDays(parseISO(range.startDate), offset), 'yyyy-MM-dd');
-        const subEndDate = format(addDays(parseISO(range.startDate), offset + length - 1), 'yyyy-MM-dd');
+        const remainingDays = Math.min(maxDays, rangeLength - offset);
+        const subEndDate = format(addDays(parseISO(range.startDate), offset + remainingDays - 1), 'yyyy-MM-dd');
         
-        allPossibleRanges.push({
-          startDate: subStartDate,
-          endDate: subEndDate,
-          count: range.count,
-          names: range.names,
-        });
+        // Only add if this chunk meets minimum length
+        if (remainingDays >= minDays) {
+          filteredRanges.push({
+            startDate: subStartDate,
+            endDate: subEndDate,
+            count: range.count,
+            names: range.names,
+          });
+        }
       }
     }
+    // If range is too short (< minDays), skip it
   }
 
   // Sort: first by people count (desc), then by length (desc), then by start date (asc)
-  const sortedRanges = allPossibleRanges.sort((a, b) => {
+  const sortedRanges = filteredRanges.sort((a, b) => {
     // First priority: number of people
     if (b.count !== a.count) return b.count - a.count;
     
