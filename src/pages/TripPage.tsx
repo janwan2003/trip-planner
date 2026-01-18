@@ -342,18 +342,14 @@ export default function TripPage() {
                     participants={trip.participants}
                   />
                   
-                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-heat-low" />
-                      <span>Few</span>
+                  <div className="mt-4">
+                    {/* Dynamic gradient legend */}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex-1 h-3 rounded-full bg-gradient-to-r from-heat-low via-heat-medium to-heat-high" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-heat-medium" />
-                      <span>Some</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-heat-high" />
-                      <span>Everyone</span>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>1 person</span>
+                      <span>{selectedParticipants.length === 0 ? trip.participants.length : selectedParticipants.length} people</span>
                     </div>
                   </div>
                 </CardContent>
