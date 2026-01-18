@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ export function CreateTripForm() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const endDateRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,38 +83,51 @@ export function CreateTripForm() {
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-sm font-medium">Start Date</Label>
-              <div className="relative">
-                <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={today}
-                  className="h-11 pl-10"
-                  required
-                  disabled={isCreating}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-sm font-medium">End Date</Label>
-              <div className="relative">
-                <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || today}
-                  className="h-11 pl-10"
-                  required
-                  disabled={isCreating}
-                />
+              <Label htmlFor="startDate" className="text-sm font-medium flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-primary" />
+                Select Date Range
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      // Auto-focus end date after selecting start date
+                      setTimeout(() => endDateRef.current?.focus(), 100);
+                    }}
+                    min={today}
+                    className="h-11 text-center font-medium"
+                    required
+                    disabled={isCreating}
+                    placeholder="Start"
+                  />
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-muted-foreground">
+                    {!startDate && 'Start Date'}
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <Input
+                    ref={endDateRef}
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || today}
+                    className="h-11 text-center font-medium"
+                    required
+                    disabled={isCreating || !startDate}
+                    placeholder="End"
+                  />
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-muted-foreground">
+                    {!endDate && 'End Date'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

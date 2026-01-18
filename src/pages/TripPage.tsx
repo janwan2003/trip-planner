@@ -207,28 +207,13 @@ export default function TripPage() {
               </Card>
             ) : (
               <Card className="animate-scale-in shadow-warm border-0">
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader>
                   <div>
                     <CardTitle className="font-display">Mark Your Availability</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
                       Hi {userName}! Click and drag to select dates you're available.
                     </p>
                   </div>
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={selectedDates.length === 0 || isSaving}
-                    size="lg"
-                    className="px-8 font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Availability'
-                    )}
-                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4 flex gap-2">
@@ -268,6 +253,25 @@ export default function TripPage() {
                       <div className="w-4 h-4 rounded bg-muted" />
                       <span>Not selected</span>
                     </div>
+                  </div>
+                  
+                  {/* Floating Save Button */}
+                  <div className="sticky bottom-4 mt-6 z-10">
+                    <Button 
+                      onClick={handleSave} 
+                      disabled={selectedDates.length === 0 || isSaving}
+                      size="lg"
+                      className="w-full px-8 font-semibold shadow-2xl hover:shadow-xl transition-all"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Availability'
+                      )}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
