@@ -46,7 +46,7 @@ export function BestDates({ trip }: BestDatesProps) {
 
   const maxCount = Math.max(...datesWithAvailability.map(d => d.count));
 
-  // Group consecutive dates with the same availability (in chronological order)
+  // Find all consecutive date sequences (regardless of who's available)
   const dateRanges: DateRange[] = [];
   let currentRange: DateRange | null = null;
 
@@ -63,13 +63,14 @@ export function BestDates({ trip }: BestDatesProps) {
       const currDate = parseISO(item.date);
       const daysDiff = differenceInDays(currDate, prevDate);
       
-      // Check if consecutive and same availability
-      const sameAvailability = 
-        item.count === currentRange.count &&
-        JSON.stringify([...item.names].sort()) === JSON.stringify([...currentRange.names].sort());
-      
-      if (daysDiff === 1 && sameAvailability) {
+      // Just check if consecutive (extend range with current item's data)
+      if (daysDiff === 1) {
         currentRange.endDate = item.date;
+        // Update to minimum count in the range
+        currentRange.count = Math.min(currentRange.count, item.count);
+        // Combine names (intersection of all days in range)
+        const currentNames = new Set(currentRange.names);
+        currentRange.names = item.names.filter(name => currentNames.has(name));
       } else {
         dateRanges.push(currentRange);
         currentRange = {
