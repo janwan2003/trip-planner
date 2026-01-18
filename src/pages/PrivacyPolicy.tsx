@@ -87,7 +87,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>Access:</strong> Request access to your personal data</li>
               <li><strong>Rectification:</strong> Request correction of inaccurate data</li>
-              <li><strong>Erasure:</strong> Request deletion of your data (trips can be deleted by not accessing them)</li>
+              <li><strong>Erasure:</strong> Request deletion of your data</li>
               <li><strong>Data Portability:</strong> Request transfer of your data</li>
               <li><strong>Object:</strong> Object to processing of your data</li>
             </ul>
@@ -111,17 +111,9 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">9. Children's Privacy</h2>
-            <p className="mb-4">
-              Our Service is not intended for children under 13 years of age. We do not knowingly collect 
-              personal information from children under 13. If you become aware that a child has provided us 
-              with personal data, please contact us.
-            </p>
-          </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">10. Data Retention</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">9. Data Retention</h2>
             <p className="mb-4">
               Trip data is retained indefinitely unless explicitly deleted. Trips that are not accessed may 
               be archived or removed after an extended period of inactivity (typically 24 months).
@@ -129,7 +121,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">11. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">10. Changes to This Privacy Policy</h2>
             <p className="mb-4">
               We may update our Privacy Policy from time to time. We will notify you of any changes by updating 
               the "Last updated" date at the top of this policy. You are advised to review this Privacy Policy 
@@ -138,7 +130,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">12. Contact Us</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">11. Contact Us</h2>
             <p className="mb-4">
               If you have any questions about this Privacy Policy or wish to exercise your data rights, 
               please contact us through the website or via email.
