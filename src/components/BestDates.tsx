@@ -24,7 +24,6 @@ interface DateRange {
 
 export function BestDates({ trip }: BestDatesProps) {
   const [minDays, setMinDays] = useState<number>(1);
-  const [maxDays, setMaxDays] = useState<number>(999);
   const availability = getAvailabilityCount(trip);
   const dates = getDatesBetween(trip.startDate, trip.endDate);
   
@@ -88,36 +87,11 @@ export function BestDates({ trip }: BestDatesProps) {
     dateRanges.push(currentRange);
   }
 
-  // Filter and process ranges - prefer longest non-overlapping periods
-  const filteredRanges: DateRange[] = [];
-  
-  for (const range of dateRanges) {
+  // Filter ranges by minimum days only
+  const filteredRanges = dateRanges.filter(range => {
     const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
-    
-    // If range fits within min/max, keep it as-is (no sub-periods)
-    if (rangeLength >= minDays && rangeLength <= maxDays) {
-      filteredRanges.push(range);
-    }
-    // If range is too long, split it into maxDays chunks
-    else if (rangeLength > maxDays) {
-      for (let offset = 0; offset <= rangeLength - maxDays; offset += maxDays) {
-        const subStartDate = format(addDays(parseISO(range.startDate), offset), 'yyyy-MM-dd');
-        const remainingDays = Math.min(maxDays, rangeLength - offset);
-        const subEndDate = format(addDays(parseISO(range.startDate), offset + remainingDays - 1), 'yyyy-MM-dd');
-        
-        // Only add if this chunk meets minimum length
-        if (remainingDays >= minDays) {
-          filteredRanges.push({
-            startDate: subStartDate,
-            endDate: subEndDate,
-            count: range.count,
-            names: range.names,
-          });
-        }
-      }
-    }
-    // If range is too short (< minDays), skip it
-  }
+    return rangeLength >= minDays;
+  });
 
   // Sort: first by people count (desc), then by length (desc), then by start date (asc)
   const sortedRanges = filteredRanges.sort((a, b) => {
@@ -155,12 +129,13 @@ export function BestDates({ trip }: BestDatesProps) {
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p className="text-xs">
-                  Minimum and maximum length of trip period.
+                  Minimum length of trip period.
                 </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           
+          <span className="text-xs text-muted-foreground">Min:</span>
           <Input
             type="number"
             value={minDays}
@@ -168,16 +143,6 @@ export function BestDates({ trip }: BestDatesProps) {
             min="1"
             className="h-6 w-10 text-xs px-1.5"
             title="Min days"
-          />
-          <span className="text-xs text-muted-foreground">-</span>
-          <Input
-            type="number"
-            value={maxDays === 999 ? '' : maxDays}
-            onChange={(e) => setMaxDays(parseInt(e.target.value) || 999)}
-            min={minDays}
-            placeholder="∞"
-            className="h-6 w-10 text-xs px-1.5"
-            title="Max days"
           />
         </div>
       </div>
