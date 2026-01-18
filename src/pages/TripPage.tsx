@@ -134,7 +134,7 @@ export default function TripPage() {
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <img src="/favicon.png" alt="TripSync Logo" className="w-full h-full object-cover" />
+              <img src="/trip-planner/favicon.png" alt="TripSync Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-display font-semibold">TripSync</span>
           </Link>
