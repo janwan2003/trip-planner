@@ -205,12 +205,19 @@ export const addParticipant = async (
 
 export const getDatesBetween = (startDate: string, endDate: string): string[] => {
   const dates: string[] = [];
-  const current = new Date(startDate + 'T00:00:00');
-  const end = new Date(endDate + 'T00:00:00');
+  const start = new Date(startDate);
+  const end = new Date(endDate);
   
-  while (current <= end) {
-    dates.push(current.toISOString().split('T')[0]);
-    current.setDate(current.getDate() + 1);
+  // Normalize to UTC midnight to avoid timezone issues
+  const current = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()));
+  const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()));
+  
+  while (current <= endUTC) {
+    const year = current.getUTCFullYear();
+    const month = String(current.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(current.getUTCDate()).padStart(2, '0');
+    dates.push(`${year}-${month}-${day}`);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   
   return dates;
