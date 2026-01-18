@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide will help you set up Supabase for TripSync to enable real-time database persistence and sharing across devices.
+This guide will help you set up Supabase for WeGoWhen to enable real-time database persistence and sharing across devices.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ This guide will help you set up Supabase for TripSync to enable real-time databa
 1. Go to [https://supabase.com](https://supabase.com) and sign in
 2. Click "New Project"
 3. Fill in the project details:
-   - **Name**: TripSync (or any name you prefer)
+   - **Name**: WeGoWhen (or any name you prefer)
    - **Database Password**: Choose a strong password
    - **Region**: Select the region closest to your users
 4. Click "Create new project" and wait for it to initialize (takes ~2 minutes)
@@ -115,4 +115,4 @@ If Supabase is not configured or unavailable, the app automatically falls back t
 
 For issues related to:
 - **Supabase setup**: [Supabase Documentation](https://supabase.com/docs)
-- **TripSync app**: [GitHub Issues](https://github.com/janwan2003/trip-planner/issues)
+- **WeGoWhen app**: [GitHub Issues](https://github.com/janwan2003/trip-planner/issues)

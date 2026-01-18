@@ -1,4 +1,4 @@
-# TripSync - Collaborative Trip Planner
+# WeGoWhen - Collaborative Trip Planner
 
 Find the perfect dates for group trips by coordinating everyone's availability.
 
@@ -44,7 +44,7 @@ npm run dev
 
 ### Using with Supabase (Optional)
 
-TripSync works out of the box with localStorage. For multi-device synchronization and sharing:
+WeGoWhen works out of the box with localStorage. For multi-device synchronization and sharing:
 
 1. Create a [Supabase](https://supabase.com) project
 2. Run the SQL script from `supabase-schema.sql` in your Supabase SQL editor
