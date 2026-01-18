@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { CreateTripForm } from '@/components/CreateTripForm';
 import { Tutorial } from '@/components/Tutorial';
 
@@ -61,14 +62,14 @@ const Index = () => {
               <h4 className="font-medium mb-3">Company</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="/#/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                     About
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/#/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                     Contact
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -78,14 +79,14 @@ const Index = () => {
               <h4 className="font-medium mb-3">Legal</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="/#/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/#/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
