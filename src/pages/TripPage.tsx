@@ -126,7 +126,7 @@ export default function TripPage() {
     return sortedSelected.some((date, index) => date !== sortedSaved[index]);
   };
 
-  const isSaveDisabled = selectedDates.length === 0 || isSaving || !hasUnsavedChanges();
+  const isSaveDisabled = isSaving || !hasUnsavedChanges();
 
   if (isLoading) {
     return (

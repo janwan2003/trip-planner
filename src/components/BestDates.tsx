@@ -139,14 +139,16 @@ export function BestDates({ trip }: BestDatesProps) {
         </div>
         
         <div className="flex items-center gap-1.5">
-          <TooltipProvider>
+          <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                <div className="cursor-default">
+                  <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p className="text-xs">
-                  Filter periods by length. Longer periods are broken into sub-periods that fit your range.
+                  Minimum and maximum length of trip period.
                 </p>
               </TooltipContent>
             </Tooltip>
