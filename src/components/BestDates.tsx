@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { Trip, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
-import { Star, Users, Filter } from 'lucide-react';
+import { Star, Users, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface BestDatesProps {
   trip: Trip;
@@ -82,14 +88,32 @@ export function BestDates({ trip }: BestDatesProps) {
     dateRanges.push(currentRange);
   }
 
-  // Filter by min/max days
-  const filteredRanges = dateRanges.filter(range => {
-    const days = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
-    return days >= minDays && days <= maxDays;
-  });
+  // Generate all possible sub-periods within min/max days constraints
+  const allPossibleRanges: DateRange[] = [];
+  
+  for (const range of dateRanges) {
+    const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
+    const effectiveMaxDays = Math.min(maxDays, rangeLength);
+    
+    // Generate sub-periods of different lengths
+    for (let length = minDays; length <= effectiveMaxDays; length++) {
+      // For each length, generate all possible starting positions
+      for (let offset = 0; offset <= rangeLength - length; offset++) {
+        const subStartDate = format(addDays(parseISO(range.startDate), offset), 'yyyy-MM-dd');
+        const subEndDate = format(addDays(parseISO(range.startDate), offset + length - 1), 'yyyy-MM-dd');
+        
+        allPossibleRanges.push({
+          startDate: subStartDate,
+          endDate: subEndDate,
+          count: range.count,
+          names: range.names,
+        });
+      }
+    }
+  }
 
   // Sort: first by people count (desc), then by length (desc), then by start date (asc)
-  const sortedRanges = filteredRanges.sort((a, b) => {
+  const sortedRanges = allPossibleRanges.sort((a, b) => {
     // First priority: number of people
     if (b.count !== a.count) return b.count - a.count;
     
@@ -107,31 +131,46 @@ export function BestDates({ trip }: BestDatesProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Star className="w-4 h-4 text-accent" />
-        Best Dates
-      </div>
-      
-      {/* Min/Max days filter */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
-        <Filter className="w-3 h-3 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Days:</span>
-        <Input
-          type="number"
-          value={minDays}
-          onChange={(e) => setMinDays(Math.max(1, parseInt(e.target.value) || 1))}
-          min="1"
-          className="h-6 w-12 text-xs px-2"
-        />
-        <span className="text-xs text-muted-foreground">-</span>
-        <Input
-          type="number"
-          value={maxDays === 999 ? '' : maxDays}
-          onChange={(e) => setMaxDays(parseInt(e.target.value) || 999)}
-          min={minDays}
-          placeholder="∞"
-          className="h-6 w-12 text-xs px-2"
-        />
+      {/* Header with filter */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Star className="w-4 h-4 text-accent" />
+          Best Dates
+        </div>
+        
+        <div className="flex items-center gap-1.5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">
+                  Filter periods by length. Longer periods are broken into sub-periods that fit your range.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <Input
+            type="number"
+            value={minDays}
+            onChange={(e) => setMinDays(Math.max(1, parseInt(e.target.value) || 1))}
+            min="1"
+            className="h-6 w-10 text-xs px-1.5"
+            title="Min days"
+          />
+          <span className="text-xs text-muted-foreground">-</span>
+          <Input
+            type="number"
+            value={maxDays === 999 ? '' : maxDays}
+            onChange={(e) => setMaxDays(parseInt(e.target.value) || 999)}
+            min={minDays}
+            placeholder="∞"
+            className="h-6 w-10 text-xs px-1.5"
+            title="Max days"
+          />
+        </div>
       </div>
       
       <div className="space-y-2">
