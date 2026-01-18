@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Trip, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
-import { Star, Users } from 'lucide-react';
+import { Star, Users, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 interface BestDatesProps {
   trip: Trip;
@@ -15,6 +17,8 @@ interface DateRange {
 }
 
 export function BestDates({ trip }: BestDatesProps) {
+  const [minDays, setMinDays] = useState<number>(1);
+  const [maxDays, setMaxDays] = useState<number>(999);
   const availability = getAvailabilityCount(trip);
   const dates = getDatesBetween(trip.startDate, trip.endDate);
   
@@ -78,14 +82,56 @@ export function BestDates({ trip }: BestDatesProps) {
     dateRanges.push(currentRange);
   }
 
+  // Filter by min/max days
+  const filteredRanges = dateRanges.filter(range => {
+    const days = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
+    return days >= minDays && days <= maxDays;
+  });
+
+  // Sort: first by people count (desc), then by length (desc), then by start date (asc)
+  const sortedRanges = filteredRanges.sort((a, b) => {
+    // First priority: number of people
+    if (b.count !== a.count) return b.count - a.count;
+    
+    // Second priority: length of period
+    const aLength = differenceInDays(parseISO(a.endDate), parseISO(a.startDate)) + 1;
+    const bLength = differenceInDays(parseISO(b.endDate), parseISO(b.startDate)) + 1;
+    if (bLength !== aLength) return bLength - aLength;
+    
+    // Third priority: chronological order
+    return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
+  });
+
   // Take top 5 ranges
-  const topRanges = dateRanges.slice(0, 5);
+  const topRanges = sortedRanges.slice(0, 5);
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm font-medium">
         <Star className="w-4 h-4 text-accent" />
         Best Dates
+      </div>
+      
+      {/* Min/Max days filter */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
+        <Filter className="w-3 h-3 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Days:</span>
+        <Input
+          type="number"
+          value={minDays}
+          onChange={(e) => setMinDays(Math.max(1, parseInt(e.target.value) || 1))}
+          min="1"
+          className="h-6 w-12 text-xs px-2"
+        />
+        <span className="text-xs text-muted-foreground">-</span>
+        <Input
+          type="number"
+          value={maxDays === 999 ? '' : maxDays}
+          onChange={(e) => setMaxDays(parseInt(e.target.value) || 999)}
+          min={minDays}
+          placeholder="∞"
+          className="h-6 w-12 text-xs px-2"
+        />
       </div>
       
       <div className="space-y-2">
