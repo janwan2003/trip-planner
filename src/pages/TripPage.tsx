@@ -28,6 +28,13 @@ export default function TripPage() {
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const { toast } = useToast();
 
+  // Initialize selected participants to all participants by default
+  useEffect(() => {
+    if (trip && selectedParticipants.length === 0) {
+      setSelectedParticipants(trip.participants.map(p => p.name));
+    }
+  }, [trip]);
+
   useEffect(() => {
     const loadTrip = async () => {
       if (tripId) {
@@ -312,23 +319,12 @@ export default function TripPage() {
                 <CardHeader>
                   <CardTitle className="font-display">Group Availability</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {selectedParticipants.length > 0 
-                      ? `Showing dates available for: ${selectedParticipants.join(', ')}`
-                      : 'Click participant names to highlight their available dates'}
+                    {selectedParticipants.length === trip.participants.length
+                      ? 'Click participant names to filter availability'
+                      : `Showing availability for: ${selectedParticipants.join(', ')}`}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  {selectedParticipants.length > 0 && (
-                    <div className="mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedParticipants([])}
-                      >
-                        Clear Selection
-                      </Button>
-                    </div>
-                  )}
                   <AvailabilityCalendar
                     startDate={trip.startDate}
                     endDate={trip.endDate}

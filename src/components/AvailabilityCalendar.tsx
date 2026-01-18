@@ -32,16 +32,28 @@ export function AvailabilityCalendar({
   
   const dates = getDatesBetween(startDate, endDate);
   
-  // Check if date is available for all selected participants
-  const isDateAvailableForSelected = (date: string): boolean => {
-    if (selectedParticipants.length === 0) return false;
-    return selectedParticipants.every(participantName => {
+  // Calculate availability based on selected participants
+  const getFilteredAvailability = (date: string): number => {
+    if (selectedParticipants.length === 0) return 0;
+    return selectedParticipants.filter(participantName => {
       const participant = participants.find(p => p.name === participantName);
       return participant?.availableDates.includes(date);
-    });
+    }).length;
   };
   
   const getHeatLevel = (date: string): 'none' | 'low' | 'medium' | 'high' => {
+    if (readOnly && selectedParticipants.length > 0) {
+      // Use filtered count based on selected participants
+      const count = getFilteredAvailability(date);
+      const ratio = count / selectedParticipants.length;
+      
+      if (ratio === 0) return 'none';
+      if (ratio < 0.5) return 'low';
+      if (ratio < 1) return 'medium';
+      return 'high';
+    }
+    
+    // Fallback to original logic
     if (!availability || totalParticipants === 0) return 'none';
     const count = availability[date]?.length || 0;
     const ratio = count / totalParticipants;
@@ -137,9 +149,10 @@ export function AvailabilityCalendar({
               {monthDates.map(date => {
                 const isSelected = selectedDates.includes(date);
                 const heatLevel = getHeatLevel(date);
-                const availableCount = availability?.[date]?.length || 0;
+                const availableCount = readOnly && selectedParticipants.length > 0
+                  ? getFilteredAvailability(date)
+                  : (availability?.[date]?.length || 0);
                 const dateObj = parseISO(date);
-                const isHighlightedForParticipant = readOnly && isDateAvailableForSelected(date);
                 
                 return (
                   <button
@@ -158,11 +171,10 @@ export function AvailabilityCalendar({
                       readOnly && "cursor-default",
                       isSelected && "bg-success-light border-2 border-success text-foreground font-semibold",
                       !isSelected && !readOnly && "bg-muted hover:bg-muted/80 border border-transparent",
-                      isHighlightedForParticipant && "ring-2 ring-primary ring-offset-1 bg-primary/20 font-semibold scale-105",
-                      !isHighlightedForParticipant && readOnly && heatLevel === 'none' && "bg-muted",
-                      !isHighlightedForParticipant && readOnly && heatLevel === 'low' && "bg-heat-low",
-                      !isHighlightedForParticipant && readOnly && heatLevel === 'medium' && "bg-heat-medium",
-                      !isHighlightedForParticipant && readOnly && heatLevel === 'high' && "bg-heat-high text-primary-foreground",
+                      readOnly && heatLevel === 'none' && "bg-muted",
+                      readOnly && heatLevel === 'low' && "bg-heat-low",
+                      readOnly && heatLevel === 'medium' && "bg-heat-medium",
+                      readOnly && heatLevel === 'high' && "bg-heat-high text-primary-foreground",
                     )}
                   >
                     <span className="font-medium">{format(dateObj, 'd')}</span>
@@ -176,16 +188,22 @@ export function AvailabilityCalendar({
                     )}
                     
                     {/* Tooltip for hover */}
-                    {readOnly && availability?.[date] && availability[date].length > 0 && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                        <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs whitespace-nowrap">
-                          <div className="font-medium mb-1 text-popover-foreground">{format(dateObj, 'MMM d, yyyy')}</div>
-                          <div className="text-muted-foreground">
-                            {availability[date].join(', ')}
+                    {readOnly && availableCount > 0 && (() => {
+                      const availableNames = selectedParticipants.filter(name => {
+                        const participant = participants.find(p => p.name === name);
+                        return participant?.availableDates.includes(date);
+                      });
+                      return availableNames.length > 0 ? (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                          <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs whitespace-nowrap">
+                            <div className="font-medium mb-1 text-popover-foreground">{format(dateObj, 'MMM d, yyyy')}</div>
+                            <div className="text-muted-foreground">
+                              {availableNames.join(', ')}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      ) : null;
+                    })()}
                   </button>
                 );
               })}
