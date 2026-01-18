@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .trip-list {
+            list-style: none;
+        }
+
+        .trip-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trip-item .destination {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .trip-item .dates {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .trip-item .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .trip-item .delete-btn:hover {
+            background: #ee5a5a;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+        }
+
+        .emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✈️ Trip Planner</h1>
+        
+        <div class="card">
+            <h2>Plan a New Trip</h2>
+            <form id="tripForm">
+                <div class="form-group">
+                    <label for="destination">Destination</label>
+                    <input type="text" id="destination" placeholder="Where do you want to go?" required>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Any notes for your trip..."></textarea>
+                </div>
+                <button type="submit" class="btn">Add Trip</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>My Trips</h2>
+            <ul class="trip-list" id="tripList">
+                <li class="empty-state">
+                    <div class="emoji">🌍</div>
+                    <p>No trips planned yet. Start planning your adventure!</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let trips = JSON.parse(localStorage.getItem('trips')) || [];
+
+        function renderTrips() {
+            const tripList = document.getElementById('tripList');
+            
+            if (trips.length === 0) {
+                tripList.innerHTML = `
+                    <li class="empty-state">
+                        <div class="emoji">🌍</div>
+                        <p>No trips planned yet. Start planning your adventure!</p>
+                    </li>
+                `;
+                return;
+            }
+
+            tripList.innerHTML = trips.map((trip, index) => `
+                <li class="trip-item">
+                    <div>
+                        <div class="destination">📍 ${trip.destination}</div>
+                        <div class="dates">${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}</div>
+                        ${trip.notes ? `<div class="notes" style="color: #888; font-size: 0.85rem; margin-top: 5px;">${trip.notes}</div>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteTrip(${index})">Delete</button>
+                </li>
+            `).join('');
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function deleteTrip(index) {
+            trips.splice(index, 1);
+            localStorage.setItem('trips', JSON.stringify(trips));
+            renderTrips();
+        }
+
+        document.getElementById('tripForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const destination = document.getElementById('destination').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const notes = document.getElementById('notes').value;
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('End date must be after start date!');
+                return;
+            }
+
+            trips.push({ destination, startDate, endDate, notes });
+            trips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            localStorage.setItem('trips', JSON.stringify(trips));
+            
+            this.reset();
+            renderTrips();
+        });
+
+        // Initial render
+        renderTrips();
+    </script>
+</body>
+</html>
