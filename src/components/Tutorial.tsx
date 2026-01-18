@@ -1,12 +1,46 @@
-import { Calendar, Users, Share2, Check } from 'lucide-react';
+import { Calendar, Users, Share2, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 interface TutorialProps {
   completedSteps?: number[];
 }
 
 export function Tutorial({ completedSteps = [] }: TutorialProps) {
+  const [isHidden, setIsHidden] = useState(false);
+
+  useEffect(() => {
+    const hidden = localStorage.getItem('tutorialHidden');
+    if (hidden === 'true') {
+      setIsHidden(true);
+    }
+  }, []);
+
+  const handleHide = () => {
+    setIsHidden(true);
+    localStorage.setItem('tutorialHidden', 'true');
+  };
+
+  const handleShow = () => {
+    setIsHidden(false);
+    localStorage.removeItem('tutorialHidden');
+  };
+
+  if (isHidden) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleShow}
+        className="w-full"
+      >
+        Show Tutorial
+      </Button>
+    );
+  }
+
   const steps = [
     {
       icon: Calendar,
@@ -37,9 +71,19 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
       <CardContent className="p-6">
-        <h3 className="text-lg font-display font-semibold mb-4 text-foreground">
-          How it works
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-display font-semibold text-foreground">
+            How it works
+          </h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={handleHide}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
         <div className="space-y-4">
           {steps.map((step) => {
             const Icon = step.icon;
@@ -48,12 +92,12 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
               <div 
                 key={step.number} 
                 className={cn(
-                  "flex gap-3 items-start transition-opacity",
+                  "flex gap-3 items-start transition-all duration-300",
                   isCompleted && "opacity-40"
                 )}
               >
                 <div className={cn(
-                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
+                  "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
                   isCompleted 
                     ? "bg-muted text-muted-foreground" 
                     : "bg-primary text-primary-foreground"
@@ -63,12 +107,12 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Icon className={cn(
-                      "w-4 h-4 flex-shrink-0",
+                      "w-4 h-4 flex-shrink-0 transition-colors",
                       isCompleted ? "text-muted-foreground" : "text-primary"
                     )} />
                     <h4 className={cn(
-                      "font-medium text-sm",
-                      isCompleted ? "text-muted-foreground" : "text-foreground"
+                      "font-medium text-sm transition-colors",
+                      isCompleted ? "text-muted-foreground line-through" : "text-foreground"
                     )}>
                       {step.title}
                     </h4>

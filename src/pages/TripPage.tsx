@@ -20,6 +20,7 @@ export default function TripPage() {
   const [userName, setUserName] = useState('');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [hasJoined, setHasJoined] = useState(false);
+  const [hasSavedAvailability, setHasSavedAvailability] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -48,6 +49,7 @@ export default function TripPage() {
     
     if (existingParticipant) {
       setSelectedDates(existingParticipant.availableDates);
+      setHasSavedAvailability(existingParticipant.availableDates.length > 0);
     }
     
     setHasJoined(true);
@@ -74,6 +76,7 @@ export default function TripPage() {
       
       if (updatedTrip) {
         setTrip(updatedTrip);
+        setHasSavedAvailability(true);
         toast({
           title: "Availability saved!",
           description: `Your dates have been updated.`,
@@ -312,7 +315,7 @@ export default function TripPage() {
               completedSteps={[
                 1, // Trip created
                 ...(copied || trip.participants.length > 1 ? [2] : []), // Link shared
-                ...(hasJoined ? [3] : []), // Availability marked
+                ...(hasSavedAvailability ? [3] : []), // Availability saved
                 ...(trip.participants.length > 1 ? [4] : []), // Best dates available
               ]}
             />
