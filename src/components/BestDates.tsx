@@ -87,14 +87,40 @@ export function BestDates({ trip }: BestDatesProps) {
     dateRanges.push(currentRange);
   }
 
-  // Filter ranges by minimum days only
-  const filteredRanges = dateRanges.filter(range => {
+  // Generate all possible sub-periods of minDays or longer
+  const allValidRanges: DateRange[] = [];
+  
+  for (const range of dateRanges) {
     const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
-    return rangeLength >= minDays;
-  });
-
-  // Sort: first by people count (desc), then by length (desc), then by start date (asc)
-  const sortedRanges = filteredRanges.sort((a, b) => {
+    
+    // For each possible starting position
+    for (let startOffset = 0; startOffset < rangeLength; startOffset++) {
+      // For each possible length from minDays up to remaining days
+      for (let length = minDays; length <= rangeLength - startOffset; length++) {
+        const subStartDate = format(addDays(parseISO(range.startDate), startOffset), 'yyyy-MM-dd');
+        const subEndDate = format(addDays(parseISO(range.startDate), startOffset + length - 1), 'yyyy-MM-dd');
+        
+        allValidRanges.push({
+          startDate: subStartDate,
+          endDate: subEndDate,
+          count: range.count,
+          names: range.names,
+        });
+      }
+    }
+  }
+  
+  // Remove duplicates and sort: first by people count (desc), then by length (desc), then by start date (asc)
+  const uniqueRanges = Array.from(
+    new Map(
+      allValidRanges.map(r => [
+        `${r.startDate}-${r.endDate}-${r.count}`,
+        r
+      ])
+    ).values()
+  );
+  
+  const sortedRanges = uniqueRanges.sort((a, b) => {
     // First priority: number of people
     if (b.count !== a.count) return b.count - a.count;
     

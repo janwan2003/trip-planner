@@ -175,13 +175,38 @@ export function AvailabilityCalendar({
                       readOnly && "cursor-default",
                       isSelected && "bg-success-light border-2 border-success text-foreground font-semibold",
                       !isSelected && !readOnly && "bg-muted hover:bg-muted/80 border border-transparent",
-                      readOnly && heatLevel === 'none' && "bg-muted",
-                      readOnly && heatLevel === 'low' && "bg-heat-low",
-                      readOnly && heatLevel === 'medium' && "bg-heat-medium",
-                      readOnly && heatLevel === 'high' && "bg-heat-high text-primary-foreground",
                     )}
+                    style={readOnly && !isSelected ? {
+                      backgroundColor: (() => {
+                        if (heatLevel === 'none') return 'hsl(var(--muted))';
+                        const activeCount = selectedParticipants.length === 0 ? participants.length : selectedParticipants.length;
+                        const count = readOnly && participants.length > 0 ? getFilteredAvailability(date) : (availability?.[date]?.length || 0);
+                        const ratio = count / activeCount;
+                        
+                        // Interpolate between heat-low and heat-high based on ratio
+                        // heat-low: 40 20% 94% (light mode) / 25 15% 20% (dark mode)
+                        // heat-high: 168 76% 42% (light mode) / 168 76% 60% (dark mode)
+                        const isDark = document.documentElement.classList.contains('dark');
+                        if (isDark) {
+                          // Dark mode: interpolate from 25,15%,20% to 168,76%,60%
+                          const h = 25 + (168 - 25) * ratio;
+                          const s = 15 + (76 - 15) * ratio;
+                          const l = 20 + (60 - 20) * ratio;
+                          return `hsl(${h}, ${s}%, ${l}%)`;
+                        } else {
+                          // Light mode: interpolate from 40,20%,94% to 168,76%,42%
+                          const h = 40 + (168 - 40) * ratio;
+                          const s = 20 + (76 - 20) * ratio;
+                          const l = 94 - (94 - 42) * ratio;
+                          return `hsl(${h}, ${s}%, ${l}%)`;
+                        }
+                      })()
+                    } : undefined}
                   >
-                    <span className="font-medium">{format(dateObj, 'd')}</span>
+                    <span className={cn(
+                      "font-medium",
+                      readOnly && heatLevel === 'high' && "text-primary-foreground"
+                    )}>{format(dateObj, 'd')}</span>
                     {availableCount > 0 && (
                       <span className={cn(
                         "text-[10px] font-medium",
