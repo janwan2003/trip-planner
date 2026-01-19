@@ -469,8 +469,8 @@ export default function TripPage() {
                       <div className="flex-1 h-3 rounded-full bg-gradient-to-r from-muted to-primary" />
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>1 person</span>
-                      <span>{selectedParticipants.length === 0 ? trip.participants.length : selectedParticipants.length} people</span>
+                      <span>No one</span>
+                      <span>Everyone</span>
                     </div>
                   </div>
                 </CardContent>
