@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TripPage from './TripPage';
 import { Trip, TripApiError } from '@/lib/tripStore';
 import { getRecentTrips } from '@/lib/recentTrips';
+import { recalledName, rememberName } from '@/lib/identity';
 
 const getTrip = vi.fn();
 const addParticipant = vi.fn();
@@ -164,6 +165,94 @@ describe('TripPage', () => {
 
     expect(before(answer, detail)).toBe(true);
     expect(before(detail, teaching)).toBe(true);
+  });
+
+  /**
+   * Reloading a trip link used to show "Join this trip" to someone who had already
+   * joined and saved dates. Retyping the name exactly re-attached them, but any
+   * variation made a second participant holding none of the first one's dates.
+   */
+  describe('a returning participant', () => {
+    it('is re-attached without retyping their name', async () => {
+      rememberName('abc123', 'Ada');
+      getTrip.mockResolvedValue(
+        trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] }] }),
+      );
+
+      renderTripPage();
+
+      expect(await screen.findByText(/Mark Your Availability/i)).toBeInTheDocument();
+      expect(screen.queryByLabelText(/your name/i)).not.toBeInTheDocument();
+      // Named in the card header and again in the participants list.
+      expect(screen.getAllByText('Ada').length).toBeGreaterThan(0);
+    });
+
+    it('gets their saved dates back, not an empty calendar', async () => {
+      rememberName('abc123', 'Ada');
+      getTrip.mockResolvedValue(
+        trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] }] }),
+      );
+
+      renderTripPage();
+      await screen.findByText(/Mark Your Availability/i);
+
+      // Nothing unsaved: the calendar matches what the API holds, so no save prompt.
+      expect(screen.queryByText(/unsaved/i)).not.toBeInTheDocument();
+      expect(editableDayCell('2')).toHaveAttribute('aria-pressed', 'true');
+      expect(editableDayCell('3')).toHaveAttribute('aria-pressed', 'true');
+      expect(editableDayCell('4')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('matches the remembered name case-insensitively, as the API does', async () => {
+      rememberName('abc123', 'ada');
+      getTrip.mockResolvedValue(trip({ participants: [{ name: 'Ada', availableDates: [] }] }));
+
+      renderTripPage();
+
+      expect(await screen.findByText(/Mark Your Availability/i)).toBeInTheDocument();
+      // The trip's spelling wins, so a later save cannot fork the participant.
+      expect(screen.getAllByText('Ada').length).toBeGreaterThan(0);
+      expect(screen.queryByText('ada')).not.toBeInTheDocument();
+    });
+
+    it('is not silently re-added after someone removed them', async () => {
+      rememberName('abc123', 'Ada');
+      getTrip.mockResolvedValue(trip({ participants: [{ name: 'Bo', availableDates: [] }] }));
+
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      // The name is only a hint; it is checked against the participants the API returned.
+      const field = await screen.findByLabelText(/your name/i);
+      expect(field).toHaveValue('Ada');
+      expect(screen.queryByText(/Mark Your Availability/i)).not.toBeInTheDocument();
+    });
+
+    it('does not auto-join a different trip on the strength of a remembered name', async () => {
+      rememberName('other-trip', 'Ada');
+      getTrip.mockResolvedValue(trip({ participants: [{ name: 'Ada', availableDates: [] }] }));
+
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      // Same name, different trip: prefill only, because this could be a different Ada.
+      expect(await screen.findByLabelText(/your name/i)).toHaveValue('Ada');
+    });
+
+    it('forgets the name on withdrawal, so the next visit does not rejoin them', async () => {
+      const user = userEvent.setup();
+      getTrip.mockResolvedValue(trip({ participants: [{ name: 'Ada', availableDates: [] }] }));
+      removeParticipant.mockResolvedValue(trip({ participants: [] }));
+      rememberName('abc123', 'Ada');
+
+      renderTripPage();
+      await screen.findByText(/Mark Your Availability/i);
+
+      await user.click(screen.getByRole('button', { name: /withdraw from trip/i }));
+      await user.click(screen.getByRole('button', { name: /^withdraw$/i }));
+
+      await waitFor(() => expect(recalledName('abc123')).toBeNull());
+    });
   });
 
   it('will not join with a blank name', async () => {

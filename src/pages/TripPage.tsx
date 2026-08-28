@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { rememberTrip } from '@/lib/recentTrips';
+import { forgetName, lastUsedName, recalledName, rememberName } from '@/lib/identity';
 import { Trip, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,34 @@ export default function TripPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  /**
+   * Re-attaches this browser to the participant it answered as last time.
+   *
+   * The recalled name is only a hint: it is matched against the participants the API
+   * just returned, and an auto-rejoin happens only on a hit. If the name is not there -
+   * someone withdrew it, or the trip was recreated - it becomes a prefill instead, so
+   * nobody is silently re-added to a group they left. A name from a *different* trip is
+   * never enough to auto-join; it only fills the field.
+   */
+  const restoreIdentity = useCallback((loaded: Trip) => {
+    const remembered = recalledName(loaded.id);
+    const mine = remembered
+      ? loaded.participants.find((p) => p.name.toLowerCase() === remembered.toLowerCase())
+      : undefined;
+
+    if (mine) {
+      setUserName(mine.name);
+      setSelectedDates(mine.availableDates);
+      setSavedDates(mine.availableDates);
+      setHasSavedAvailability(mine.availableDates.length > 0);
+      setHasJoined(true);
+      return;
+    }
+
+    const guess = remembered ?? lastUsedName();
+    if (guess) setUserName(guess);
+  }, []);
+
   useEffect(() => {
     const loadTrip = async () => {
       if (!tripId) return;
@@ -60,7 +89,10 @@ export default function TripPage() {
         setTrip(loaded);
         // Opening a trip is what puts it in this browser's list, so a link someone was
         // sent is recoverable too, and a renamed trip updates the row.
-        if (loaded) rememberTrip(loaded);
+        if (loaded) {
+          rememberTrip(loaded);
+          restoreIdentity(loaded);
+        }
       } catch (error) {
         // getTrip returns null only for a trip that does not exist, and throws for
         // anything else. Telling someone their trip "does not exist" because the
@@ -73,7 +105,9 @@ export default function TripPage() {
     };
 
     loadTrip();
-  }, [tripId]);
+    // restoreIdentity is stable (useCallback with no deps); it is listed so the reload
+    // path cannot silently stop restoring if it ever gains one.
+  }, [tripId, restoreIdentity]);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +124,7 @@ export default function TripPage() {
       setHasSavedAvailability(existingParticipant.availableDates.length > 0);
     }
     
+    if (tripId) rememberName(tripId, userName.trim());
     setHasJoined(true);
   };
 
@@ -173,6 +208,8 @@ export default function TripPage() {
     setIsSaving(true);
     try {
       const updatedTrip = await updateParticipantName(trip.id, userName, editedName.trim());
+      // Recall the name that now exists on the trip; the old one no longer matches.
+      rememberName(trip.id, editedName.trim());
       if (updatedTrip) {
         setTrip(updatedTrip);
         setUserName(editedName.trim());
@@ -205,6 +242,8 @@ export default function TripPage() {
       const updatedTrip = await removeParticipant(trip.id, userName);
       if (updatedTrip) {
         setTrip(updatedTrip);
+        // Otherwise the next visit would auto-rejoin them to the trip they just left.
+        forgetName(trip.id);
         setHasJoined(false);
         setUserName('');
         setSelectedDates([]);
