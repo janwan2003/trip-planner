@@ -81,3 +81,26 @@ describe('index.html structured data', () => {
     expect(data.review).toBeUndefined();
   });
 });
+
+describe('reciprocal launch-directory badges', () => {
+  // OpenHunts and Fazier verify the badge by fetching this file, not by running
+  // the app, so these links have to be in the served HTML. They were in React
+  // first, which meant curl saw nothing and verification failed.
+  it('are in the served HTML, outside #root', () => {
+    const body = html.slice(html.indexOf('<div id="root">'));
+    expect(body).toContain('https://openhunts.com');
+    expect(body).toContain('https://cdn.openhunts.com/badges/club.webp');
+    expect(body).toContain('https://fazier.com');
+    expect(body).toContain('https://fazier.com/api/v1/public/badges/launch_badges.svg');
+  });
+
+  it('are lazy and carry intrinsic dimensions, so they cannot shift layout', () => {
+    const badges = html.match(/<img src="https:\/\/(?:cdn\.openhunts\.com|fazier\.com)[^>]*>/g) ?? [];
+    expect(badges).toHaveLength(2);
+    for (const img of badges) {
+      expect(img).toContain('loading="lazy"');
+      expect(img).toMatch(/width="\d+"/);
+      expect(img).toMatch(/height="\d+"/);
+    }
+  });
+});

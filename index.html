@@ -77,6 +77,26 @@
 
   <body>
     <div id="root"></div>
+
+    <!--
+      Reciprocal launch-directory badges, deliberately OUTSIDE #root.
+
+      OpenHunts and Fazier give a free listing in exchange for a visible link
+      back, and both verify it by fetching this page's HTML - not by running the
+      app. Rendered from React they were invisible to that check: `curl` found
+      zero badge references while a headless browser found them, which is
+      exactly what a verifier sees. React only replaces #root, so anything here
+      survives hydration and is in the served bytes.
+    -->
+    <footer class="launch-badges" aria-label="Launch platforms">
+      <a href="https://openhunts.com" target="_blank" rel="noopener noreferrer">
+        <img src="https://cdn.openhunts.com/badges/club.webp" alt="OpenHunts" width="486" height="105" loading="lazy" />
+      </a>
+      <a href="https://fazier.com" target="_blank" rel="noopener noreferrer">
+        <img src="https://fazier.com/api/v1/public/badges/launch_badges.svg" alt="Fazier" width="182" height="43" loading="lazy" />
+      </a>
+    </footer>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
