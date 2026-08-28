@@ -3,6 +3,7 @@ import { CreateTripForm } from '@/components/CreateTripForm';
 import { Tutorial } from '@/components/Tutorial';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { RecentTrips } from '@/components/RecentTrips';
+import { HeatPreview } from '@/components/HeatPreview';
 
 const Index = () => {
   usePageMeta('/');
@@ -58,6 +59,14 @@ const Index = () => {
                 {/* Renders nothing for a browser that has not opened a trip yet. */}
                 <div className="mt-6">
                   <RecentTrips />
+                </div>
+
+                {/*
+                  After the headline and the CTA, not before: someone who already wants
+                  the product should not have to scroll past a demo to reach the form.
+                */}
+                <div className="mt-8">
+                  <HeatPreview />
                 </div>
               </div>
             </div>
