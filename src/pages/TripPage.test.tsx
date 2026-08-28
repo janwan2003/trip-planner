@@ -202,6 +202,42 @@ describe('TripPage', () => {
     errorSpy.mockRestore();
   });
 
+  it('warns before losing days that were marked but not saved', async () => {
+    const added = vi.spyOn(window, 'addEventListener');
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    expect(added.mock.calls.filter(([e]) => e === 'beforeunload')).toHaveLength(0);
+
+    await user.click(editableDayCell('3'));
+
+    await waitFor(() =>
+      expect(added.mock.calls.filter(([e]) => e === 'beforeunload').length).toBeGreaterThan(0),
+    );
+    added.mockRestore();
+  });
+
+  it('stops warning once there is nothing unsaved', async () => {
+    addParticipant.mockResolvedValue(
+      trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-03'] }] }),
+    );
+    const removed = vi.spyOn(window, 'removeEventListener');
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    await user.click(editableDayCell('3'));
+    await user.click(screen.getByRole('button', { name: /save availability/i }));
+
+    await waitFor(() =>
+      expect(removed.mock.calls.filter(([e]) => e === 'beforeunload').length).toBeGreaterThan(0),
+    );
+    removed.mockRestore();
+  });
+
   it('copies the trip link to the clipboard', async () => {
     const user = userEvent.setup();
     renderTripPage();
@@ -240,8 +276,18 @@ describe('TripPage', () => {
     );
   });
 
+  it('names the withdraw control for assistive technology', async () => {
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    // It is icon-only; before this it was named by `title` alone, so the most
+    // destructive action in the product announced itself as "button".
+    expect(screen.getByRole('button', { name: /withdraw from trip/i })).toBeInTheDocument();
+  });
+
   it('withdraws from the trip once the confirmation is accepted', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     getTrip.mockResolvedValue(
       trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02'] }] }),
     );
@@ -251,13 +297,13 @@ describe('TripPage', () => {
     await screen.findByText('Alps trip');
     await join(user, 'Ada');
 
-    await user.click(screen.getByTitle(/withdraw from trip/i));
+    await user.click(screen.getByRole('button', { name: /withdraw from trip/i }));
+    await user.click(await screen.findByRole('button', { name: /^withdraw$/i }));
 
     await waitFor(() => expect(removeParticipant).toHaveBeenCalledWith('abc123', 'Ada'));
   });
 
   it('does not withdraw when the confirmation is declined', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     getTrip.mockResolvedValue(
       trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02'] }] }),
     );
@@ -266,7 +312,8 @@ describe('TripPage', () => {
     await screen.findByText('Alps trip');
     await join(user, 'Ada');
 
-    await user.click(screen.getByTitle(/withdraw from trip/i));
+    await user.click(screen.getByRole('button', { name: /withdraw from trip/i }));
+    await user.click(await screen.findByRole('button', { name: /stay on the trip/i }));
 
     expect(removeParticipant).not.toHaveBeenCalled();
   });

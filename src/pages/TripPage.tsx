@@ -6,6 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
@@ -186,10 +197,9 @@ export default function TripPage() {
   const handleWithdraw = async () => {
     if (!trip || !userName) return;
 
-    if (!confirm('Are you sure you want to withdraw from this trip? Your availability will be removed.')) {
-      return;
-    }
-
+    // Confirmation is the AlertDialog wrapping the trigger, not window.confirm. The
+    // native dialog renders as an unstyled system sheet on a phone, on the only
+    // irreversible action in the product.
     setIsSaving(true);
     try {
       const updatedTrip = await removeParticipant(trip.id, userName);
@@ -234,6 +244,27 @@ export default function TripPage() {
   };
 
   const isSaveDisabled = isSaving || !hasUnsavedChanges();
+
+  /**
+   * A refresh or a closed tab used to discard marked-but-unsaved days silently. The
+   * participant's whole interaction is a minute of tapping, so losing it without a word
+   * is the worst possible outcome for the persona the product is built around.
+   */
+  const unsavedDays = hasJoined && hasUnsavedChanges();
+
+  useEffect(() => {
+    if (!unsavedDays) return;
+
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Browsers ignore custom text and show their own wording; returnValue is what
+      // actually triggers the prompt.
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [unsavedDays]);
 
   if (isLoading) {
     return (
@@ -411,15 +442,38 @@ export default function TripPage() {
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleWithdraw}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      title="Withdraw from trip"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Withdraw from trip"
+                          className="min-h-11 min-w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Withdraw from trip"
+                        >
+                          <LogOut className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Withdraw from this trip?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            The days you marked will be removed from {trip.name}, and the
+                            group will no longer see you as coming. You can rejoin with the
+                            same name later, but your dates will be gone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Stay on the trip</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleWithdraw}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Withdraw
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardHeader>
                 <CardContent>

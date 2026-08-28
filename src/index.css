@@ -117,6 +117,24 @@
     @apply border-border;
   }
 
+  /*
+   * Nothing in the app suppressed motion before this. The trip page fires five
+   * fade-in/scale-in animations at once, and the tailwind config declares them with no
+   * reduced-motion variant anywhere in src. This is the blanket opt-out: it covers every
+   * current animation and every future one, which a per-utility variant would not.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
