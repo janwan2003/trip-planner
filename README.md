@@ -89,6 +89,26 @@ Build-time environment variables (set for Production and Preview):
 
 `public/_redirects` supplies the SPA fallback (`/* /index.html 200`).
 
+### Search engine discoverability
+
+`public/robots.txt` points crawlers at `public/sitemap.xml`. The sitemap lists only
+the root URL, because routing is HashRouter and search engines do not index `#`
+fragments as separate pages.
+
+Google: verified in Search Console as a Domain property, via the
+`google-site-verification` TXT record on `wegowhen.com`. **Do not delete that TXT
+record** — removing it un-verifies the property.
+
+Bing and other engines: submissions go through [IndexNow](https://www.indexnow.org/),
+which needs no account. The key is `public/.txt`,
+served at `https://wegowhen.com/.txt`; the file
+content must equal its own filename minus `.txt`. **Do not delete or rename it** — the
+API rejects submissions it cannot authenticate. To submit the home page:
+
+```bash
+curl -sS -X POST https://api.indexnow.org/indexnow   -H 'Content-Type: application/json'   -d '{"host":"wegowhen.com","key":"","urlList":["https://wegowhen.com/"]}'
+```
+
 ### Manual Build
 
 ```bash
