@@ -11,7 +11,9 @@ describe('Index', () => {
   it('leads with what the product is for', () => {
     renderWithRouter(<Index />);
 
-    expect(screen.getByRole('heading', { name: /Find the perfect date/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Find the days your group can actually go/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Plan trips with friends by finding when everyone's available/i),
     ).toBeInTheDocument();
@@ -40,7 +42,17 @@ describe('Index', () => {
     renderWithRouter(<Index />);
 
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(expect.arrayContaining(['/about', '/contact', '/terms', '/privacy']));
+    expect(hrefs).toEqual(
+      expect.arrayContaining([
+        '/about',
+        '/contact',
+        '/terms',
+        '/privacy',
+        '/faq',
+        '/when2meet-alternative',
+        '/doodle-alternative',
+      ]),
+    );
   });
 
   it('names the product in the header', () => {

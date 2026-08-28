@@ -87,13 +87,14 @@ can reach page one. It will still need the referring domains from
 One page per intent, each with a single H1 in the target phrasing, an honest comparison
 table, and `FAQPage` JSON-LD.
 
-| Page | Target | Supporting |
+| Page | Target | Status |
 | --- | --- | --- |
-| `/` | group trip planner (390) | Homepage; carries the "days, not hours" claim above the fold |
-| `/when2meet-alternative` | when2meet alternative (720), when to meet alternative (90) | "when 2 meet but for days", "when2meet for next month" answered verbatim |
-| `/doodle-alternative` | doodle alternative (590) | doodle vs when2meet |
-| `/faq` | zero-click and AI-overview capture | The `FAQPage` schema lives here |
-| `/how-to-plan-a-group-trip` | how to plan a group trip (70), plan a trip with friends (50) | Write it once there is something true to say about real usage |
+| `/` | group trip planner (390) | Live. H1 is "Find the days your group can actually go"; the "a trip is not an hour" section carries the claim |
+| `/when2meet-alternative` | when2meet alternative (720), when to meet alternative (90) | Live. Answers "when 2 meet but for days" in a heading, in those words |
+| `/doodle-alternative` | doodle alternative (590) | Live. Quotes Doodle's own pricing, dated |
+| `/faq` | zero-click and AI-overview capture | Live, with `FAQPage` structured data generated from the same array the page renders |
+| `/how-to-plan-a-group-trip` | how to plan a group trip (70), plan a trip with friends (50) | **Not built, deliberately** |
 
-Do not build the last one yet. There is no usage to write it from, and a guide padded out
-of nothing is the kind of page that ages into a liability.
+The last one stays unbuilt until there is real usage to write it from. A guide padded out
+of nothing is the kind of page that ages into a liability, and 120 searches a month is not
+worth it.

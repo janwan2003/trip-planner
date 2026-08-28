@@ -13,12 +13,12 @@ human with a login.
 | Not in Google's index | `site:wegowhen.com` returned zero pages from the domain, 2026-08-28 |
 | Zero backlinks, DR 0 | Domain first served content 2026-08-28; nothing has linked to it |
 | Zero users, zero reviews | PRODUCT.md records this explicitly — no testimonial or counter may be invented |
-| One indexable page | Routing is `HashRouter`, so `/#/about` and friends are fragments, not pages |
-| No link preview | `og:image` was absent until this change; pasting the URL into WhatsApp showed a bare link |
+| Eight indexable pages | Was one — routing was `HashRouter`, so `/#/about` and friends were fragments. Now path-based and prerendered per route |
+| Google Search Console is already verified | `dig +short TXT wegowhen.com` returns the `google-site-verification` record, 2026-08-28 |
 | No analytics | Nothing is installed, so "getting users" is currently unmeasurable |
 
-Two of those are fixed in this change (link preview, structured data). The rest are the
-work list below.
+Link previews, structured data, indexable pages and an `llms.txt` are done. What is left
+is the work list below.
 
 ## The wedge
 
@@ -47,12 +47,15 @@ volumes, and [positioning-kit.md](positioning-kit.md) for the copy at each lengt
 Directory backlinks need somewhere useful to land, and a submission spent while the site
 has one indexable page is a submission wasted.
 
-1. **Share previews and structured data** (this change). Every link anyone pastes from now
-   on carries a card. Cheapest possible win, and it compounds with every share.
-2. **Make the site more than one page.** Move off `HashRouter` so `/about`, `/faq` and the
-   comparison pages are crawlable, then publish the destination pages that the keyword
-   research points at. Blocks step 3.
+1. ~~**Share previews and structured data.**~~ Done 2026-08-28. Every link anyone pastes
+   now carries a card, and the home page carries `WebApplication` JSON-LD.
+2. ~~**Make the site more than one page.**~~ Done 2026-08-28. Path routing, a real static
+   HTML file per route with its own title, description and canonical, a generated sitemap,
+   `llms.txt`, and the three destination pages the keyword research pointed at:
+   `/when2meet-alternative`, `/doodle-alternative`, `/faq` (the last with `FAQPage`
+   structured data).
 3. **Directory submissions** — [directories.md](directories.md), in the order given there.
+   **This is the next thing to do, and it needs your logins.**
 4. **Launch moment** — Product Hunt, Show HN, Reddit. Copy drafted in
    [launch-copy.md](launch-copy.md). Deliberately after 2 and 3: a launch that lands on a
    one-page site converts worse and cannot be repeated.
@@ -68,10 +71,12 @@ I cannot create accounts, enter credentials, or submit forms on your behalf. The
 the steps that need you, in priority order — everything else in this directory is
 paste-ready.
 
-1. **Google Search Console** — add `wegowhen.com`, verify by DNS in Cloudflare, submit
-   `https://wegowhen.com/sitemap.xml`. Without this the site gets indexed eventually
-   instead of this week, and you have no query data at all.
-2. **Bing Webmaster Tools** — same, and it can import the Search Console setup.
+1. **Google Search Console** — the property is already verified by DNS, so this is one
+   click: submit `https://wegowhen.com/sitemap.xml` under Sitemaps, then check Pages
+   coverage a few days later. Until the sitemap is submitted the eight new URLs get found
+   eventually rather than this week.
+2. **Bing** needs nothing from you — IndexNow works without an account and the key is
+   already in `public/`. The exact command is in the repository README.
 3. **Analytics.** Cloudflare Web Analytics is the right fit: free, cookieless, no third
    party, and for a Pages project it is a toggle rather than a code change — Cloudflare
    dashboard → Web Analytics → add `wegowhen.com` → enable automatic setup for the
@@ -98,9 +103,16 @@ database. Everything above it is a proxy for it.
 
 ## Next step after this change
 
-Step 2 above: get off `HashRouter` and publish the comparison and FAQ pages. It is the
-prerequisite for both the directory submissions and the launch, and it is the difference
-between a site with one indexable URL and a site with eight. The alternative I rejected
-was submitting to directories first, to start the DR clock earlier — rejected because a
-first submission is the one that gets editorial attention, and spending it on a one-page
-site wastes it.
+The screenshots. Every Tier 1 directory form asks for them and the submissions stall
+without them, which makes them the binding constraint on steps 3 and 4 — not the copy,
+which is written. See the asset table in [positioning-kit.md](positioning-kit.md) for what
+is needed and how to generate it against a local `wrangler pages dev` rather than
+production.
+
+Then, in parallel: submit the sitemap in Search Console, turn on Cloudflare Web Analytics,
+and work down batch 1 of [directories.md](directories.md) starting with AlternativeTo.
+
+The alternative I rejected was submitting to directories immediately after the pages went
+live, to start the referring-domain clock earlier. Rejected because a first submission is
+the one that gets a moderator's editorial attention, and a listing with no screenshots
+either gets rejected or gets accepted looking like nothing.

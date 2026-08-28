@@ -98,26 +98,26 @@ Lead with the alternative framing; these audiences arrive by searching for a rep
 Lead with the substance; this audience rewards a real mechanism and punishes marketing.
 
 > WeGoWhen finds the days a group can travel together. The interesting part is the output:
-> instead of rendering an availability grid and leaving the reading to you, it enumerates
-> subsets of participants, finds the maximal runs of consecutive days every member of a
-> subset is free, drops any run dominated by a longer one, and ranks what remains by group
-> size, then length, then date.
+> instead of rendering an availability grid and leaving the reading to you, it walks every
+> run of consecutive days carrying a bitmask intersection of who is free, emits a candidate
+> where that intersection is about to shrink, and ranks what remains by group size, then
+> length, then date. Every emitted set is maximal for its range by construction, so there
+> is no dominance check to run afterwards.
+>
+> The first version enumerated participant subsets instead — 2^n, which locked up the tab
+> around twenty people, and at n = 31 `1 << 31` went negative in JavaScript so the loop
+> never ran and the feature silently returned nothing. The intersection walk removes the
+> cliff rather than moving it: 60 people across 90 days answers in under three seconds.
 >
 > The stack is deliberately small: a React SPA on Cloudflare Pages, Cloudflare Pages
 > Functions for the API, and Cloudflare D1 for storage. No third-party backend, no auth
 > provider, no accounts — identity is a typed name plus possession of the trip link, which
 > is the whole invitation mechanic.
->
-> Known limitation, stated because it is real: subset enumeration is exponential, so very
-> large groups are not supported yet.
 
-Variant C's last paragraph is not optional. A technical audience will find that limit in
-about a minute, and saying it first is the difference between credible and caught.
-
-It is also the one paragraph in this file with an expiry date: it describes the algorithm
-in `src/components/BestDates.tsx` as it stands on 2026-08-28. If the subset enumeration is
-replaced, rewrite it in the same change — "we fixed the exponential blowup" is a better
-line than the limitation was, and a stale limitation is worse than either.
+The 2^n paragraph is the strongest thing in this file for a technical audience: a bug
+found, explained and fixed reads as competence in a way a feature list never does. It
+describes `src/lib/bestDates.ts` as of 2026-08-28; the numbers come from that module's
+own tests, so re-read them if the algorithm changes again.
 
 ## Tags
 
