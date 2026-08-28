@@ -77,7 +77,7 @@ export default function Contact() {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="text-xl font-semibold mb-2">How is my data protected?</h3>
                 <p className="text-muted-foreground">
-                  Your trip data is stored securely using Supabase with Row Level Security (RLS) policies. 
+                  Your trip data is stored in Cloudflare D1 and reached only through this app's own API. 
                   Only people with your unique trip link can access your trip. See our{' '}
                   <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for details.
                 </p>

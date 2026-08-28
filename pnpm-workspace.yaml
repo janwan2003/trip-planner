@@ -1,7 +1,8 @@
-# Postinstall scripts are blocked by default. These two compile native binaries
-# and do not work without them.
+# Postinstall scripts are blocked by default. These compile native binaries and do
+# not work without them: @swc/core and esbuild build the app, workerd runs wrangler.
 allowBuilds:
   '@swc/core': true
   esbuild: true
+  workerd: true
 minimumReleaseAgeExclude:
   - '@testing-library/react@16.3.3'

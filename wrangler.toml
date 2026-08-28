@@ -1,0 +1,15 @@
+# Used by `wrangler pages dev` for local development. The production binding lives in
+# the Pages project settings; this file is what makes a local run reach the same D1
+# database from a checkout.
+#
+# There is no migrations_dir on purpose: the schema is applied idempotently by
+# functions/_lib/schema.ts. See the comment at the top of that file for why, and for
+# what it would take to move to real migrations.
+name = "wegowhen"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-28"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wegowhen"
+database_id = "39bb1ce4-bc4a-4047-823a-6255e2c472bb"

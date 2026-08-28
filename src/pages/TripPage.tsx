@@ -28,18 +28,29 @@ export default function TripPage() {
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     const loadTrip = async () => {
-      if (tripId) {
-        setIsLoading(true);
-        const loadedTrip = await getTrip(tripId);
-        setTrip(loadedTrip);
+      if (!tripId) return;
+
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        setTrip(await getTrip(tripId));
+      } catch (error) {
+        // getTrip returns null only for a trip that does not exist, and throws for
+        // anything else. Telling someone their trip "does not exist" because the
+        // network hiccuped would be a lie they cannot recover from.
+        console.error('Error loading trip:', error);
+        setLoadError(error instanceof Error ? error.message : String(error));
+      } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadTrip();
   }, [tripId]);
 
@@ -220,6 +231,25 @@ export default function TripPage() {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading trip...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <h2 className="text-2xl font-display font-semibold mb-2">Couldn't load this trip</h2>
+          <p className="text-muted-foreground mb-4">
+            The trip may well be fine — we just couldn't reach it. Check your connection and try again.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => window.location.reload()}>Try again</Button>
+            <Button variant="outline" asChild>
+              <Link to="/">Create a new trip</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
