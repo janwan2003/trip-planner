@@ -147,12 +147,11 @@ Every Tier 1 directory asks for these, and the submissions stall without them.
 | --- | --- |
 | Square logo, 1024×1024 | `public/favicon.png` is 1200×1200 — downscale, no new artwork needed |
 | Share card, 1200×630 | Done: `public/og-image.png` |
-| 5–8 product screenshots, 1920×1080 | **Missing.** Needs a demo trip with realistic names and availability |
-| Gallery images, 1270×760 (Product Hunt) | **Missing.** Crop from the screenshots |
-| 60–90 second demo video | **Missing.** The single biggest gap for Product Hunt |
-| Pricing page | **Missing.** Most Tier 1 forms require a pricing URL; a one-line "free" section on the homepage satisfies it |
+| 5–8 product screenshots | Done: nine in `assets/`, taken at a device scale factor of 2 against a local `wrangler pages dev`. `assets/03-best-dates.png` is the persuasive one |
+| Gallery images, 1270×760 (Product Hunt) | Done: `assets/gallery/ph-1..4.png`, in order |
+| 60–90 second demo video | **Missing. The last blocker for Product Hunt** — screen-record creating a trip, sharing the link, two people marking availability, the answer appearing |
+| Pricing page | Satisfied by the homepage: "Free, no account, and nothing for your friends to sign up to" under the form, and the FAQ answers it directly. Point the pricing field at `https://wegowhen.com/faq` |
 
-Screenshots need a trip that looks like a real one — a plausible trip name, six or seven
-first names, overlapping availability, and one visible winning range. Generate it against
-a local `wrangler pages dev` rather than in production, so the demo data never lands in
-the live database.
+Everything in `assets/` is the real app, not a mock-up, and reproducible —
+`assets/README.md` has the exact commands, and `scripts/seed-demo-trip.sh` creates the
+demo trip. The demo data lives in a local D1 and never touches production.
