@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Regenerate public/og-image.png, the 1200x630 link preview card.
 
+Source logo lives in scripts/assets/, so it is not published with the site.
+
 Run when the brand palette, the wordmark or the headline changes:
 
     python3 scripts/generate-og-image.py
@@ -29,7 +31,10 @@ from brand import (
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "public" / "og-image.png"
-LOGO = ROOT / "public" / "logo.png"
+# Lives under scripts/, not public/: it is an input to this generator, and anything in
+# public/ is published. At 794 KB it was being served from the site and requested by
+# nothing.
+LOGO = ROOT / "scripts" / "assets" / "logo.png"
 
 W, H = 1200, 630
 SCALE = 2  # supersample, then downscale, so text and corners stay crisp
