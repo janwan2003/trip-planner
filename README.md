@@ -34,10 +34,10 @@ git clone https://github.com/janwan2003/trip-planner.git
 cd trip-planner
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 ## 🔧 Configuration
@@ -70,14 +70,17 @@ serve it.
 | Setting | Value |
 | --- | --- |
 | Framework preset | None (build command set explicitly) |
-| Build command | `npm run build` |
+| Build command | `pnpm run build` |
 | Build output directory | `dist` |
 | Node version | 22 (Cloudflare default) |
 
-Do not commit a `bun.lockb`: Cloudflare detects bun from it and runs
-`bun install --frozen-lockfile`, which cannot parse the old binary lockfile
-format and fails the build before vite runs. `package-lock.json` is the
-lockfile this project builds from.
+This project uses **pnpm**. `pnpm-lock.yaml` is the only lockfile that belongs
+in the repo — Cloudflare picks the package manager from whichever lockfile it
+finds, so a stray `package-lock.json` or `bun.lockb` silently changes how
+production installs. A committed `bun.lockb` is what broke the first build here.
+
+`pnpm-workspace.yaml` allows postinstall scripts for `@swc/core` and `esbuild`;
+pnpm blocks build scripts by default and neither of those compiles without one.
 
 Build-time environment variables (set for Production and Preview):
 
@@ -89,7 +92,7 @@ Build-time environment variables (set for Production and Preview):
 ### Manual Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 The built files will be in the `dist/` directory.

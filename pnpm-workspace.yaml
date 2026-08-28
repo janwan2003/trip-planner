@@ -1,0 +1,5 @@
+# Postinstall scripts are blocked by default. These two compile native binaries
+# and do not work without them.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
