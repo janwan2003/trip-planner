@@ -35,9 +35,23 @@ export interface BestDateRange {
  * Availability is held as a bitmask per day so intersecting is one `&` rather than a
  * set rebuild, which keeps a long trip with a large group comfortable.
  */
+export interface FindBestDateRangesOptions {
+  minDays?: number;
+  limit?: number;
+  /**
+   * Restrict the answer to these participants, by name, case-insensitively. An empty
+   * or omitted list means the whole group.
+   *
+   * This exists because the organiser's filter has exactly one job - "what if these
+   * five go" - and without it the ranked answer ignored the filter entirely and went
+   * on naming people who had just been excluded.
+   */
+  onlyParticipants?: string[];
+}
+
 export const findBestDateRanges = (
   trip: Trip,
-  { minDays = 1, limit = 5 }: { minDays?: number; limit?: number } = {},
+  { minDays = 1, limit = 5, onlyParticipants }: FindBestDateRangesOptions = {},
 ): BestDateRange[] => {
   const dates = getDatesBetween(trip.startDate, trip.endDate);
   if (dates.length === 0 || trip.participants.length === 0) return [];
@@ -45,8 +59,19 @@ export const findBestDateRanges = (
   const availability = getAvailabilityCount(trip);
 
   // Index participants so each becomes one bit. Order is the trip's own order, which
-  // is what the UI shows.
-  const names = trip.participants.map((p) => p.name);
+  // is what the UI shows. Restricting this list is all the filtering that is needed:
+  // maskFor ignores any name without a bit, so excluded people simply never appear in
+  // an intersection.
+  const allowed =
+    onlyParticipants && onlyParticipants.length > 0
+      ? new Set(onlyParticipants.map((n) => n.toLowerCase()))
+      : null;
+
+  const names = trip.participants
+    .map((p) => p.name)
+    .filter((name) => !allowed || allowed.has(name.toLowerCase()));
+
+  if (names.length === 0) return [];
   const bitOf = new Map(names.map((name, index) => [name, index]));
 
   const maskFor = (date: string): bigint => {

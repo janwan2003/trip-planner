@@ -270,6 +270,47 @@ describe('TripPage', () => {
     expect(screen.getByText('Alps trip')).toBeInTheDocument();
   });
 
+  /**
+   * The regression guard for the defect this filter shipped with: toggling a
+   * participant re-computed the heat map but left the ranked answer untouched, so the
+   * organiser read recommendations that still named people they had just excluded.
+   */
+  it('filters the recommended dates, not just the calendar', async () => {
+    getTrip.mockResolvedValue(
+      trip({
+        // Everyone can do Sep 2. Without Cy, Ada and Bo have a three-day stretch.
+        participants: [
+          { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+          { name: 'Bo', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+          { name: 'Cy', availableDates: ['2026-09-02'] },
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+
+    const rowsFor = () =>
+      screen.queryAllByTestId('best-date-row').map((row) => ({
+        count: row.querySelector('[data-testid="best-date-count"]')?.textContent?.trim(),
+        names: row.querySelector('[data-testid="best-date-names"]')?.textContent ?? '',
+      }));
+
+    const before = rowsFor();
+    expect(before[0].count).toBe('3');
+    expect(before.some((r) => r.names.includes('Cy'))).toBe(true);
+    expect(screen.queryByTestId('best-dates-scope')).not.toBeInTheDocument();
+
+    // Filter to Ada only.
+    await user.click(screen.getByRole('button', { name: /Ada/ }));
+
+    const after = rowsFor();
+    expect(after).not.toEqual(before);
+    expect(after.every((r) => !r.names.includes('Cy'))).toBe(true);
+    expect(after.every((r) => !r.names.includes('Bo'))).toBe(true);
+    expect(screen.getByTestId('best-dates-scope')).toHaveTextContent('for Ada');
+  });
+
   it('filters the group view down to a chosen subset', async () => {
     getTrip.mockResolvedValue(
       trip({

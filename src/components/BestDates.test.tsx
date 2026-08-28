@@ -188,6 +188,48 @@ describe('BestDates', () => {
     expect(suggestions()).toHaveLength(1);
   });
 
+  it('states whose dates it is answering for when filtered', () => {
+    render(
+      <BestDates
+        trip={trip([
+          { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
+          { name: 'Bo', availableDates: ['2026-09-02'] },
+        ])}
+        selectedParticipants={['Ada']}
+      />,
+    );
+
+    // The scope belongs where the answer is read, not only in the list 500px away that
+    // set it.
+    expect(screen.getByTestId('best-dates-scope')).toHaveTextContent('for Ada');
+  });
+
+  it('says nothing about scope when the whole group is in play', () => {
+    render(
+      <BestDates trip={trip([{ name: 'Ada', availableDates: ['2026-09-02'] }])} />,
+    );
+
+    expect(screen.queryByTestId('best-dates-scope')).not.toBeInTheDocument();
+  });
+
+  it('excludes filtered-out people from the ranges it offers', () => {
+    render(
+      <BestDates
+        trip={trip([
+          { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+          { name: 'Bo', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+          { name: 'Cy', availableDates: ['2026-09-02'] },
+        ])}
+        selectedParticipants={['Ada', 'Bo']}
+      />,
+    );
+
+    const rows = suggestions();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ count: 2 });
+    expect(rows.flatMap((r) => r.names)).not.toContain('Cy');
+  });
+
   it('ignores availability that falls outside the trip range', () => {
     render(
       <BestDates
