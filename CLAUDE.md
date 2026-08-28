@@ -26,12 +26,16 @@ because both compile native binaries; nothing else is.
 ```bash
 pnpm dev              # vite dev server, port 8080
 pnpm run build        # -> dist/
-pnpm run typecheck    # tsc --noEmit
+pnpm run typecheck    # both tsconfigs: the app and the Functions
 pnpm lint             # eslint
-pnpm test             # vitest run
+pnpm test             # vitest run - unit tests only, fast
 pnpm run test:coverage
+pnpm run test:api     # builds, then integration tests against a real wrangler + D1
 pnpm run check        # typecheck + lint + test, the same gates CI runs
 ```
+
+`pnpm test` deliberately excludes the integration suite: it boots workerd, which takes
+seconds. CI runs both.
 
 `.husky/pre-commit` runs lint-staged, typecheck and the tests on every commit, so a
 failure surfaces before the push rather than in CI. `.github/workflows/ci.yml` runs
@@ -98,11 +102,14 @@ not a key. `.env` is still gitignored if you need one.
 - `pnpm lint` exits 0. The 7 remaining warnings are all
   `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
   the run, and those files are not ours to restructure.
-- **Coverage baseline is 0%.** Measured, not guessed: `pnpm run test:coverage` reports 0
-  statements, branches, functions and lines across `src/lib`, `src/components` and
-  `src/pages`. Thresholds in `vitest.config.ts` are set to 0 so the gate cannot pass
-  vacuously while pretending otherwise — raise them as real tests land.
-  `src/components/ui/**` is excluded from coverage because it is vendored third-party code.
+- **Coverage is 96.65% of lines, 88.76% of branches** across `src/lib`,
+  `src/components` and `src/pages`, from 110 unit tests. Thresholds in
+  `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
+  refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
+  third-party code, and measuring it would dilute the number that matters.
+- **21 integration tests** in `test/api.integration.test.ts` run the API against a real
+  `wrangler pages dev` with a local D1. Nothing is mocked, so they cover the Functions,
+  the SQL, the unique index and the middleware together.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 

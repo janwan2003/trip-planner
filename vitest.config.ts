@@ -17,11 +17,14 @@ export default defineConfig({
       // that hides how well our own logic is tested.
       include: ["src/lib/**", "src/components/**", "src/pages/**"],
       exclude: ["src/components/ui/**", "src/test/**", "src/main.tsx", "src/vite-env.d.ts"],
+      // Set below the measured result rather than at it: a threshold pinned to the
+      // exact current number turns any unrelated refactor into a red build. The floor
+      // the project committed to is 80; these sit well above it.
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
       },
     },
   },
