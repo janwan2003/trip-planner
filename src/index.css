@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  The reciprocal launch-directory badges in index.html live outside #root, so
+  Tailwind's class scanner never sees them and they need real CSS. Colours come
+  from the same tokens as the rest of the footer.
+*/
+.launch-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.25rem 1rem 2rem;
+  background: hsl(var(--muted) / 0.3);
+  border-top: 1px solid hsl(var(--border) / 0.4);
+}
+
+.launch-badges a {
+  display: inline-block;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+}
+
+.launch-badges a:hover,
+.launch-badges a:focus-visible {
+  opacity: 1;
+}
+
+.launch-badges img {
+  height: 2rem;
+  width: auto;
+}
+
+
 @layer base {
   :root {
     --background: 40 33% 98%;

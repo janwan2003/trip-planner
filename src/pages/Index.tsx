@@ -148,51 +148,6 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               Share the link. Mark your dates. Go on adventures.
             </p>
-
-            {/*
-              Reciprocal launch-directory badges. OpenHunts and Fazier both give a
-              free listing in exchange for a visible link back, and both check for
-              it before they publish, so removing these silently kills the listings.
-              Kept at the very bottom, small and muted, and lazy-loaded so the two
-              third-party images never delay anything above them - the rest of the
-              site loads no third-party assets except its fonts.
-            */}
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-4 opacity-60">
-              <li>
-                <a
-                  href="https://openhunts.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block transition-opacity hover:opacity-100"
-                >
-                  <img
-                    src="https://cdn.openhunts.com/badges/club.webp"
-                    alt="OpenHunts"
-                    width={486}
-                    height={105}
-                    loading="lazy"
-                    className="h-8 w-auto"
-                  />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://fazier.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block transition-opacity hover:opacity-100"
-                >
-                  <img
-                    src="https://fazier.com/api/v1/public/badges/launch_badges.svg"
-                    alt="Fazier"
-                    width={182}
-                    height={43}
-                    loading="lazy"
-                    className="h-8 w-auto"
-                  />
-                </a>
-              </li>
-            </ul>
           </div>
         </div>
       </footer>
