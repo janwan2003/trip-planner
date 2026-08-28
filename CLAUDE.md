@@ -198,9 +198,13 @@ migration: `prodsmoke0000000000000000000001` ("prod smoke") and
 they hold no personal data, but the rows are still there.
 
 **There is no way to delete a trip.** The API exposes create, read, and
-add/rename/remove participant — nothing deletes a trip. That is worth knowing for two
-reasons: this junk cannot be cleaned up through the app, and `PrivacyPolicy.tsx` makes
-claims about retention that nothing in the code implements (see below).
+add/rename/remove participant — nothing deletes a trip. So this junk cannot be cleaned up
+through the app, and it cannot be cleaned up with `wrangler d1 execute --remote` from a
+non-interactive session either: that needs `CLOUDFLARE_API_TOKEN`, which is not in any
+`.env` here. Either set one, or run the delete from the D1 console in the dashboard.
+
+Whether to add `DELETE /api/trips/:id` is a product decision, not a cleanup task: with no
+accounts, anyone holding the link could delete everyone's answers.
 
 ## Claims in the legal pages that the code does not back
 
@@ -216,7 +220,47 @@ Both were checked against the codebase, not assumed:
   scheduled job, and Pages Functions have no cron triggers, so implementing it would
   need a separate Worker.
 
-Neither was rewritten, because narrowing a privacy policy is the product owner's call.
+**Both have since been rewritten** (commit `00bcaf4`) to describe what the code does: the
+policy now states that no analytics run, that retention is indefinite with no automatic
+expiry, and how to exercise the rights it lists. Five tests guard the wording. The Contact
+page was corrected in the same commit — it had promised "Report critical bugs using the
+information below", where below was a FAQ and no contact details existed anywhere on the
+site.
+
+**Still outstanding:** no contact address is published, so a request to delete a whole trip
+has nowhere to go. Which address to publish is the owner's call.
+
+## Dates: never parse `YYYY-MM-DD` with `new Date()`
+
+`new Date('2026-09-01')` is not 1 September. The spec parses a date-only string as an
+*instant* — UTC midnight — so in New York it is the evening of 31 August, and reading
+`getFullYear()/getMonth()/getDate()` off it there gives 2026/8/31.
+
+This shipped: `getDatesBetween` did exactly that under a comment claiming to prevent it,
+so every date in every trip was one day early for every user west of UTC, the trip's own
+start date included. Fixed in `0a433d5`.
+
+- **String in, string out?** Build from the string's digits and stay in UTC:
+  `new Date(Date.UTC(y, m - 1, d))`, read back with `getUTC*`. This is what
+  `getDatesBetween` and the API's `isCalendarDate` both do. Also check the result, because
+  `Date.UTC` rolls `2026-02-31` forward to 3 March instead of rejecting it.
+- **Displaying a date, or feeding a date picker?** `parseISO(value)` from date-fns, which
+  reads a date-only string as a *local* calendar day, then `format(d, 'yyyy-MM-dd')` to go
+  back. Never `toISOString().slice(0, 10)` on a local Date.
+- **Comparing two `YYYY-MM-DD` strings?** Compare the strings. The format sorts correctly.
+
+**The suite runs in `America/New_York`** — see `src/test/setup.ts`; override with
+`WGW_TEST_TZ`. UTC+0 is the one offset where all of this is invisible, which is why the
+old suite passed for months. A test named "does not shift dates in a timezone behind UTC"
+stubbed `Date.prototype.getTimezoneOffset`, a method none of the code calls, and passed
+while the bug was live: when guarding timezone behaviour, change the timezone, do not stub
+a method and hope.
+
+When touching date code, run more than one offset:
+
+```bash
+for tz in UTC Asia/Tokyo Pacific/Kiritimati Pacific/Midway; do WGW_TEST_TZ=$tz pnpm test; done
+```
 
 ## Two defects found and fixed here
 
