@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { rememberTrip } from '@/lib/recentTrips';
 import { Trip, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +45,11 @@ export default function TripPage() {
       setLoadError(null);
 
       try {
-        setTrip(await getTrip(tripId));
+        const loaded = await getTrip(tripId);
+        setTrip(loaded);
+        // Opening a trip is what puts it in this browser's list, so a link someone was
+        // sent is recoverable too, and a renamed trip updates the row.
+        if (loaded) rememberTrip(loaded);
       } catch (error) {
         // getTrip returns null only for a trip that does not exist, and throws for
         // anything else. Telling someone their trip "does not exist" because the

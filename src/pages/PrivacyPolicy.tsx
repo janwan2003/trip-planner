@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>Browser Information:</strong> Browser type and version</li>
               <li><strong>Usage Data:</strong> Pages visited, time spent on pages, and interaction patterns</li>
-              <li><strong>Local Storage:</strong> Tutorial preferences and UI state stored in your browser</li>
+              <li><strong>Local Storage:</strong> Tutorial preferences, UI state, and a list of trips you have opened in this browser (trip name, dates and link), stored in your browser</li>
             </ul>
           </section>
 
@@ -99,9 +99,11 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">7. Cookies and Local Storage</h2>
             <p className="mb-4">
-              We use browser local storage to save your tutorial preferences and UI state. This data is stored 
-              only on your device and is not transmitted to our servers. You can clear this data at any time 
-              through your browser settings.
+              We use browser local storage to save your tutorial preferences, UI state, and a list of the trips
+              you have opened in this browser so you can find them again without the link. That list holds each
+              trip's name, dates and link, and nothing about other participants. This data is stored only on
+              your device and is not transmitted to our servers. You can remove an individual trip from the list
+              on the home page, or clear all of it at any time through your browser settings.
             </p>
           </section>
 

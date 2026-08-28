@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
+import { rememberTrip } from '@/lib/recentTrips';
 import { useToast } from '@/hooks/use-toast';
 import { ModernDateInput } from '@/components/ModernDateInput';
 
@@ -43,6 +44,9 @@ export function CreateTripForm() {
       };
       
       await saveTrip(trip);
+      // Recorded before navigating, and only after the trip really exists: this list is
+      // the only way back in for someone who closes the tab without keeping the link.
+      rememberTrip(trip, 'creator');
       navigate(`/trip/${trip.id}`);
     } catch (error) {
       console.error('Error creating trip:', error);

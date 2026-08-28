@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateTripForm } from './CreateTripForm';
+import { getRecentTrips } from '@/lib/recentTrips';
 
 const navigate = vi.fn();
 vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
@@ -47,6 +48,7 @@ describe('CreateTripForm', () => {
     navigate.mockClear();
     saveTrip.mockReset();
     saveTrip.mockResolvedValue(undefined);
+    localStorage.clear();
   });
 
   it('will not submit without a name', async () => {
@@ -128,6 +130,37 @@ describe('CreateTripForm', () => {
     await waitFor(() => expect(saveTrip).toHaveBeenCalled());
     expect(navigate).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByRole('button', { name: /create trip/i })).toBeEnabled());
+
+    errorSpy.mockRestore();
+  });
+
+  it('records the trip in this browser, so a creator who loses the link can return', async () => {
+    const user = userEvent.setup();
+    render(<CreateTripForm />);
+
+    fill('Alps trip', '2026-09-01', '2026-09-05');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+
+    const remembered = getRecentTrips();
+    expect(remembered).toHaveLength(1);
+    expect(remembered[0].name).toBe('Alps trip');
+    expect(remembered[0].role).toBe('creator');
+    expect(navigate).toHaveBeenCalledWith(`/trip/${remembered[0].id}`);
+  });
+
+  it('does not record a trip the backend refused, which would list a dead link', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    saveTrip.mockRejectedValue(new Error('down'));
+    const user = userEvent.setup();
+    render(<CreateTripForm />);
+
+    fill('Alps trip', '2026-09-01', '2026-09-05');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+
+    await waitFor(() => expect(saveTrip).toHaveBeenCalled());
+    expect(getRecentTrips()).toEqual([]);
 
     errorSpy.mockRestore();
   });

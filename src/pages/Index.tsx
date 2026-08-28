@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CreateTripForm } from '@/components/CreateTripForm';
 import { Tutorial } from '@/components/Tutorial';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { RecentTrips } from '@/components/RecentTrips';
 
 const Index = () => {
   usePageMeta('/');
@@ -48,6 +49,11 @@ const Index = () => {
                 <p className="mt-4 text-sm text-muted-foreground text-center lg:text-left">
                   Free, no account, and nothing for your friends to sign up to.
                 </p>
+
+                {/* Renders nothing for a browser that has not opened a trip yet. */}
+                <div className="mt-6">
+                  <RecentTrips />
+                </div>
               </div>
             </div>
           </div>

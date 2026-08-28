@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithRouter } from '@/test/render';
 import Index from './Index';
+import { rememberTrip } from '@/lib/recentTrips';
 
 describe('Index', () => {
   beforeEach(() => {
@@ -59,5 +60,23 @@ describe('Index', () => {
     renderWithRouter(<Index />);
     expect(screen.getAllByText('WeGoWhen').length).toBeGreaterThan(0);
     expect(screen.getAllByAltText(/WeGoWhen Logo/i).length).toBeGreaterThan(0);
+  });
+
+  it('shows nothing about past trips to a browser that has not opened one', () => {
+    renderWithRouter(<Index />);
+    expect(screen.queryByText(/Trips you opened in this browser/i)).not.toBeInTheDocument();
+  });
+
+  it('offers a way back into a trip this browser has opened', () => {
+    rememberTrip(
+      { id: 'abc123', name: 'Alps trip', startDate: '2026-09-01', endDate: '2026-09-07' },
+      'creator',
+    );
+
+    renderWithRouter(<Index />);
+
+    expect(screen.getByText(/Trips you opened in this browser/i)).toBeInTheDocument();
+    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+    expect(hrefs).toContain('/trip/abc123');
   });
 });

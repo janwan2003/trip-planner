@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TripPage from './TripPage';
 import { Trip, TripApiError } from '@/lib/tripStore';
+import { getRecentTrips } from '@/lib/recentTrips';
 
 const getTrip = vi.fn();
 const addParticipant = vi.fn();
@@ -58,6 +59,7 @@ const editableDayCell = (day: string) => {
 describe('TripPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     getTrip.mockResolvedValue(trip());
     navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined);
   });
@@ -341,5 +343,39 @@ describe('TripPage', () => {
     // Ada is now the only selected participant, and the group calendar re-renders
     // counting only her.
     expect(screen.getAllByRole('button', { name: /Ada/ }).length).toBeGreaterThan(0);
+  });
+
+  it('remembers a trip opened from a link, so it is recoverable from the home page', async () => {
+    renderTripPage();
+    expect(await screen.findByText('Alps trip')).toBeInTheDocument();
+
+    const remembered = getRecentTrips();
+    expect(remembered).toHaveLength(1);
+    expect(remembered[0]).toMatchObject({
+      id: 'abc123',
+      name: 'Alps trip',
+      startDate: '2026-09-01',
+      endDate: '2026-09-07',
+      role: 'visitor',
+    });
+  });
+
+  it('does not remember a trip that does not exist', async () => {
+    getTrip.mockResolvedValue(null);
+    renderTripPage();
+
+    expect(await screen.findByText(/Trip not found/i)).toBeInTheDocument();
+    expect(getRecentTrips()).toEqual([]);
+  });
+
+  it('does not remember a trip it could not load', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    getTrip.mockRejectedValue(new TripApiError('offline'));
+    renderTripPage();
+
+    expect(await screen.findByText(/Couldn't load this trip/i)).toBeInTheDocument();
+    expect(getRecentTrips()).toEqual([]);
+
+    errorSpy.mockRestore();
   });
 });

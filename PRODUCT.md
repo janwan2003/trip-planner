@@ -58,6 +58,10 @@ Two things together, per the product owner — neither alone is the claim:
 - Participants can edit their name and withdraw from a trip.
 - Sharing happens outside the product: the organiser copies a URL and sends it through
   whatever channel the group already uses.
+- The home page lists the trips that browser has opened, so an organiser who lost the
+  link can get back in. It is per-browser localStorage, not an account: another device,
+  a cleared profile or a private window shows nothing, and the link remains the only
+  credential.
 
 ## Capabilities and Constraints
 

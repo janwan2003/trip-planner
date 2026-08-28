@@ -112,8 +112,9 @@ not a key. `.env` is still gitignored if you need one.
 - `pnpm lint` exits 0. The 7 remaining warnings are all
   `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
   the run, and those files are not ours to restructure.
-- **Coverage is 96.78% of lines, 89.13% of branches** across `src/lib`,
-  `src/components` and `src/pages`, from 137 unit tests. Thresholds in
+- **Coverage is 97.70% of lines, 91.36% of branches** across `src/lib`,
+  `src/components` and `src/pages`, from 243 unit tests (measured 2026-08-28 with
+  `pnpm run test:coverage`; the 137 this line claimed before was long stale). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
@@ -161,6 +162,29 @@ Things in this repo that marketing depends on, so do not break them silently:
   trip's only credential is possession of its link, so a search result for one would
   break that. The 404 page is `noindex` too, because the SPA fallback answers an unknown
   path with a 200.
+
+## The browser-local trip list
+
+`src/lib/recentTrips.ts` keeps a list of the trips a browser has opened under the
+localStorage key `wegowhen.recentTrips.v1`, and `src/components/RecentTrips.tsx` renders
+it under the create form on the home page. It exists because the link is the only
+credential: someone who created a trip and closed the tab had no way back in.
+
+Two things about it are deliberate and worth not undoing:
+
+- **It never answers a read.** Each entry holds only `id`, `name`, `startDate`,
+  `endDate`, `role` and `lastOpenedAt` — no participants, no availability — and every
+  screen still fetches the trip from the API. The write-through cache this repo removed
+  (see the header of `src/lib/tripStore.ts`) failed precisely because it served reads,
+  so a dead backend looked alive.
+- **Every storage call is guarded.** Safari private mode throws on `setItem` and a
+  browser blocking site data throws on the getter, so an unguarded call would break the
+  flow that creates a trip. All functions swallow those failures and degrade to an empty
+  list.
+
+It is per-browser, so it is a convenience and not an account: a different device, a
+cleared profile or a private window shows nothing. `PrivacyPolicy.tsx` §2.2 and §7 were
+updated in the same change to say the list exists and what it holds.
 
 ## Test data left on production
 
