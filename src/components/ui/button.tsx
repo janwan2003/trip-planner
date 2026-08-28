@@ -15,13 +15,18 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-warm hover:shadow-lg hover:-translate-y-1 text-base py-6 px-8",
+        // Carries colour and elevation only. Its padding used to live here too, where
+        // the default size's h-10/px-4/py-2 silently won the twMerge conflict and left
+        // the page's only CTA 40px tall - shorter than the inputs feeding it. Sizing now
+        // lives in the matching `hero` size, which cannot be overridden by accident.
+        hero: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-warm hover:shadow-lg hover:-translate-y-1",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-lg px-8",
         icon: "h-10 w-10",
+        hero: "h-12 rounded-lg px-8 text-base",
       },
     },
     defaultVariants: {

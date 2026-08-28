@@ -51,6 +51,18 @@ describe('CreateTripForm', () => {
     localStorage.clear();
   });
 
+  it('gives the only call to action a 48px target and its own sizing', () => {
+    // The hero variant used to bake padding into the variant, where the default size's
+    // h-10 won the twMerge conflict and left this button 40px tall - shorter than the
+    // 44px inputs above it. jsdom has no layout, so this asserts the class that carries
+    // the height; the measured 48px is recorded in the commit.
+    render(<CreateTripForm />);
+
+    const cta = screen.getByRole('button', { name: /create trip/i });
+    expect(cta.className).toContain('h-12');
+    expect(cta.className).not.toContain('h-10');
+  });
+
   it('will not submit without a name', async () => {
     const user = userEvent.setup();
     render(<CreateTripForm />);

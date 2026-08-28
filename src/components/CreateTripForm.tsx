@@ -103,7 +103,7 @@ export function CreateTripForm() {
             />
           </div>
           
-          <Button type="submit" variant="hero" className="w-full mt-6" disabled={isCreating}>
+          <Button type="submit" variant="hero" size="hero" className="w-full mt-6" disabled={isCreating}>
             {isCreating ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

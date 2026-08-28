@@ -252,6 +252,9 @@ export function AvailabilityCalendar({
                           return `hsl(${h}, ${s}%, ${l}%)`;
                         } else {
                           // Light mode: muted (40,20%,94%) to primary (16,65%,55%)
+                          // Peaks at 16 65% 55%, deliberately lighter than --primary
+                          // (44%): these cells carry dark text, so the fill stays light
+                          // enough for the count to read. See the note in index.css.
                           const h = 40 + (16 - 40) * ratio;
                           const s = 20 + (65 - 20) * ratio;
                           const l = 94 - (94 - 55) * ratio;

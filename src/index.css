@@ -15,7 +15,17 @@
     --popover: 40 30% 100%;
     --popover-foreground: 25 30% 15%;
 
-    --primary: 16 65% 55%;
+    /*
+     * 44% lightness, not the 55% this used to be. White-on-primary measured 3.37:1,
+     * which fails AA for 16px text, and it was the colour of the landing page's only
+     * call to action. At 44% the same pair measures 4.81:1.
+     *
+     * The availability heat ramp deliberately does NOT follow this. It interpolates to
+     * 16 65% 55% in AvailabilityCalendar, because those cells carry dark text and a
+     * lighter peak keeps the count legible. The two values differing is intentional:
+     * interactive surfaces carry light text, decorative fills carry dark text.
+     */
+    --primary: 16 65% 44%;
     --primary-foreground: 40 33% 98%;
 
     --secondary: 85 25% 75%;
@@ -63,7 +73,9 @@
     --popover: 25 20% 14%;
     --popover-foreground: 40 30% 95%;
 
-    --primary: 16 65% 55%;
+    /* Kept in step with the light theme. Unverified: nothing sets the `dark` class
+     * today, so no user can reach this block. */
+    --primary: 16 65% 44%;
     --primary-foreground: 40 33% 98%;
 
     --secondary: 85 15% 25%;
