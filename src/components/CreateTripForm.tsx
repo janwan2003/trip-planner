@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Loader2 } from 'lucide-react';
+import { CalendarRange, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
 import { rememberTrip } from '@/lib/recentTrips';
 import { useToast } from '@/hooks/use-toast';
@@ -63,7 +63,9 @@ export function CreateTripForm() {
     <Card className="w-full max-w-md animate-fade-in shadow-warm border-0">
       <CardHeader className="text-center pb-2">
         <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <MapPin className="w-6 h-6 text-primary" />
+          {/* A range of days, not a pin. The product does not know or care where
+              you go; the whole thesis is when. */}
+            <CalendarRange className="w-6 h-6 text-primary" />
         </div>
         <CardTitle className="text-2xl font-display">Plan Your Trip</CardTitle>
         <CardDescription className="text-muted-foreground">
