@@ -137,6 +137,35 @@ describe('TripPage', () => {
     expect(screen.queryByText(/click and drag/i)).not.toBeInTheDocument();
   });
 
+  /**
+   * The page has one job: say when everyone is free. On a phone every card is one column,
+   * so DOM order is reading order, and the answer used to sit third from last - behind the
+   * heat map and behind a tutorial explaining the flow the reader is already in.
+   */
+  it('puts the answer above the detail and the teaching last', async () => {
+    getTrip.mockResolvedValue(
+      trip({
+        participants: [
+          { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
+          { name: 'Bo', availableDates: ['2026-09-02', '2026-09-03'] },
+        ],
+      }),
+    );
+    renderTripPage();
+    await screen.findByText('Alps trip');
+
+    // "Best Dates" also appears as a tutorial step, so anchor on the real result row.
+    const answer = (await screen.findAllByTestId('best-date-row'))[0];
+    const detail = screen.getByText('Group Availability');
+    const teaching = screen.getByText(/Share the Link/i);
+
+    const before = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    expect(before(answer, detail)).toBe(true);
+    expect(before(detail, teaching)).toBe(true);
+  });
+
   it('will not join with a blank name', async () => {
     const user = userEvent.setup();
     renderTripPage();

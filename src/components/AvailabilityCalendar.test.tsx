@@ -161,6 +161,19 @@ describe('AvailabilityCalendar', () => {
     }
   });
 
+  it('keeps cells square on a phone but caps their height above sm', () => {
+    // aspect-square is right at 375px, where a column is ~45px and 44px is the floor.
+    // Unqualified it made 90x90 cells on a 1265px desktop, adding 149px to the calendar
+    // card and pushing Best Dates from y=835 to y=992 - past a 900px fold.
+    render(<AvailabilityCalendar {...props()} />);
+
+    for (const cell of screen.getAllByRole('button')) {
+      expect(cell.className).toContain('aspect-square');
+      expect(cell.className).toContain('sm:aspect-auto');
+      expect(cell.className).toContain('sm:h-14');
+    }
+  });
+
   it('makes the availability count legible on every heat level, not only a unanimous one', () => {
     // The count used to fall back to text-muted-foreground unless heatLevel was 'high',
     // which only happens when literally everyone is free - measured 1.8:1 on a 4-of-5

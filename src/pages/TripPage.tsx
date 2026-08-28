@@ -382,6 +382,12 @@ export default function TripPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
+          {/*
+            Card order here is reading order. The page answers one question, so the answer
+            comes before the heat map that supports it, and before the tutorial explaining
+            a flow the reader is already inside. This is DOM order, not `order-*`: the
+            latter moves pixels only and would leave tab and screen-reader sequence stale.
+          */}
           {/* Main Calendar Section */}
           <div className="lg:col-span-2 space-y-6">
             {!hasJoined ? (
@@ -545,6 +551,13 @@ export default function TripPage() {
               </Card>
             )}
 
+            {/* Best Dates: the answer, above the heat map that explains it */}
+            <Card className="shadow-soft animate-fade-in">
+              <CardContent className="pt-6">
+                <BestDates trip={trip} selectedParticipants={selectedParticipants} />
+              </CardContent>
+            </Card>
+
             {/* Group Availability View */}
             {trip.participants.length > 0 && (
               <Card className="shadow-soft animate-fade-in">
@@ -586,23 +599,6 @@ export default function TripPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Tutorial */}
-            <Tutorial 
-              completedSteps={[
-                1, // Trip created
-                ...(hasSharedLink || trip.participants.length > 1 ? [2] : []), // Link shared
-                ...(hasSavedAvailability ? [3] : []), // Availability saved
-                ...(trip.participants.length > 1 ? [4] : []), // Best dates available
-              ]}
-            />
-            
-            {/* Best Dates */}
-            <Card className="shadow-soft animate-fade-in">
-              <CardContent className="pt-6">
-                <BestDates trip={trip} selectedParticipants={selectedParticipants} />
-              </CardContent>
-            </Card>
-
             {/* Participants */}
             <Card className="shadow-soft animate-fade-in">
               <CardHeader>
@@ -618,6 +614,16 @@ export default function TripPage() {
                 />
               </CardContent>
             </Card>
+
+            {/* Tutorial last: it teaches the flow, it is not the flow */}
+            <Tutorial 
+              completedSteps={[
+                1, // Trip created
+                ...(hasSharedLink || trip.participants.length > 1 ? [2] : []), // Link shared
+                ...(hasSavedAvailability ? [3] : []), // Availability saved
+                ...(trip.participants.length > 1 ? [4] : []), // Best dates available
+              ]}
+            />
           </div>
         </div>
       </main>

@@ -215,7 +215,7 @@ export function AvailabilityCalendar({
               {/* Empty cells for alignment - only for first week of each month */}
               {monthIndex === 0 || getDay(firstDate) !== 0 ? (
                 Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                  <div key={`empty-${monthKey}-${i}`} className="aspect-square" />
+                  <div key={`empty-${monthKey}-${i}`} className="aspect-square sm:aspect-auto sm:h-14" />
                 ))
               ) : null}
               
@@ -264,7 +264,7 @@ export function AvailabilityCalendar({
                       }
                     }}
                     className={cn(
-                      "aspect-square min-h-11 min-w-11 rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-200 relative group select-none",
+                      "aspect-square sm:aspect-auto sm:h-14 min-h-11 min-w-11 rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-200 relative group select-none",
                       "cursor-pointer",
                       !readOnly && "hover:scale-105",
                       readOnly && revealedDate === date && "ring-2 ring-primary ring-offset-1",
