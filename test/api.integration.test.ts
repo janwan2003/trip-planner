@@ -282,6 +282,113 @@ describe('validation', () => {
   });
 });
 
+describe('limits', () => {
+  /**
+   * The API is unauthenticated by design - possession of the link is the credential -
+   * so the caps in functions/_lib/trips.ts are the only thing bounding what one
+   * request can write. Each boundary is checked on both sides, because an off-by-one
+   * in a cap is exactly the kind of thing nobody notices.
+   */
+
+  it('accepts a trip id of exactly 64 characters and rejects 65', async () => {
+    const ok = await createTrip({ id: 'a'.repeat(64) });
+    expect(ok.response.status).toBe(200);
+
+    const tooLong = await fetch(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id: 'a'.repeat(65),
+        name: 'x',
+        startDate: '2026-09-01',
+        endDate: '2026-09-02',
+      }),
+    });
+    expect(tooLong.status).toBe(400);
+  });
+
+  it('accepts a trip name of exactly 120 characters and rejects 121', async () => {
+    const ok = await createTrip({ name: 'n'.repeat(120) });
+    expect(ok.response.status).toBe(200);
+    expect((await (await fetch(`${API}/${ok.id}`)).json()).name).toHaveLength(120);
+
+    const tooLong = await createTrip({ name: 'n'.repeat(121) });
+    expect(tooLong.response.status).toBe(400);
+  });
+
+  it('accepts a participant name of exactly 120 characters and rejects 121', async () => {
+    const { id } = await createTrip();
+
+    expect((await putParticipant(id, 'p'.repeat(120), [])).status).toBe(200);
+    expect((await putParticipant(id, 'p'.repeat(121), [])).status).toBe(400);
+  });
+
+  it('accepts 1000 dates and rejects 1001', async () => {
+    const { id } = await createTrip({ startDate: '2026-01-01', endDate: '2029-12-31' });
+
+    const isoDay = (offset: number) =>
+      new Date(Date.UTC(2026, 0, 1 + offset)).toISOString().slice(0, 10);
+
+    const thousand = Array.from({ length: 1000 }, (_, i) => isoDay(i));
+    expect((await putParticipant(id, 'Ada', thousand)).status).toBe(200);
+
+    const thousandAndOne = Array.from({ length: 1001 }, (_, i) => isoDay(i));
+    expect((await putParticipant(id, 'Bo', thousandAndOne)).status).toBe(400);
+  });
+
+  it('stores 1000 dates without losing any', async () => {
+    const { id } = await createTrip({ startDate: '2026-01-01', endDate: '2029-12-31' });
+    const dates = Array.from({ length: 1000 }, (_, i) =>
+      new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+    );
+
+    await putParticipant(id, 'Ada', dates);
+    const trip = await (await fetch(`${API}/${id}`)).json();
+
+    expect(trip.participants[0].availableDates).toHaveLength(1000);
+    expect(trip.participants[0].availableDates[0]).toBe('2026-01-01');
+  });
+
+  it('accepts 200 participants and refuses the 201st', async () => {
+    const { id } = await createTrip();
+
+    // Sequential rather than parallel: the cap is a read-then-insert, so firing 200 at
+    // once would be testing the race instead of the limit.
+    for (let i = 0; i < 200; i += 1) {
+      const response = await putParticipant(id, `P${i}`, ['2026-09-02']);
+      if (response.status !== 200) throw new Error(`participant ${i} was rejected`);
+    }
+
+    const trip = await (await fetch(`${API}/${id}`)).json();
+    expect(trip.participants).toHaveLength(200);
+
+    const overflow = await putParticipant(id, 'P200', ['2026-09-02']);
+    expect(overflow.status).toBe(400);
+    expect((await overflow.json()).error).toMatch(/at most 200 participants/i);
+
+    // An existing participant can still update their availability at the cap - the
+    // limit guards inserts, not writes.
+    expect((await putParticipant(id, 'P0', ['2026-09-03'])).status).toBe(200);
+  }, 60_000);
+
+  it('trims surrounding whitespace from names rather than storing it', async () => {
+    const { id } = await createTrip({ name: '  Alps  ' });
+    expect((await (await fetch(`${API}/${id}`)).json()).name).toBe('Alps');
+
+    const trip = await (await putParticipant(id, '  Ada  ', [])).json();
+    expect(trip.participants[0].name).toBe('Ada');
+  });
+
+  it('treats a padded name as the same participant', async () => {
+    const { id } = await createTrip();
+
+    await putParticipant(id, 'Ada', ['2026-09-02']);
+    const trip = await (await putParticipant(id, '  ada  ', ['2026-09-03'])).json();
+
+    expect(trip.participants).toHaveLength(1);
+  });
+});
+
 describe('routing', () => {
   /**
    * public/_redirects serves index.html for anything unmatched, which is right for app
