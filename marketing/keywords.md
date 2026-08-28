@@ -89,7 +89,7 @@ table, and `FAQPage` JSON-LD.
 
 | Page | Target | Status |
 | --- | --- | --- |
-| `/` | group trip planner (390) | Live. H1 is "Find the days your group can actually go"; the "a trip is not an hour" section carries the claim |
+| `/` | group trip planner (390) | Live. H1 is "Find the days your group can actually go". Deliberately nothing else — the page is the tool, and a prose block above the fold was cluttering it. The claim lives on the comparison pages, reached from the footer |
 | `/when2meet-alternative` | when2meet alternative (720), when to meet alternative (90) | Live. Answers "when 2 meet but for days" in a heading, in those words |
 | `/doodle-alternative` | doodle alternative (590) | Live. Quotes Doodle's own pricing, dated |
 | `/faq` | zero-click and AI-overview capture | Live, with `FAQPage` structured data generated from the same array the page renders |
