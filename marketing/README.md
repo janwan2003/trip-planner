@@ -16,6 +16,7 @@ human with a login.
 | Eight indexable pages | Was one — routing was `HashRouter`, so `/#/about` and friends were fragments. Now path-based and prerendered per route |
 | Google Search Console is already verified | `dig +short TXT wegowhen.com` returns the `google-site-verification` record, 2026-08-28 |
 | No analytics | Nothing is installed, so "getting users" is currently unmeasurable |
+| No backlink data at all | DataForSEO's `/v3/backlinks/summary/live` returned zero items for the domain on 2026-08-28, which is why Fazier's "Domain Rating > 0" gate cannot be met yet |
 
 Link previews, structured data, indexable pages and an `llms.txt` are done. What is left
 is the work list below.
@@ -54,8 +55,10 @@ has one indexable page is a submission wasted.
    `llms.txt`, and the three destination pages the keyword research pointed at:
    `/when2meet-alternative`, `/doodle-alternative`, `/faq` (the last with `FAQPage`
    structured data).
-3. **Directory submissions** — [directories.md](directories.md), in the order given there.
-   **This is the next thing to do, and it needs your logins.**
+3. ~~**Directory submissions**~~ Started 2026-08-28. Live: AlternativeTo, dev.to, GitHub.
+   Pending review: SaaSHub, OpenHunts. Blocked or paid: Fazier, Uneed, TinyLaunch,
+   Product Hunt. The full picture, including what each "free" tier now actually costs,
+   is in [directories.md](directories.md).
 4. **Launch moment** — Product Hunt, Show HN, Reddit. Copy drafted in
    [launch-copy.md](launch-copy.md). Deliberately after 2 and 3: a launch that lands on a
    one-page site converts worse and cannot be repeated.
