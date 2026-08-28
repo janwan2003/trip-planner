@@ -113,18 +113,18 @@ not a key. `.env` is still gitignored if you need one.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 
-## Two real defects worth knowing before you touch this code
+## Two defects found and fixed here
 
-1. **Drag-to-select does not work on touch.** `src/components/AvailabilityCalendar.tsx`
-   wires `onMouseDown` (line 166) and mouse-move logic only — there are no
-   `onTouchStart`/`onPointerDown` handlers. PRODUCT.md records "must work on a phone" as a
-   non-negotiable constraint, and the app itself says "Click and drag to select dates", so
-   this is a contradiction, not a nice-to-have. Confirmed while testing: dispatching a
-   plain `click()` on a day cell does nothing; only `mousedown` selects.
-2. **Best-dates enumerates the full power set of participants.**
-   `src/components/BestDates.tsx` runs `for (let mask = 1; mask < (1 << n); mask++)`. That
-   is 2^n iterations: unusable around 20 participants, and at n = 31 `1 << 31` is negative
-   so the loop never runs and the feature **silently returns nothing**.
+1. ~~Drag-to-select does not work on touch.~~ **Fixed.**
+   `src/components/AvailabilityCalendar.tsx` now resolves each `touchmove` through
+   `document.elementFromPoint` to the cell under the finger, and Enter/Space work too —
+   they previously did nothing, because the synthesised click hits an intentionally inert
+   `onClick`. Cells also gained `aria-pressed` and a full date as their accessible name.
+2. ~~Best-dates enumerates the full power set of participants.~~ **Fixed.** The
+   algorithm now lives in `src/lib/bestDates.ts` and walks date ranges carrying a bitmask
+   intersection, so it scales with participants rather than 2^n. Verified in a browser
+   with 35 participants, where the old version offered a range all 35 could make to only
+   6 of them.
 
 ## Conventions
 
