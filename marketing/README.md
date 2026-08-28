@@ -11,7 +11,7 @@ human with a login.
 | --- | --- |
 | Site is live and returns 200 | `curl -sI https://wegowhen.com/` on 2026-08-28 |
 | Not in Google's index | `site:wegowhen.com` returned zero pages from the domain, 2026-08-28 |
-| Seven live backlinks, DR still 0 | Each page fetched and its `rel` read, 2026-08-28: AlternativeTo, SaaSHub, GitHub, YouTube and Startup Fame are nofollow; dev.to and PeerPush are dofollow. Five more queued or under review. DR is unchanged because no crawler has processed them yet |
+| Four indexable backlinks, one dofollow, DR still 0 | Checked 2026-08-28 cookie-free, reading both the robots meta and the link's `rel`: dev.to (**dofollow**), Startup Fame, GitHub, YouTube (all nofollow). SaaSHub and PeerPush serve publicly but are `noindex` while queued; AlternativeTo is not public yet. DR is unchanged because no crawler has processed any of them |
 | Zero users, zero reviews | PRODUCT.md records this explicitly — no testimonial or counter may be invented |
 | Eight indexable pages | Was one — routing was `HashRouter`, so `/#/about` and friends were fragments. Now path-based and prerendered per route |
 | Google Search Console is already verified | `dig +short TXT wegowhen.com` returns the `google-site-verification` record, 2026-08-28 |
