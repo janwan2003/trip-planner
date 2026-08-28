@@ -37,3 +37,7 @@ coverage/
 
 # wrangler local state (miniflare databases, caches)
 .wrangler/
+
+# Python bytecode from the image generators in scripts/
+__pycache__/
+*.pyc

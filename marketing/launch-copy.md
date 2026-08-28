@@ -31,7 +31,7 @@ video and screenshots.
 >
 > Every scheduling tool I tried answered a different question. When2meet, Doodle and the
 > rest are built for "which hour suits everyone" — the output is a grid of ticks over
-> half-hour slots. A trip is not an hour. It is a stretch of days, and what you actually
+> time slots. A trip is not an hour. It is a stretch of days, and what you actually
 > want to know is which stretch the most people can make.
 >
 > So that is what this does. The organiser picks an outer window and shares one link.
@@ -40,10 +40,8 @@ video and screenshots.
 > date ranges that work, ranked by how many people they include and then by how long they
 > are.
 >
-> Two honest notes. It is new — it went live at the end of August and I am the only person
-> who has used it in anger, so I would rather have your criticism than your upvote. And
-> very large groups are not supported yet: the ranking works by enumerating subsets of
-> participants, which is fine for a dozen friends and not fine for fifty.
+> One honest note. It is new — it went live at the end of August and I am the only person
+> who has used it in anger, so I would rather have your criticism than your upvote.
 >
 > The thing I would most like feedback on: does the ranked-ranges output actually read as
 > the answer, or do you still find yourself wanting the grid?
@@ -60,9 +58,10 @@ Keep the title under 80 characters and do not put "launch" in it.
 
 > Every group-scheduling tool I could find answers "which hour suits everyone" and renders
 > an availability grid. For a trip the unit is a run of days, and the useful output is a
-> shortlist of ranges, so I wrote the ranking instead of the grid: enumerate subsets of
-> participants, find the maximal runs of consecutive days every member of a subset is free,
-> discard runs dominated by a longer one, then rank by group size, length, and date.
+> shortlist of ranges, so I wrote the ranking instead of the grid: walk the consecutive-day
+> ranges carrying a bitmask intersection of who is free across the whole range, emit a
+> candidate wherever that intersection is about to shrink, and rank what comes out by group
+> size, then length, then date.
 >
 > The whole thing is on Cloudflare — Pages for the SPA, Pages Functions for the API, D1 for
 > storage — with no auth provider and no accounts. Identity is a typed name plus possession
@@ -71,16 +70,22 @@ Keep the title under 80 characters and do not put "launch" in it.
 > first request, because doing it out of band would have needed an account-wide Cloudflare
 > credential in CI.
 >
-> Known limitation, since it is the first thing anyone here will find: subset enumeration
-> is exponential in the number of participants. It is fine for a dozen friends and wrong
-> for fifty, and there is no supported maximum yet.
+> The first version got this wrong in an instructive way. It enumerated participant subsets
+> — 2^n — which locked up the tab around twenty people, and at n = 31 `1 << 31` is negative
+> in JavaScript, so the loop body never ran and the feature silently returned nothing at
+> all. Past 31 it was worse than missing: on a 35-person trip where all 35 were free for the
+> same five days, it offered that range to 6 of them. The subsets were never the interesting
+> objects — for any stretch of days, the people who can make all of it are already
+> determined — so carrying the intersection while walking ranges is enough, and holding it
+> as a BigInt rather than a 32-bit int removes the cliff instead of moving it to 53. Sixty
+> people across ninety days now answers in under three seconds.
 >
 > https://wegowhen.com — no signup, and the source is at
 > https://github.com/janwan2003/trip-planner
 
-Show HN rewards the mechanism and punishes the pitch. If the exponential limit has been
-fixed by the time you post this, say what replaced it instead — that is a better story than
-the limitation.
+Show HN rewards the mechanism and punishes the pitch. The `1 << 31` paragraph is the
+strongest thing in this draft: that audience recognises the bug on sight, and a post that
+hands over its own worst one reads very differently from a post that does not.
 
 ## Reddit
 
@@ -152,7 +157,7 @@ no-accounts decision. The technical thread is what gets indexed and quoted.
 > people each say which weekend doesn't work, and nobody can hold it in their head.
 >
 > The tools we reach for are the wrong shape. When2meet, Doodle and the rest are built to
-> find an hour: you get a grid of half-hour slots and you read the consensus yourself. A
+> find an hour: you get a grid of time slots and you read the consensus yourself. A
 > trip isn't an hour. It's a stretch of days, and the question is which stretch the most
 > people can actually make.
 >

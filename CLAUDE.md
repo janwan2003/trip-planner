@@ -55,8 +55,18 @@ Builds automatically from `main`. `wegowhen.com`, `www.wegowhen.com` and
 | Framework preset | None |
 | Node on Cloudflare | 22.16.0 |
 
-`public/_redirects` provides the SPA fallback. Routing is **hash-based**
-(`HashRouter`), so `/#/trip/:id` — not `/trip/:id`.
+Routing is **path-based** (`BrowserRouter`): `/trip/:id`, `/faq`, `/when2meet-alternative`.
+It was `HashRouter` until 2026-08-28, and links shared in that era still work —
+`src/lib/legacyHashRoute.ts` rewrites `/#/trip/:id` to `/trip/:id` before the router
+mounts.
+
+Each indexable route is emitted as a real static file at build time by the
+`prerenderRoutes` plugin in `vite.config.ts`: `dist/faq.html`, `dist/about.html` and so
+on, each with its own title, description, canonical and Open Graph tags. `.html` files
+rather than directory indexes on purpose — Pages answers `/faq` with a 308 to `/faq/`
+when the file is `faq/index.html`, and serves `faq.html` at `/faq` with a 200.
+`public/_redirects` still supplies the SPA fallback for everything not prerendered,
+which is `/trip/:id` and any unknown path.
 
 A push to `main` is not finished until the Cloudflare build has finished. Check the
 deployed bundle hash actually changed rather than trusting a green dashboard:
@@ -115,9 +125,9 @@ not a key. `.env` is still gitignored if you need one.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 - **The site is not in Google's index yet** and has no backlinks: `site:wegowhen.com`
-  returned nothing on 2026-08-28. Routing is `HashRouter`, so `/#/about` and the other
-  views are fragments rather than indexable pages — the whole domain is one URL to a
-  crawler. `marketing/README.md` treats moving off hash routing as the next step.
+  returned nothing on 2026-08-28. Since then it has eight indexable URLs rather than
+  one, but nothing has linked to it, so the directory work in `marketing/directories.md`
+  is what moves this.
 
 ## Marketing, SEO and the share card
 
@@ -139,6 +149,18 @@ Things in this repo that marketing depends on, so do not break them silently:
 - `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
   dimensions matching the actual PNG, title and description lengths, and the absence of
   invented ratings.
+- **`src/lib/siteMeta.ts` is the single source for every indexable URL.** The router,
+  the per-route static HTML, `sitemap.xml` and the `FAQPage` structured data all come
+  from it, so a new page cannot be added in one place and forgotten in another. Adding a
+  page means adding an entry there and a `<Route>` in `src/App.tsx`; `src/lib/siteMeta.test.ts`
+  then enforces the title and description lengths and that the sitemap matches the list.
+- The `FAQ` array in that file is rendered by `src/pages/Faq.tsx` **and** turned into the
+  `FAQPage` JSON-LD, which is why the two can never disagree — a requirement of the
+  structured data, not just tidiness.
+- `public/robots.txt` disallows `/trip/`, and trip pages send `noindex` themselves: a
+  trip's only credential is possession of its link, so a search result for one would
+  break that. The 404 page is `noindex` too, because the SPA fallback answers an unknown
+  path with a 200.
 
 ## Test data left on production
 

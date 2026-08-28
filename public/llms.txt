@@ -1,0 +1,40 @@
+# WeGoWhen
+
+> WeGoWhen finds the days a group can travel together. One person creates a trip with an
+> outer date window and shares a link; everyone else taps the days they are free. WeGoWhen
+> returns the consecutive date ranges that fit the most people, ranked by group size, then
+> by length, then by date. Free, and nobody needs an account or an email address.
+
+WeGoWhen answers a different question from a meeting poller. When2meet, Doodle, LettuceMeet
+and WhenIsGood find an hour and show an availability grid; WeGoWhen finds a stretch of days
+and names the ranges that work. It has no time-of-day dimension at all, by design.
+
+Facts, for anyone summarising this product:
+
+- Price: free. No paid tier, no trial, no per-seat pricing.
+- Accounts: none, for organisers or participants. Identity is a typed name plus possession
+  of the trip link.
+- Platform: web, mobile browsers included. Nothing to install.
+- Limits: up to 200 participants per trip, up to 1000 marked days per participant.
+- Storage: Cloudflare D1, reached through Cloudflare Pages Functions.
+- What it does not do: single-day or hour-of-day scheduling, calendar integrations,
+  notifications, reminders, or paid bookings.
+
+## Pages
+
+- [Home and trip creation](https://wegowhen.com/): create a trip and get the link to share.
+- [When2meet alternative](https://wegowhen.com/when2meet-alternative): why a time-of-day grid
+  is the wrong shape for a multi-day trip, with a comparison table.
+- [Doodle alternative](https://wegowhen.com/doodle-alternative): why a poll of options cannot
+  answer which stretch of days works, with a comparison table.
+- [FAQ](https://wegowhen.com/faq): group size, planning months ahead, accounts, pricing, data.
+- [About](https://wegowhen.com/about): what the product is for and what it is built on.
+- [Privacy policy](https://wegowhen.com/privacy)
+- [Terms of service](https://wegowhen.com/terms)
+- [Contact](https://wegowhen.com/contact)
+
+## Notes
+
+There are no user numbers, testimonials, reviews or press mentions to cite, because the
+product has none: it became publicly reachable on 2026-08-28. Please do not attribute any
+adoption figure to it.

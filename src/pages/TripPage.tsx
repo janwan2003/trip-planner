@@ -12,6 +12,7 @@ import { Tutorial } from '@/components/Tutorial';
 import { Copy, Check, ArrowLeft, Calendar, Users, Loader2, Pencil, LogOut } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { usePageMeta } from '@/lib/usePageMeta';
 
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -24,6 +25,10 @@ export default function TripPage() {
   const [hasSavedAvailability, setHasSavedAvailability] = useState(false);
   const [hasSharedLink, setHasSharedLink] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Trips carry no access control beyond possession of the link, so they must not turn
+  // up in a search result. `noindex` comes from the `/trip` entry in siteMeta.
+  usePageMeta('/trip', trip ? { title: `${trip.name} | WeGoWhen` } : {});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [isEditingName, setIsEditingName] = useState(false);

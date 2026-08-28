@@ -95,22 +95,28 @@ variables any more.
 
 ### Search engine discoverability
 
-`public/robots.txt` points crawlers at `public/sitemap.xml`. The sitemap lists only
-the root URL, because routing is HashRouter and search engines do not index `#`
-fragments as separate pages.
+`public/robots.txt` points crawlers at `sitemap.xml`, which is **generated at build
+time** from `src/lib/siteMeta.ts` rather than kept by hand — the same list that drives
+the router and the per-route static HTML. Routing is path-based, so every page in that
+list is a real URL a crawler can index; `robots.txt` disallows `/trip/`, because a trip
+is reachable by anyone holding its link and should not turn up in search results.
+
+`public/llms.txt` is the equivalent summary for the crawlers behind AI answers: what the
+product is, what it costs, its limits, and what it deliberately does not do.
 
 Google: verified in Search Console as a Domain property, via the
 `google-site-verification` TXT record on `wegowhen.com`. **Do not delete that TXT
 record** — removing it un-verifies the property.
 
 Bing and other engines: submissions go through [IndexNow](https://www.indexnow.org/),
-which needs no account. The key is `public/.txt`,
-served at `https://wegowhen.com/.txt`; the file
-content must equal its own filename minus `.txt`. **Do not delete or rename it** — the
-API rejects submissions it cannot authenticate. To submit the home page:
+which needs no account. The key is `public/5336c16045b1067eef246cc17ea1297d.txt`,
+served at
+`https://wegowhen.com/5336c16045b1067eef246cc17ea1297d.txt`; the file content must equal
+its own filename minus `.txt`. **Do not delete or rename it** — the API rejects
+submissions it cannot authenticate. To submit the pages:
 
 ```bash
-curl -sS -X POST https://api.indexnow.org/indexnow   -H 'Content-Type: application/json'   -d '{"host":"wegowhen.com","key":"","urlList":["https://wegowhen.com/"]}'
+curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' -d '{"host":"wegowhen.com","key":"5336c16045b1067eef246cc17ea1297d","keyLocation":"https://wegowhen.com/5336c16045b1067eef246cc17ea1297d.txt","urlList":["https://wegowhen.com/","https://wegowhen.com/when2meet-alternative","https://wegowhen.com/doodle-alternative","https://wegowhen.com/faq"]}'
 ```
 
 ### Manual Build

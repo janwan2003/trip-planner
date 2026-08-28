@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
 
+# A trip is reachable by anyone holding its link and by nobody else, so it should not
+# appear in a search result. The pages themselves also send `noindex`.
+Disallow: /trip/
+
+# Crawlers behind AI answers are welcome, and there is a summary written for them.
+# See llms.txt.
+
 Sitemap: https://wegowhen.com/sitemap.xml

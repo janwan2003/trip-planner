@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePageMeta } from '@/lib/usePageMeta';
 
 export default function Contact() {
+  usePageMeta('/contact');
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">

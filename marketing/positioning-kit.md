@@ -98,26 +98,26 @@ Lead with the alternative framing; these audiences arrive by searching for a rep
 Lead with the substance; this audience rewards a real mechanism and punishes marketing.
 
 > WeGoWhen finds the days a group can travel together. The interesting part is the output:
-> instead of rendering an availability grid and leaving the reading to you, it enumerates
-> subsets of participants, finds the maximal runs of consecutive days every member of a
-> subset is free, drops any run dominated by a longer one, and ranks what remains by group
-> size, then length, then date.
+> instead of rendering an availability grid and leaving the reading to you, it walks every
+> run of consecutive days carrying a bitmask intersection of who is free, emits a candidate
+> where that intersection is about to shrink, and ranks what remains by group size, then
+> length, then date. Every emitted set is maximal for its range by construction, so there
+> is no dominance check to run afterwards.
+>
+> The first version enumerated participant subsets instead — 2^n, which locked up the tab
+> around twenty people, and at n = 31 `1 << 31` went negative in JavaScript so the loop
+> never ran and the feature silently returned nothing. The intersection walk removes the
+> cliff rather than moving it: 60 people across 90 days answers in under three seconds.
 >
 > The stack is deliberately small: a React SPA on Cloudflare Pages, Cloudflare Pages
 > Functions for the API, and Cloudflare D1 for storage. No third-party backend, no auth
 > provider, no accounts — identity is a typed name plus possession of the trip link, which
 > is the whole invitation mechanic.
->
-> Known limitation, stated because it is real: subset enumeration is exponential, so very
-> large groups are not supported yet.
 
-Variant C's last paragraph is not optional. A technical audience will find that limit in
-about a minute, and saying it first is the difference between credible and caught.
-
-It is also the one paragraph in this file with an expiry date: it describes the algorithm
-in `src/components/BestDates.tsx` as it stands on 2026-08-28. If the subset enumeration is
-replaced, rewrite it in the same change — "we fixed the exponential blowup" is a better
-line than the limitation was, and a stale limitation is worse than either.
+The 2^n paragraph is the strongest thing in this file for a technical audience: a bug
+found, explained and fixed reads as competence in a way a feature list never does. It
+describes `src/lib/bestDates.ts` as of 2026-08-28; the numbers come from that module's
+own tests, so re-read them if the algorithm changes again.
 
 ## Tags
 
@@ -147,12 +147,11 @@ Every Tier 1 directory asks for these, and the submissions stall without them.
 | --- | --- |
 | Square logo, 1024×1024 | `public/favicon.png` is 1200×1200 — downscale, no new artwork needed |
 | Share card, 1200×630 | Done: `public/og-image.png` |
-| 5–8 product screenshots, 1920×1080 | **Missing.** Needs a demo trip with realistic names and availability |
-| Gallery images, 1270×760 (Product Hunt) | **Missing.** Crop from the screenshots |
-| 60–90 second demo video | **Missing.** The single biggest gap for Product Hunt |
-| Pricing page | **Missing.** Most Tier 1 forms require a pricing URL; a one-line "free" section on the homepage satisfies it |
+| 5–8 product screenshots | Done: nine in `assets/`, taken at a device scale factor of 2 against a local `wrangler pages dev`. `assets/03-best-dates.png` is the persuasive one |
+| Gallery images, 1270×760 (Product Hunt) | Done: `assets/gallery/ph-1..4.png`, in order |
+| 60–90 second demo video | **Missing. The last blocker for Product Hunt** — screen-record creating a trip, sharing the link, two people marking availability, the answer appearing |
+| Pricing page | Satisfied by the homepage: "Free, no account, and nothing for your friends to sign up to" under the form, and the FAQ answers it directly. Point the pricing field at `https://wegowhen.com/faq` |
 
-Screenshots need a trip that looks like a real one — a plausible trip name, six or seven
-first names, overlapping availability, and one visible winning range. Generate it against
-a local `wrangler pages dev` rather than in production, so the demo data never lands in
-the live database.
+Everything in `assets/` is the real app, not a mock-up, and reproducible —
+`assets/README.md` has the exact commands, and `scripts/seed-demo-trip.sh` creates the
+demo trip. The demo data lives in a local D1 and never touches production.
