@@ -11,12 +11,12 @@ human with a login.
 | --- | --- |
 | Site is live and returns 200 | `curl -sI https://wegowhen.com/` on 2026-08-28 |
 | Not in Google's index | `site:wegowhen.com` returned zero pages from the domain, 2026-08-28 |
-| Zero backlinks, DR 0 | Domain first served content 2026-08-28; nothing has linked to it |
+| Seven live backlinks, DR still 0 | Each page fetched and its `rel` read, 2026-08-28: AlternativeTo, SaaSHub, GitHub, YouTube and Startup Fame are nofollow; dev.to and PeerPush are dofollow. Five more queued or under review. DR is unchanged because no crawler has processed them yet |
 | Zero users, zero reviews | PRODUCT.md records this explicitly — no testimonial or counter may be invented |
 | Eight indexable pages | Was one — routing was `HashRouter`, so `/#/about` and friends were fragments. Now path-based and prerendered per route |
 | Google Search Console is already verified | `dig +short TXT wegowhen.com` returns the `google-site-verification` record, 2026-08-28 |
 | No analytics | Nothing is installed, so "getting users" is currently unmeasurable |
-| No backlink data at all | DataForSEO's `/v3/backlinks/summary/live` returned zero items for the domain on 2026-08-28, which is why Fazier's "Domain Rating > 0" gate cannot be met yet |
+| No backlink data at all | DataForSEO's `/v3/backlinks/summary/live` returned zero items for the domain on 2026-08-28, re-checked after the links above went live. This is why the "Domain Rating > 0" gate on **both** Fazier and Startup Fame's free tiers cannot be met yet; Ahrefs' own free DR checker sits behind a Cloudflare turnstile, so there is no second opinion to be had |
 
 Link previews, structured data, indexable pages and an `llms.txt` are done. What is left
 is the work list below.
