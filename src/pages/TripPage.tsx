@@ -248,7 +248,7 @@ export default function TripPage() {
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-16 h-16">
-              <img src="/trip-planner/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
+              <img src="/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
             </div>
             <div className="h-8 flex items-center">
               <span className="font-display font-semibold text-2xl select-none">

@@ -9,7 +9,7 @@ const Index = () => {
       <header className="py-3 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">
           <div className="w-16 h-16">
-            <img src="/trip-planner/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
+            <img src="/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
           </div>
           <div className="h-8 flex items-center">
             <span className="font-display font-semibold text-2xl select-none">
