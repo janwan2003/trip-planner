@@ -6,9 +6,15 @@ import { useState, useEffect } from 'react';
 
 interface TutorialProps {
   completedSteps?: number[];
+  /**
+   * Whose checklist this is. The default steps are the organiser's - create a trip, share
+   * the link - and were being shown to people who arrived from someone else's link, where
+   * two of the four steps are not their job and "Trip created" is permanently ticked.
+   */
+  audience?: 'organiser' | 'participant';
 }
 
-export function Tutorial({ completedSteps = [] }: TutorialProps) {
+export function Tutorial({ completedSteps = [], audience = 'organiser' }: TutorialProps) {
   const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
@@ -41,7 +47,7 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
     );
   }
 
-  const steps = [
+  const organiserSteps = [
     {
       icon: Calendar,
       number: 1,
@@ -68,12 +74,40 @@ export function Tutorial({ completedSteps = [] }: TutorialProps) {
     },
   ];
 
+  /**
+   * What someone who was sent the link actually has to do. Sharing is not on the list,
+   * and the last step is the payoff rather than a task, because they are not the one who
+   * decides.
+   */
+  const participantSteps = [
+    {
+      icon: Calendar,
+      number: 1,
+      title: 'Mark the days you can go',
+      description: 'Tap a day, or drag across several',
+    },
+    {
+      icon: Check,
+      number: 2,
+      title: 'Save',
+      description: 'Your dates go to the group straight away',
+    },
+    {
+      icon: Users,
+      number: 3,
+      title: 'Watch the answer change',
+      description: 'Best Dates updates as more people reply',
+    },
+  ];
+
+  const steps = audience === 'participant' ? participantSteps : organiserSteps;
+
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-display font-semibold text-foreground">
-            How it works
+            {audience === 'participant' ? 'What to do' : 'How it works'}
           </h3>
           <Button
             variant="ghost"

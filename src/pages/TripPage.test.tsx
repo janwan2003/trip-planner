@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TripPage from './TripPage';
 import { Trip, TripApiError } from '@/lib/tripStore';
-import { getRecentTrips } from '@/lib/recentTrips';
+import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 import { recalledName, rememberName } from '@/lib/identity';
 
 const getTrip = vi.fn();
@@ -158,7 +158,7 @@ describe('TripPage', () => {
     // "Best Dates" also appears as a tutorial step, so anchor on the real result row.
     const answer = (await screen.findAllByTestId('best-date-row'))[0];
     const detail = screen.getByText('Group Availability');
-    const teaching = screen.getByText(/Share the Link/i);
+    const teaching = screen.getByRole('heading', { name: /what to do|how it works/i });
 
     const before = (a: HTMLElement, b: HTMLElement) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -264,6 +264,30 @@ describe('TripPage', () => {
     expect(screen.getByText(/labels the days you pick/i)).toBeInTheDocument();
     expect(screen.getByText(/No account, no email/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /mark my dates/i })).toBeInTheDocument();
+  });
+
+  describe('the checklist', () => {
+    it('gives someone who arrived from a link their own steps, not the organiser\'s', async () => {
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      // Two of the organiser's four steps are not this person's job, and "Trip created"
+      // is ticked before they have done anything.
+      expect(screen.getByRole('heading', { name: /what to do/i })).toBeInTheDocument();
+      expect(screen.queryByText(/Share the Link/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Create a Trip/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/Mark the days you can go/i)).toBeInTheDocument();
+    });
+
+    it('gives the browser that created the trip the organiser steps', async () => {
+      rememberTrip(trip(), 'creator');
+
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      expect(screen.getByRole('heading', { name: /how it works/i })).toBeInTheDocument();
+      expect(screen.getByText(/Share the Link/i)).toBeInTheDocument();
+    });
   });
 
   it('will not join with a blank name', async () => {

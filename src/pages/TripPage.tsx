@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { rememberTrip } from '@/lib/recentTrips';
+import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 import { forgetName, lastUsedName, recalledName, rememberName } from '@/lib/identity';
 import { Trip, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,13 @@ export default function TripPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
+  /**
+   * Whether this browser created the trip. Read once on mount rather than on every
+   * render, because opening the trip is itself what writes the row.
+   */
+  const [isOrganiser] = useState(
+    () => getRecentTrips().find((entry) => entry.id === tripId)?.role === 'creator',
+  );
   const { toast } = useToast();
 
   /**
@@ -666,14 +673,21 @@ export default function TripPage() {
             </Card>
 
             {/* Tutorial last: it teaches the flow, it is not the flow */}
-            <Tutorial 
-              completedSteps={[
-                1, // Trip created
-                ...(hasSharedLink || trip.participants.length > 1 ? [2] : []), // Link shared
-                ...(hasSavedAvailability ? [3] : []), // Availability saved
-                ...(trip.participants.length > 1 ? [4] : []), // Best dates available
-              ]}
-            />
+            {isOrganiser ? (
+              <Tutorial
+                completedSteps={[
+                  1, // Trip created
+                  ...(hasSharedLink || trip.participants.length > 1 ? [2] : []), // Link shared
+                  ...(hasSavedAvailability ? [3] : []), // Availability saved
+                  ...(trip.participants.length > 1 ? [4] : []), // Best dates available
+                ]}
+              />
+            ) : (
+              <Tutorial
+                audience="participant"
+                completedSteps={hasSavedAvailability ? [1, 2] : []}
+              />
+            )}
           </div>
         </div>
       </main>
