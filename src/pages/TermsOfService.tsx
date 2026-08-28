@@ -15,7 +15,7 @@ export default function TermsOfService() {
 
         <div className="prose prose-slate max-w-none">
           <h1 className="text-4xl font-display font-bold mb-6">Terms of Service</h1>
-          <p className="text-muted-foreground mb-8">Last updated: January 18, 2026</p>
+          <p className="text-muted-foreground mb-8">Last updated: August 28, 2026</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">1. Acceptance of Terms</h2>
@@ -48,7 +48,7 @@ export default function TermsOfService() {
             <h2 className="text-2xl font-display font-semibold mb-4">4. Data and Privacy</h2>
             <p className="mb-4">
               We collect and store trip information, participant names, and availability data as necessary to 
-              provide the Service. All data is stored securely using Supabase infrastructure. For detailed 
+              provide the Service. All data is stored on Cloudflare infrastructure. For detailed 
               information about data handling, please see our <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
             </p>
           </section>

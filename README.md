@@ -12,7 +12,7 @@ Find the perfect dates for group trips by coordinating everyone's availability.
 - 🖱️ **Drag to select** - Hold and drag to select multiple consecutive dates
 - 📊 **Heat map visualization** - See at a glance when most people are available
 - 🔗 **Easy sharing** - One-click link sharing for inviting friends
-- 💾 **Persistent storage** - Works with localStorage by default, Supabase for multi-device sync
+- 💾 **Shared storage** - Trips live in Cloudflare D1, so a link works across devices and people
 - 📱 **Responsive design** - Works seamlessly on mobile and desktop
 - 🎨 **Beautiful UI** - Built with shadcn/ui and Tailwind CSS
 
@@ -21,7 +21,7 @@ Find the perfect dates for group trips by coordinating everyone's availability.
 - **Frontend**: React 18, TypeScript, Vite
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Styling**: Tailwind CSS
-- **Database**: Supabase (optional) or localStorage (default)
+- **Backend**: Cloudflare Pages Functions with a Cloudflare D1 database
 - **Routing**: React Router
 - **Date Handling**: date-fns
 - **State Management**: React Query
@@ -42,21 +42,26 @@ pnpm dev
 
 ## 🔧 Configuration
 
-### Using with Supabase (Optional)
+### Backend
 
-WeGoWhen works out of the box with localStorage. For multi-device synchronization and sharing:
+Trips live in **Cloudflare D1**, reached through **Cloudflare Pages Functions** in
+`functions/api/trips`. There is no third-party backend service and no configuration to
+copy: the schema is applied idempotently on the first request by
+`functions/_lib/schema.ts`, so a fresh database works immediately.
 
-1. Create a [Supabase](https://supabase.com) project
-2. Run the SQL script from `supabase-schema.sql` in your Supabase SQL editor
-3. Copy `.env.example` to `.env`
-4. Add your Supabase credentials:
+Run the app with its API locally:
 
-```env
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+```bash
+pnpm run build
+pnpm exec wrangler pages dev
 ```
 
-The app automatically falls back to localStorage if Supabase is not configured.
+That serves `dist` plus the Functions on `http://127.0.0.1:8788` against a **local** D1,
+so nothing you do locally touches production data.
+
+There is no localStorage fallback. An earlier version wrote through to localStorage
+whenever the backend failed, which made a dead backend look like a working app while
+every browser quietly kept its own private copy of a trip. Failures now surface instead.
 
 ## 🚀 Deployment
 
@@ -82,10 +87,9 @@ production installs. A committed `bun.lockb` is what broke the first build here.
 `pnpm-workspace.yaml` allows postinstall scripts for `@swc/core` and `esbuild`;
 pnpm blocks build scripts by default and neither of those compiles without one.
 
-Build-time environment variables (set for Production and Preview):
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+The Pages project needs one binding: the **D1 database** `wegowhen`, bound as `DB`.
+Without it every `/api` request answers 503. There are no build-time environment
+variables any more.
 
 `public/_redirects` supplies the SPA fallback (`/* /index.html 200`).
 

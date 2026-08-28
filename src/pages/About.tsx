@@ -63,10 +63,10 @@ export default function About() {
               WeGoWhen is built with modern web technologies:
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li>React 18 with TypeScript for a type-safe, responsive interface</li>
-              <li>Supabase for secure cloud database storage</li>
+              <li>React 19 with TypeScript for a type-safe, responsive interface</li>
+              <li>Cloudflare D1 for trip storage, reached through Cloudflare Pages Functions</li>
               <li>Tailwind CSS and shadcn/ui for modern, accessible design</li>
-              <li>Hosted on GitHub Pages for reliable availability</li>
+              <li>Hosted on Cloudflare Pages for reliable availability</li>
             </ul>
           </section>
 

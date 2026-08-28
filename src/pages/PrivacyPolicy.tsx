@@ -15,7 +15,7 @@ export default function PrivacyPolicy() {
 
         <div className="prose prose-slate max-w-none">
           <h1 className="text-4xl font-display font-bold mb-6">Privacy Policy</h1>
-          <p className="text-muted-foreground mb-8">Last updated: January 18, 2026</p>
+          <p className="text-muted-foreground mb-8">Last updated: August 28, 2026</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">1. Introduction</h2>
@@ -58,9 +58,9 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">4. Data Storage and Security</h2>
             <p className="mb-4">
-              All trip data is stored securely using Supabase, a trusted cloud database provider with enterprise-grade 
-              security. We implement appropriate technical and organizational measures to protect your data against 
-              unauthorized access, alteration, disclosure, or destruction.
+              All trip data is stored in Cloudflare D1, Cloudflare's managed SQL database, and is served from 
+              Cloudflare's network. We implement appropriate technical and organizational measures to protect your 
+              data against unauthorized access, alteration, disclosure, or destruction.
             </p>
             <p className="mb-4">
               However, no method of transmission over the Internet or electronic storage is 100% secure. While we 
@@ -76,7 +76,7 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>With Trip Participants:</strong> Availability data is shared with others who access the same trip link</li>
-              <li><strong>Service Providers:</strong> We use Supabase for database hosting and GitHub Pages for hosting the application</li>
+              <li><strong>Service Providers:</strong> We use Cloudflare to host the application and to store trip data</li>
               <li><strong>Legal Requirements:</strong> If required by law or to protect our rights</li>
             </ul>
           </section>
@@ -106,8 +106,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-display font-semibold mb-4">8. Third-Party Services</h2>
             <p className="mb-4">Our Service uses the following third-party services:</p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li><strong>Supabase:</strong> Database and authentication services (<a href="https://supabase.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
-              <li><strong>GitHub Pages:</strong> Application hosting (<a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
+              <li><strong>Cloudflare:</strong> Application hosting (Cloudflare Pages) and trip data storage (Cloudflare D1) (<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
             </ul>
           </section>
 

@@ -64,20 +64,35 @@ curl -s https://wegowhen.com/ | grep -oE '/assets/index-[A-Za-z0-9_-]+\.js'
 Compare that against the hash your local `pnpm run build` produced. Equal means the
 deploy is genuinely the code you built.
 
+## Backend
+
+Trips live in **Cloudflare D1** (database `wegowhen`, id
+`39bb1ce4-bc4a-4047-823a-6255e2c472bb`), reached through Pages Functions in
+`functions/api/trips`. The Pages project must have that database bound as **`DB`**, or
+every `/api` request answers 503.
+
+The schema is applied idempotently on the first request by `functions/_lib/schema.ts`
+rather than by `wrangler d1 migrations apply`. The reason is written at the top of that
+file: applying migrations out of band needs a Cloudflare credential, and the OAuth grant
+wrangler asks for covers the whole account. Anything destructive — dropping or altering a
+column — cannot be expressed idempotently and does need real migrations.
+
+Local development with the real API:
+
+```bash
+pnpm run build && pnpm exec wrangler pages dev   # http://127.0.0.1:8788, local D1
+```
+
 ## Credentials
 
-Per the global convention, credentials live in `.env` at the repo root. **`.env` here is
-currently stale**: it points at a Supabase project (`kbowfpedzqdtrgfsmizi.supabase.co`)
-that no longer resolves in DNS. The same dead values were copied into the Cloudflare
-Pages build-time variables. Do not treat that `.env` as a working backend.
+There are none any more. The Supabase project this repo used to point at no longer
+exists, and nothing replaced it that needs a secret: D1 is reached through a binding,
+not a key. `.env` is still gitignored if you need one.
 
 ## Known state, as of 2026-08-28
 
-- **No backend.** The Supabase project is gone. Every call site in
-  `src/lib/tripStore.ts` catches the failure and falls back to `localStorage`, so the site
-  works but trips are per-browser and **sharing a trip link does not work**.
-- **Decided:** replace Supabase with **Cloudflare Pages Functions + D1**. Stay entirely
-  inside Cloudflare. `supabase-schema.sql` is the starting point for the D1 schema.
+- **Backend is Cloudflare D1 via Pages Functions.** Supabase is gone from the repo
+  entirely, along with the localStorage write-through that used to hide its absence.
 - **Typing is fully strict.** `strict`, `noUnusedLocals`, `noUnusedParameters`,
   `noImplicitAny` and `noFallthroughCasesInSwitch` are all on, and the tree is clean.
 - `pnpm lint` exits 0. The 7 remaining warnings are all
@@ -96,8 +111,9 @@ Pages build-time variables. Do not treat that `.env` as a working backend.
 1. **Drag-to-select does not work on touch.** `src/components/AvailabilityCalendar.tsx`
    wires `onMouseDown` (line 166) and mouse-move logic only — there are no
    `onTouchStart`/`onPointerDown` handlers. PRODUCT.md records "must work on a phone" as a
-   non-negotiable constraint, and the README advertises drag selection, so this is a
-   contradiction, not a nice-to-have.
+   non-negotiable constraint, and the app itself says "Click and drag to select dates", so
+   this is a contradiction, not a nice-to-have. Confirmed while testing: dispatching a
+   plain `click()` on a day cell does nothing; only `mousedown` selects.
 2. **Best-dates enumerates the full power set of participants.**
    `src/components/BestDates.tsx` runs `for (let mask = 1; mask < (1 << n); mask++)`. That
    is 2^n iterations: unusable around 20 participants, and at n = 31 `1 << 31` is negative
