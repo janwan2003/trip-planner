@@ -21,3 +21,14 @@ Object.defineProperty(window.navigator, "clipboard", {
   configurable: true,
   value: { writeText: () => Promise.resolve() },
 });
+
+// jsdom does no layout, so it does not implement elementFromPoint. The touch-drag code
+// depends on it; tests that exercise a drag replace this with their own mapping from
+// synthetic coordinates to the cell they mean.
+if (!document.elementFromPoint) {
+  Object.defineProperty(document, "elementFromPoint", {
+    writable: true,
+    configurable: true,
+    value: () => null,
+  });
+}

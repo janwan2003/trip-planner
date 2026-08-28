@@ -145,26 +145,106 @@ describe('AvailabilityCalendar', () => {
     expect(dayCell('3').textContent).toContain('1');
   });
 
-  /**
-   * Regression guard for a known defect rather than a passing feature.
-   *
-   * Selection is wired to mousedown/mouseenter only. On a phone, a tap synthesises a
-   * mousedown so single days still work, but dragging across days does not, because no
-   * mouseenter fires during a touch drag. PRODUCT.md records "must work on a phone" as
-   * non-negotiable and the UI tells people to "click and drag", so this is a
-   * contradiction the codebase should not lose track of.
-   *
-   * When touch support lands, this test should fail — and then be rewritten to assert
-   * that a touch drag selects a range.
-   */
-  it('does not yet respond to touch events (known gap)', () => {
+  it('toggles a date on a touch tap', () => {
     const onToggleDate = vi.fn();
     render(<AvailabilityCalendar {...props({ onToggleDate })} />);
 
-    const cell = dayCell('3');
-    fireEvent.touchStart(cell);
-    fireEvent.touchEnd(cell);
+    fireEvent.touchStart(dayCell('3'));
+
+    expect(onToggleDate).toHaveBeenCalledWith('2026-09-03');
+  });
+
+  /**
+   * PRODUCT.md records "must work on a phone" as non-negotiable, and the UI tells
+   * people to click and drag. A touch drag cannot use mouseenter - no such event fires
+   * while a finger moves - so each move is resolved through elementFromPoint to
+   * whatever cell sits under the finger.
+   */
+  it('extends the selection across a touch drag', () => {
+    const onToggleDate = vi.fn();
+    const { container } = render(<AvailabilityCalendar {...props({ onToggleDate })} />);
+
+    const cells = ['2', '3', '4'].map(dayCell);
+    // jsdom has no layout, so elementFromPoint cannot resolve a real position. Stand in
+    // for it by mapping each synthetic coordinate to the cell the test means.
+    const byPoint = new Map<number, Element>([
+      [10, cells[1]],
+      [20, cells[2]],
+    ]);
+    const spy = vi
+      .spyOn(document, 'elementFromPoint')
+      .mockImplementation((x: number) => byPoint.get(x) ?? null);
+
+    fireEvent.touchStart(cells[0]);
+    const grid = container.firstElementChild!;
+    fireEvent.touchMove(grid, { touches: [{ clientX: 10, clientY: 0 }] });
+    fireEvent.touchMove(grid, { touches: [{ clientX: 20, clientY: 0 }] });
+
+    expect(onToggleDate.mock.calls.map(([d]) => d)).toEqual([
+      '2026-09-02',
+      '2026-09-03',
+      '2026-09-04',
+    ]);
+
+    spy.mockRestore();
+  });
+
+  it('stops extending after the finger lifts', () => {
+    const onToggleDate = vi.fn();
+    const { container } = render(<AvailabilityCalendar {...props({ onToggleDate })} />);
+
+    const cells = ['2', '3'].map(dayCell);
+    const spy = vi.spyOn(document, 'elementFromPoint').mockReturnValue(cells[1]);
+
+    fireEvent.touchStart(cells[0]);
+    const grid = container.firstElementChild!;
+    fireEvent.touchEnd(grid);
+    onToggleDate.mockClear();
+    fireEvent.touchMove(grid, { touches: [{ clientX: 10, clientY: 0 }] });
 
     expect(onToggleDate).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('ignores touch entirely when read-only', () => {
+    const onToggleDate = vi.fn();
+    render(<AvailabilityCalendar {...props({ onToggleDate, readOnly: true })} />);
+
+    fireEvent.touchStart(dayCell('3'));
+
+    expect(onToggleDate).not.toHaveBeenCalled();
+  });
+
+  it('can be operated with the keyboard', () => {
+    const onToggleDate = vi.fn();
+    render(<AvailabilityCalendar {...props({ onToggleDate })} />);
+
+    fireEvent.keyDown(dayCell('3'), { key: 'Enter' });
+    fireEvent.keyDown(dayCell('4'), { key: ' ' });
+
+    expect(onToggleDate.mock.calls.map(([d]) => d)).toEqual(['2026-09-03', '2026-09-04']);
+  });
+
+  it('does not toggle on other keys', () => {
+    const onToggleDate = vi.fn();
+    render(<AvailabilityCalendar {...props({ onToggleDate })} />);
+
+    fireEvent.keyDown(dayCell('3'), { key: 'Tab' });
+    fireEvent.keyDown(dayCell('3'), { key: 'a' });
+
+    expect(onToggleDate).not.toHaveBeenCalled();
+  });
+
+  it('tells assistive technology whether a date is selected', () => {
+    render(<AvailabilityCalendar {...props({ selectedDates: ['2026-09-03'] })} />);
+
+    expect(dayCell('3')).toHaveAttribute('aria-pressed', 'true');
+    expect(dayCell('4')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('names each date for a screen reader rather than leaving a bare number', () => {
+    render(<AvailabilityCalendar {...props()} />);
+
+    expect(dayCell('3')).toHaveAccessibleName('Thursday 3 September 2026');
   });
 });
