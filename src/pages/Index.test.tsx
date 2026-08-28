@@ -97,6 +97,21 @@ describe('Index', () => {
     );
   });
 
+  it('keeps the reciprocal directory badges in the footer', () => {
+    // OpenHunts and Fazier both verify the badge is visible before they publish
+    // the listing, so losing these links silently loses the listings.
+    renderWithRouter(<Index />);
+
+    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+    expect(hrefs).toEqual(
+      expect.arrayContaining(['https://openhunts.com', 'https://fazier.com']),
+    );
+    for (const name of ['OpenHunts', 'Fazier']) {
+      const badge = screen.getByAltText(name);
+      expect(badge).toHaveAttribute('loading', 'lazy');
+    }
+  });
+
   it('names the product in the header', () => {
     renderWithRouter(<Index />);
     expect(screen.getAllByText('WeGoWhen').length).toBeGreaterThan(0);
