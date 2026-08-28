@@ -133,7 +133,7 @@ Every row was checked by opening the submit flow, not by reading the marketing p
 | Open Launch | Free tier exists on paper | "Free launches are fully booked into 2027." Cheapest real date is $12 |
 | Microlaunch | None any more | `/submit` redirects to a $39 Pro Launch page |
 | Uneed | **No free route** | "The free waiting line is closed." $14.99 fast-track or $29.99 pick-a-date |
-| Product Hunt | Free | Hard Cloudflare block on an automated browser. Manual only |
+| Product Hunt | Free | Hard Cloudflare block on an automated browser, and no API route either — write scope is approval-only and exposes no create-post mutation. Manual only; the whole submission is prepared in [product-hunt-launch.md](product-hunt-launch.md) |
 | BetaList, StartupBuffer | Free | Same Cloudflare bot wall. Manual only |
 | Launching Next | Free, no queue quoted | Plain form, no account — but it ends in an anti-bot arithmetic field, so the last click is manual |
 | 10words | Free, and the queue is ~2,338 days | Signup needs an email **and password**, no OAuth, so that step is manual. The form itself is a minute — but the free queue is quoted at about 6.4 years, with a paid skip-the-line as the only alternative |
@@ -210,7 +210,7 @@ Every row below was re-checked this way on 2026-08-28.
 | BetaList | — | Needs you | — | — | Cloudflare bot wall |
 | StartupBuffer | — | Needs you | — | — | Cloudflare bot wall |
 | Indie Hackers | — | Needs sign-in | — | — | Tab was still at `/sign-in` |
-| Product Hunt | — | Needs you | — | — | Cloudflare blocks the automated browser. Video now exists, so the asset gap is closed |
+| Product Hunt | — | Needs you — **fully prepared** | — | — | Blocked three ways: Cloudflare interstitial in automated Chrome, hard block in a second independent browser, and API v2 exposes no create-post mutation. Every field, both image sizes and the first comment are paste-ready in [product-hunt-launch.md](product-hunt-launch.md) |
 | Show HN | — | Not started | — | — | Draft in launch-copy.md. Needs a Hacker News account |
 | DevHunt | — | Deliberately skipped | — | — | Dev tools only; WeGoWhen is off-topic and the repo has no licence |
 

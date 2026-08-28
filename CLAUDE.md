@@ -139,7 +139,11 @@ not a key. `.env` is still gitignored if you need one.
 The go-to-market side lives in `marketing/` — the plan and the honest baseline in
 `marketing/README.md`, DataForSEO keyword and SERP data in `marketing/keywords.md`,
 paste-ready submission copy in `marketing/positioning-kit.md`, the directory tracker in
-`marketing/directories.md`, launch drafts in `marketing/launch-copy.md`.
+`marketing/directories.md`, launch drafts in `marketing/launch-copy.md`, and the
+paste-ready Product Hunt submission — every field, both image sizes, the first comment — in
+`marketing/product-hunt-launch.md`. Product Hunt cannot be automated: Cloudflare blocks it
+in two independent browsers and the v2 API exposes no create-post mutation, so that file is
+the deliverable rather than a listing.
 
 Things in this repo that marketing depends on, so do not break them silently:
 
