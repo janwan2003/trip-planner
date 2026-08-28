@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { getDatesBetween, Participant } from '@/lib/tripStore';
 import { format, parseISO, getDay } from 'date-fns';
@@ -68,9 +68,12 @@ export function AvailabilityCalendar({
     return 'high';
   };
 
-  const handleMouseDown = useCallback((date: string) => {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  /** Starts a drag and toggles the date it started on. */
+  const beginDrag = useCallback((date: string) => {
     if (readOnly) return;
-    
+
     setIsDragging(true);
     const isCurrentlySelected = selectedDates.includes(date);
     setDragStartValue(!isCurrentlySelected);
@@ -78,24 +81,61 @@ export function AvailabilityCalendar({
     onToggleDate(date);
   }, [readOnly, selectedDates, onToggleDate]);
 
-  const handleMouseEnter = useCallback((date: string) => {
+  /** Extends an in-progress drag onto another date, once. */
+  const extendDrag = useCallback((date: string) => {
     if (!isDragging || readOnly) return;
-    
+
     if (!draggedDatesRef.current.has(date)) {
       draggedDatesRef.current.add(date);
       const isCurrentlySelected = selectedDates.includes(date);
-      
+
       if (dragStartValue !== null && isCurrentlySelected !== dragStartValue) {
         onToggleDate(date);
       }
     }
   }, [isDragging, readOnly, selectedDates, dragStartValue, onToggleDate]);
 
-  const handleMouseUp = useCallback(() => {
+  const endDrag = useCallback(() => {
     setIsDragging(false);
     setDragStartValue(null);
     draggedDatesRef.current.clear();
   }, []);
+
+  /** Toggles a single date without starting a drag - used by the keyboard. */
+  const toggleOne = useCallback((date: string) => {
+    if (readOnly) return;
+    onToggleDate(date);
+  }, [readOnly, onToggleDate]);
+
+  /**
+   * Touch dragging cannot use mouseenter: no such event fires while a finger moves.
+   * Instead, each move is resolved to whatever cell is under the finger.
+   *
+   * The listener is attached natively rather than through React's onTouchMove because
+   * it must be non-passive to call preventDefault, which is what stops the page
+   * scrolling underneath the gesture. React registers touchmove as passive.
+   */
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || readOnly || !isDragging) return;
+
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      const under = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cell = under?.closest<HTMLElement>('[data-date]');
+      if (cell?.dataset.date) {
+        // Only prevent the scroll once the gesture is genuinely over the grid, so a
+        // finger that strays off the calendar can still scroll the page.
+        event.preventDefault();
+        extendDrag(cell.dataset.date);
+      }
+    };
+
+    grid.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => grid.removeEventListener('touchmove', onTouchMove);
+  }, [readOnly, isDragging, extendDrag]);
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
@@ -113,10 +153,13 @@ export function AvailabilityCalendar({
   const spanMultipleMonths = months.length > 1;
 
   return (
-    <div 
+    <div
+      ref={gridRef}
       className="space-y-6"
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseUp={endDrag}
+      onMouseLeave={endDrag}
+      onTouchEnd={endDrag}
+      onTouchCancel={endDrag}
     >
       {months.map((monthKey, monthIndex) => {
         const monthDates = datesByMonth[monthKey];
@@ -142,7 +185,7 @@ export function AvailabilityCalendar({
             </div>
             
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className={cn("grid grid-cols-7 gap-1", isDragging && "touch-none")}>
               {/* Empty cells for alignment - only for first week of each month */}
               {monthIndex === 0 || getDay(firstDate) !== 0 ? (
                 Array.from({ length: firstDayOfWeek }).map((_, i) => (
@@ -162,9 +205,22 @@ export function AvailabilityCalendar({
                   <button
                     key={date}
                     type="button"
+                    data-date={date}
                     disabled={readOnly}
-                    onMouseDown={() => handleMouseDown(date)}
-                    onMouseEnter={() => handleMouseEnter(date)}
+                    aria-pressed={readOnly ? undefined : isSelected}
+                    aria-label={format(dateObj, 'EEEE d MMMM yyyy')}
+                    onMouseDown={() => beginDrag(date)}
+                    onMouseEnter={() => extendDrag(date)}
+                    onTouchStart={() => beginDrag(date)}
+                    onKeyDown={(e) => {
+                      // Buttons synthesise a click from Enter and Space, and onClick is
+                      // deliberately inert so a drag does not toggle twice. Without this
+                      // the calendar is unusable by keyboard.
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleOne(date);
+                      }
+                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
