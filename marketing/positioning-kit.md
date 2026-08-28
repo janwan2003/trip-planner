@@ -149,7 +149,7 @@ Every Tier 1 directory asks for these, and the submissions stall without them.
 | Share card, 1200×630 | Done: `public/og-image.png` |
 | 5–8 product screenshots | Done: nine in `assets/`, taken at a device scale factor of 2 against a local `wrangler pages dev`. `assets/03-best-dates.png` is the persuasive one |
 | Gallery images, 1270×760 (Product Hunt) | Done: `assets/gallery/ph-1..4.png`, in order |
-| 60–90 second demo video | **Missing. The last blocker for Product Hunt** — screen-record creating a trip, sharing the link, two people marking availability, the answer appearing |
+| 60–90 second demo video | Done: 48s, captioned, at `assets/demo-1080p.mp4`, plus an 8s loop and a poster frame. Product Hunt wants a YouTube URL rather than a file, so it needs uploading first |
 | Pricing page | Satisfied by the homepage: "Free, no account, and nothing for your friends to sign up to" under the form, and the FAQ answers it directly. Point the pricing field at `https://wegowhen.com/faq` |
 
 Everything in `assets/` is the real app, not a mock-up, and reproducible —
