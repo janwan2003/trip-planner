@@ -2,9 +2,9 @@
 
 Find the perfect dates for group trips by coordinating everyone's availability.
 
-## 🚀 Live Demo
+## 🚀 Live Site
 
-[https://janwan2003.github.io/trip-planner/](https://janwan2003.github.io/trip-planner/)
+[https://wegowhen.com](https://wegowhen.com)
 
 ## ✨ Features
 
@@ -60,13 +60,24 @@ The app automatically falls back to localStorage if Supabase is not configured.
 
 ## 🚀 Deployment
 
-### GitHub Pages
+### Cloudflare Pages
 
-This project is configured for automatic deployment to GitHub Pages via GitHub Actions.
+Production is served by Cloudflare Pages at [wegowhen.com](https://wegowhen.com),
+built automatically from the `main` branch.
 
-1. Push changes to the `main` branch
-2. GitHub Actions will automatically build and deploy
-3. Your site will be live at `https://yourusername.github.io/trip-planner/`
+| Setting | Value |
+| --- | --- |
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node version | 20 |
+
+Build-time environment variables (set for Production and Preview):
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+`public/_redirects` supplies the SPA fallback (`/* /index.html 200`).
 
 ### Manual Build
 
