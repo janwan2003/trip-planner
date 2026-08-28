@@ -41,6 +41,15 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
   const maxCount = Math.max(...topRanges.map((r) => r.count), 0);
 
   /**
+   * The denominator for a row's count. A bare "6" next to a people icon does not say
+   * whether the range is unanimous, which is the one thing the organiser is looking for -
+   * and under a participant filter it is more ambiguous still, because 6 could be 6 of 6
+   * selected or 6 of 20 on the trip.
+   */
+  const scopeTotal =
+    selectedParticipants.length > 0 ? selectedParticipants.length : trip.participants.length;
+
+  /**
    * The empty state lives here rather than in the parent, because this is the only
    * component that knows whether any ranges exist.
    *
@@ -189,9 +198,17 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
               </div>
               
               <div className="flex items-center gap-1 text-muted-foreground">
-                <Users className="w-3 h-3" />
-                <span data-testid="best-date-count" className="text-sm font-medium">
-                  {range.count}
+                <Users className="w-3 h-3" aria-hidden="true" />
+                <span className="text-sm font-medium">
+                  <span data-testid="best-date-count">{range.count}</span>
+                  <span aria-hidden="true" className="text-muted-foreground/80">
+                    /{scopeTotal}
+                  </span>
+                  {/* The icon carries no text, so the ratio needs saying in full. */}
+                  <span className="sr-only">
+                    {' '}
+                    of {scopeTotal} {scopeTotal === 1 ? 'person' : 'people'} free
+                  </span>
                 </span>
               </div>
             </div>

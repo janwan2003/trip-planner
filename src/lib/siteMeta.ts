@@ -48,7 +48,7 @@ export const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do I find the dates a whole group is free?',
     answer:
-      'Create a trip with an outer window — say, any time in September — and share the link. Everyone taps the days they are free. WeGoWhen then works out every run of consecutive days that a group could all make, and ranks those runs by how many people they include, then by how long they are. The top row is the answer: "6 of 6 free, Fri 12 to Mon 15".',
+      'Create a trip with an outer window — say, any time in September — and share the link. Everyone taps the days they are free. WeGoWhen then works out every run of consecutive days that a group could all make, and ranks those runs by how many people they include, then by how long they are. The top row is the answer: the dates, the days of the week, who is in it, and how many of the group that is - 6/6 for a range everyone can make.',
   },
   {
     question: 'Does everyone need an account?',

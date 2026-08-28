@@ -303,4 +303,60 @@ describe('BestDates', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].label).not.toContain('Dec');
   });
+
+  describe('the count of a range', () => {
+    it('says how many of the group it is, not just how many people', () => {
+      // A bare "6" beside a people icon does not answer the organiser's actual question,
+      // which is whether this range works for everyone or only most of them.
+      render(
+        <BestDates
+          trip={trip([
+            { name: 'Ada', availableDates: ['2026-09-02'] },
+            { name: 'Bo', availableDates: ['2026-09-02'] },
+            { name: 'Cy', availableDates: ['2026-09-05'] },
+          ])}
+        />,
+      );
+
+      const row = screen.getAllByTestId('best-date-row')[0];
+      expect(row.textContent).toContain('2/3');
+    });
+
+    it('counts against the filtered group, not the whole trip', () => {
+      render(
+        <BestDates
+          trip={trip([
+            { name: 'Ada', availableDates: ['2026-09-02'] },
+            { name: 'Bo', availableDates: ['2026-09-02'] },
+            { name: 'Cy', availableDates: ['2026-09-02'] },
+          ])}
+          selectedParticipants={['Ada', 'Bo']}
+        />,
+      );
+
+      // Under a filter, "2" alone could be 2 of 2 selected or 2 of 3 on the trip.
+      const row = screen.getAllByTestId('best-date-row')[0];
+      expect(row.textContent).toContain('2/2');
+      expect(row.textContent).not.toContain('2/3');
+    });
+
+    it('spells the ratio out for a screen reader, since the icon has no text', () => {
+      render(
+        <BestDates
+          trip={trip([
+            { name: 'Ada', availableDates: ['2026-09-02'] },
+            { name: 'Bo', availableDates: ['2026-09-05'] },
+          ])}
+        />,
+      );
+
+      expect(screen.getAllByText(/of 2 people free/i).length).toBeGreaterThan(0);
+    });
+
+    it('says person, not people, for a group of one', () => {
+      render(<BestDates trip={trip([{ name: 'Ada', availableDates: ['2026-09-02'] }])} />);
+
+      expect(screen.getByText(/of 1 person free/i)).toBeInTheDocument();
+    });
+  });
 });
