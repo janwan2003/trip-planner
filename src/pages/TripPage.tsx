@@ -433,6 +433,15 @@ export default function TripPage() {
               <Card className="animate-scale-in shadow-warm border-0">
                 <CardHeader>
                   <CardTitle className="font-display">Join this trip</CardTitle>
+                  {/*
+                    A cold arrival has been sent a link by a friend and is being asked for
+                    a name by a site they have never seen. Say what the name is for and
+                    that it is not an account, or the ask reads like a signup wall.
+                  */}
+                  <p className="text-sm text-muted-foreground">
+                    Your name labels the days you pick, so everyone can see who is free
+                    when. No account, no email.
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleJoin} className="space-y-4">
@@ -447,8 +456,10 @@ export default function TripPage() {
                         required
                       />
                     </div>
+                    {/* "Continue" named no destination on the one screen where the
+                        visitor does not yet know what the product does. */}
                     <Button type="submit" className="w-full">
-                      Continue
+                      Mark my dates
                     </Button>
                   </form>
                 </CardContent>

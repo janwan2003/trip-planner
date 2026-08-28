@@ -43,7 +43,7 @@ const renderTripPage = () =>
 
 const join = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
   await user.type(screen.getByLabelText(/your name/i), name);
-  await user.click(screen.getByRole('button', { name: /continue/i }));
+  await user.click(screen.getByRole('button', { name: /mark my dates/i }));
 };
 
 /**
@@ -255,12 +255,23 @@ describe('TripPage', () => {
     });
   });
 
+  it('tells a cold arrival what the name is for, and that it is not a signup', async () => {
+    renderTripPage();
+    await screen.findByText('Alps trip');
+
+    // Someone opening a friend's link has never seen this site; "Continue" named no
+    // destination and an unexplained name field reads like an account wall.
+    expect(screen.getByText(/labels the days you pick/i)).toBeInTheDocument();
+    expect(screen.getByText(/No account, no email/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mark my dates/i })).toBeInTheDocument();
+  });
+
   it('will not join with a blank name', async () => {
     const user = userEvent.setup();
     renderTripPage();
     await screen.findByText('Alps trip');
 
-    await user.click(screen.getByRole('button', { name: /continue/i }));
+    await user.click(screen.getByRole('button', { name: /mark my dates/i }));
 
     // Still on the join step: the name field has not been replaced by the calendar.
     expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
