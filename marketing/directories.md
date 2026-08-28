@@ -135,14 +135,21 @@ Every row was checked by opening the submit flow, not by reading the marketing p
 | Uneed | **No free route** | "The free waiting line is closed." $14.99 fast-track or $29.99 pick-a-date |
 | Product Hunt | Free | Hard Cloudflare block on an automated browser. Manual only |
 | BetaList, StartupBuffer | Free | Same Cloudflare bot wall. Manual only |
-| Launching Next | Free | Plain form, no account — but it ends in an anti-bot arithmetic field, so the last click is manual |
-| 10words | Free | Account creation with an email **and password**, no OAuth. Manual only |
+| Launching Next | Free, no queue quoted | Plain form, no account — but it ends in an anti-bot arithmetic field, so the last click is manual |
+| 10words | Free, and the queue is ~2,338 days | Signup needs an email **and password**, no OAuth, so that step is manual. The form itself is a minute — but the free queue is quoted at about 6.4 years, with a paid skip-the-line as the only alternative |
 | F6S | Free | Emails a 6-digit code to the address on file. Manual only |
 | DevHunt | Free, but off-topic | Accepts dev tools only: open-source projects, APIs/SDKs, frameworks, IDEs, testing, monitoring. WeGoWhen is none of those, and the repo has no licence, so submitting would be spam |
 
 The reciprocal-badge trade is the modern price, and it is a fair one: the badges live at
 the very bottom of the footer, in `index.html` rather than in React, because both sites
 verify by fetching the page rather than by running it.
+
+**Ask what the queue length actually is before valuing a free tier.** 10words is free with
+no strings and quotes an estimated feature date about **2,338 days** — 6.4 years — on the
+confirmation page, with a paid skip-the-line as the only alternative. Sites that publish the
+number (10words, PeerPush's queue position #2243, Open Launch's dates booked into 2027) are
+being straight with you. The ones that advertise "free" and reveal the backlog only after
+every field is written are where the afternoon goes.
 
 **The DR > 0 gate blocks two free tiers at once.** Both Fazier and Startup Fame require
 Ahrefs Domain Rating above zero. As of 2026-08-28 the DataForSEO backlinks summary for
@@ -197,8 +204,8 @@ Every row below was re-checked this way on 2026-08-28.
 | Open Launch | — | Abandoned | — | — | Draft built, then found free dates are booked into 2027. Not paid |
 | Microlaunch | — | Skipped | — | — | Paid only, $39 |
 | Uneed | 2026-08-28 | Built, unpaid | https://www.uneed.best/tool/wegowhen (404) | — | Page complete but will not publish without $14.99 |
-| Launching Next | — | **Staged, needs you** | — | — | Whole form filled in an open tab; needs the email field and the "what is 2+3" anti-bot answer |
-| 10words | — | Needs you | — | — | Email + password signup, no OAuth |
+| Launching Next | — | **Staged, one field left** | — | — | Whole form filled in an open tab, contact email included. Needs only the "What is 2+3?" anti-bot answer and the Submit click |
+| 10words | 2026-08-28 | Submitted, **queue is 2,338 days** | — | — | Submission id 30788. On submitting it quotes an estimated feature date about 6.4 years out and offers a paid skip-the-line. Cost a minute, so worth having, but it should not be counted |
 | F6S | — | Needs you | — | — | 6-digit code sent to jan@wangrat.com |
 | BetaList | — | Needs you | — | — | Cloudflare bot wall |
 | StartupBuffer | — | Needs you | — | — | Cloudflare bot wall |
