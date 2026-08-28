@@ -36,8 +36,8 @@ The claim to make, and the only one that is defensible:
 
 > When2meet and Doodle answer "which hour suits everyone". A trip is not an hour, it is a
 > stretch of days. WeGoWhen collects the days each person is free and returns the ranked
-> consecutive date ranges that fit the most people — "these six can all go Fri 12 – Mon 15",
-> not a grid of ticks to read yourself.
+> consecutive date ranges that fit the most people — "these six can all go Fri 12 – Mon 15" —
+> with a per-day heat map beside them so the answer can be checked at a glance.
 
 That is a factual difference in output, not a swipe at a competitor, so it survives the
 scrutiny an AI engine or a moderator applies. See [keywords.md](keywords.md) for the

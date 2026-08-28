@@ -86,10 +86,13 @@ Lead with the alternative framing; these audiences arrive by searching for a rep
 > are free — no account, no email, no login. WeGoWhen then does the part a grid leaves to
 > you: it works out the maximal runs of consecutive days that a subset of the group is
 > all free for, and ranks them by how many people they include, then by how long they are.
-> The output is a shortlist of concrete date ranges, not a wall of ticks.
+> The output is a shortlist of concrete date ranges rather than something to interpret
+> yourself.
 >
-> Also here: a per-day heat map of how many people are free, participant filtering to test
-> a smaller group, and editable names so someone can fix a typo or drop out.
+> Next to it, a per-day heat map shows how many people are free across the whole window, so
+> you can see why a range won instead of taking the ranking on trust. Clicking a participant
+> recomputes everything for just a subset, and names are editable so someone can fix a typo
+> or drop out.
 >
 > Web, mobile-first, free.
 

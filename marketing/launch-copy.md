@@ -23,30 +23,16 @@ video and screenshots.
 
 **First comment — post this yourself, immediately after launching:**
 
-> Hi Product Hunt.
+> I built WeGoWhen because every time I planned a holiday with friends, we struggled to agree on dates. There are plenty of tools that help you find the best hour for a meeting, but none that finds the longest continuous stretch of days when you could actually go on a ski trip with your friends.
 >
-> I built WeGoWhen because every group trip I have tried to organise died in the same
-> place: a chat thread where everyone says which weekend does not work for them, and nobody
-> can hold it in their head.
+> I built it on a few rules: simplicity first, no clutter in the UI, intuitive, easy to use. No logins, no accounts, and everything you need to see on the screen in front of you.
 >
-> Every scheduling tool I tried answered a different question. When2meet, Doodle and the
-> rest are built for "which hour suits everyone" — the output is a grid of ticks over
-> time slots. A trip is not an hour. It is a stretch of days, and what you actually
-> want to know is which stretch the most people can make.
+> You get both halves of the answer. The ranked date ranges name the stretches that work and how many people each one fits. The heat map next to them shows the shape of the whole month at a glance, which is what makes the ranking easy to read — you can see why a range won rather than taking it on trust. And you can click on people to recompute everything for just a subset of the group, which is how you find out that five of you can go if one person sits this one out.
 >
-> So that is what this does. The organiser picks an outer window and shares one link.
-> Everyone else taps the days they are free — on a phone, in under a minute, no account, no
-> email address. Then instead of showing you a grid, it names the answer: the consecutive
-> date ranges that work, ranked by how many people they include and then by how long they
-> are.
->
-> One honest note. It is new — it went live at the end of August and I am the only person
-> who has used it in anger, so I would rather have your criticism than your upvote.
->
-> The thing I would most like feedback on: does the ranked-ranges output actually read as
-> the answer, or do you still find yourself wanting the grid?
+> Let me know your feedback.
 
-Never ask for upvotes; ask for the criticism. Reply to every comment inside 30 minutes.
+Never ask for upvotes. Reply to every comment inside 30 minutes — that is what actually
+moves a launch.
 
 ## Show HN
 
