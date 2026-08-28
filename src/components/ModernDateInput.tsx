@@ -82,7 +82,7 @@ export function ModernDateInput({
             onSelect={handleSelect}
             defaultMonth={getDefaultMonth()}
             disabled={(day) => day < minDateObj}
-            initialFocus
+            autoFocus
           />
         </PopoverContent>
       </Popover>
