@@ -3,25 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WeGoWhen - Find Perfect Dates for Group Trips</title>
-    <meta name="description" content="Collaborative trip planning made easy. Coordinate availability with friends and find the perfect dates for your group trips." />
+    <title>WeGoWhen — Find the dates everyone is free for a group trip</title>
+    <meta name="description" content="Share one link, everyone taps the days they are free, and WeGoWhen ranks the date ranges that fit the most people. No account, no sign-up." />
     <meta name="author" content="WeGoWhen" />
-    <meta name="keywords" content="wegowhen, group trip planner, group calendar, travel planning, availability calendar, group coordination" />
+    <meta name="keywords" content="wegowhen, group trip planner, group availability calendar, when2meet alternative, multi-day date poll, group trip dates, travel planning" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="WeGoWhen - Collaborative Trip Planning" />
-    <meta property="og:description" content="Find the perfect dates for group trips by coordinating everyone's availability" />
+    <!-- Open Graph / Facebook / WhatsApp / iMessage -->
+    <meta property="og:site_name" content="WeGoWhen" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="WeGoWhen — Find the dates everyone can go" />
+    <meta property="og:description" content="Everyone taps the days they are free. WeGoWhen ranks the date ranges that fit the most people. No account, no sign-up." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://wegowhen.com/" />
+    <meta property="og:image" content="https://wegowhen.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="WeGoWhen: a month of days heat-mapped by how many people are free, with a four-day run everyone can make." />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="WeGoWhen - Collaborative Trip Planning" />
-    <meta name="twitter:description" content="Find the perfect dates for group trips by coordinating everyone's availability" />
+    <meta name="twitter:title" content="WeGoWhen — Find the dates everyone can go" />
+    <meta name="twitter:description" content="Everyone taps the days they are free. WeGoWhen ranks the date ranges that fit the most people. No account, no sign-up." />
+    <meta name="twitter:image" content="https://wegowhen.com/og-image.png" />
+    <meta name="twitter:image:alt" content="WeGoWhen: a month of days heat-mapped by how many people are free, with a four-day run everyone can make." />
 
     <!-- Theme color -->
     <meta name="theme-color" content="#e67e4f" />
-    
+
     <!-- Canonical -->
     <link rel="canonical" href="https://wegowhen.com/" />
 
@@ -29,6 +38,41 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!--
+      Structured data. Kept in the static HTML rather than injected by React so a
+      crawler that does not execute JavaScript still sees it. Deliberately no
+      aggregateRating: the product has no reviews, and inventing them would be a
+      fabrication as well as a structured-data violation.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "WeGoWhen",
+        "url": "https://wegowhen.com/",
+        "description": "WeGoWhen finds the days a group can travel together. Everyone marks the days they are free on a shared calendar, and WeGoWhen ranks the consecutive date ranges that fit the most people.",
+        "applicationCategory": "TravelApplication",
+        "applicationSubCategory": "Group trip date planning",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript.",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Share one link, no account or email needed",
+          "Mark availability by tapping or dragging across days",
+          "Heat map showing how many people are free on each day",
+          "Ranked list of consecutive date ranges that fit the most people",
+          "Filter participants to test smaller groups"
+        ],
+        "screenshot": "https://wegowhen.com/og-image.png"
+      }
+    </script>
   </head>
 
   <body>

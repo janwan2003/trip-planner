@@ -112,6 +112,31 @@ not a key. `.env` is still gitignored if you need one.
   the SQL, the unique index and the middleware together.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
+- **The site is not in Google's index yet** and has no backlinks: `site:wegowhen.com`
+  returned nothing on 2026-08-28. Routing is `HashRouter`, so `/#/about` and the other
+  views are fragments rather than indexable pages — the whole domain is one URL to a
+  crawler. `marketing/README.md` treats moving off hash routing as the next step.
+
+## Marketing, SEO and the share card
+
+The go-to-market side lives in `marketing/` — the plan and the honest baseline in
+`marketing/README.md`, DataForSEO keyword and SERP data in `marketing/keywords.md`,
+paste-ready submission copy in `marketing/positioning-kit.md`, the directory tracker in
+`marketing/directories.md`, launch drafts in `marketing/launch-copy.md`.
+
+Things in this repo that marketing depends on, so do not break them silently:
+
+- `public/og-image.png` is the 1200x630 link preview card, and `index.html` references it
+  by **absolute** URL — a relative one is dropped by most unfurlers, WhatsApp included.
+  Regenerate it with `python3 scripts/generate-og-image.py` (needs Pillow; it fetches
+  Fraunces and DM Sans into `~/.cache/wegowhen-fonts` on first run). It reads the palette
+  from the same HSL tokens as `src/index.css`, so if the brand colours change, change both.
+- `index.html` also carries `WebApplication` JSON-LD. It is static rather than injected by
+  React so a crawler that does not run JavaScript still sees it. It deliberately has no
+  `aggregateRating`: there are no reviews.
+- `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
+  dimensions matching the actual PNG, title and description lengths, and the absence of
+  invented ratings.
 
 ## Two defects found and fixed here
 
