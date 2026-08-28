@@ -59,8 +59,24 @@ of Best Dates reads **6 of 6, 11 Dec – 14 Dec, 4 days**, with a five-person we
 longer four-person stretch below it. The data is deliberately uneven: a demo where
 everyone is free for everything shows nothing.
 
-## Still missing
+## The demo video
 
-A 60–90 second demo video. Product Hunt launches with video get materially more
-engagement, and none of the above substitutes for it. Screen-record the real flow:
-create a trip, share the link, two people mark availability, the answer appears.
+Cut from a 2:05 screen recording with `scripts/cut-demo-video.sh`, which takes the raw
+file and writes four things:
+
+| File | What it is | Where it goes |
+| --- | --- | --- |
+| `demo-1080p.mp4` | 48s, 1920×1080, captions burned in | Upload to YouTube, then paste that URL into Product Hunt — it accepts a link, not a file |
+| `demo-loop.mp4` | 8s silent loop of the ranked answer | X and Reddit, where autoplay does the work |
+| `demo-loop.gif` | the same 6s as a GIF, 944 KB | Places that still insist on GIF |
+| `demo-poster.png` | one frame on the answer beat | Thumbnail, or a still where video is not allowed |
+
+The raw recording stays out of the repository: 21 MB of VP8 at 2130×1357, and only the
+derivatives are worth keeping. The script's own comments explain the two things that are
+easy to get wrong — the crop that removes the desktop visible beside the browser window,
+and the fact that ffmpeg's `drawtext` silently truncates a caption at the first colon.
+
+**One caveat, worth fixing when convenient:** the first eight seconds show the home page
+as it was *before* the "a trip is not an hour" section came out, because that is what the
+recording captured. Nothing else in the video is stale, and the form itself is unchanged,
+but a fresh 20-second re-record of just the creation step would remove it.
