@@ -154,6 +154,15 @@ Things in this repo that marketing depends on, so do not break them silently:
   with links to the comparison pages; the product owner removed it on 2026-08-28 because
   it cluttered a UI whose job is the trip form. The comparison and FAQ pages are reached
   from the footer instead. Do not reintroduce body copy there.
+- **Nor a demo.** `HeatPreview` — a "What you get back" section under the form that
+  rendered an example six-person trip through the real `AvailabilityCalendar` and
+  `findBestDateRanges` — was removed on 2026-08-28 for the same reason: it was marketing
+  in the middle of the app. Its SEO job was already done elsewhere and still is: the
+  `featureList` in `index.html`'s JSON-LD names the heat map and the ranked date ranges,
+  and `/when2meet-alternative`, `/doodle-alternative` and `/faq` carry the prose. The one
+  line kept under the form is "Free, no account, and nothing for your friends to sign up
+  to." Recover the component from git (`git show e0fc7f9:src/components/HeatPreview.tsx`)
+  if it is ever wanted on a comparison page rather than the home page.
 - **`src/lib/siteMeta.ts` is the single source for every indexable URL.** The router,
   the per-route static HTML, `sitemap.xml` and the `FAQPage` structured data all come
   from it, so a new page cannot be added in one place and forgotten in another. Adding a
