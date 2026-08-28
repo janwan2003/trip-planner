@@ -25,16 +25,78 @@ const suggestions = () =>
   }));
 
 describe('BestDates', () => {
-  it('renders nothing when the trip has no participants', () => {
-    const { container } = render(<BestDates trip={trip([])} />);
-    expect(container).toBeEmptyDOMElement();
+  it('invites the organiser to share the link when nobody has joined', () => {
+    render(<BestDates trip={trip([])} />);
+
+    expect(screen.getByTestId('best-dates-empty')).toBeInTheDocument();
+    expect(screen.getByText(/Best dates will appear here/i)).toBeInTheDocument();
+    expect(screen.getByText(/Send the link to everyone/i)).toBeInTheDocument();
   });
 
-  it('renders nothing when participants exist but nobody marked a date', () => {
-    const { container } = render(
-      <BestDates trip={trip([{ name: 'Ada', availableDates: [] }])} />,
+  /**
+   * The state this used to fall through: BestDates returned null while TripPage's
+   * placeholder was gated on there being no participants at all, so a trip where
+   * somebody had joined but marked nothing rendered an empty bordered card.
+   */
+  it('says so when people have joined but marked nothing', () => {
+    render(<BestDates trip={trip([{ name: 'Ada', availableDates: [] }])} />);
+
+    expect(screen.getByTestId('best-dates-empty')).toBeInTheDocument();
+    expect(screen.getByText(/nobody has marked days yet/i)).toBeInTheDocument();
+  });
+
+  it('uses the singular when exactly one person has joined', () => {
+    render(<BestDates trip={trip([{ name: 'Ada', availableDates: [] }])} />);
+    expect(screen.getByText(/Someone has joined/i)).toBeInTheDocument();
+  });
+
+  it('uses the plural for more than one', () => {
+    render(
+      <BestDates
+        trip={trip([
+          { name: 'Ada', availableDates: [] },
+          { name: 'Bo', availableDates: [] },
+        ])}
+      />,
     );
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/People have joined/i)).toBeInTheDocument();
+  });
+
+  it('distinguishes "nobody marked anything" from "no overlap"', () => {
+    render(
+      <BestDates
+        trip={trip(
+          [
+            { name: 'Ada', availableDates: ['2026-09-02'] },
+            { name: 'Bo', availableDates: ['2026-09-04'] },
+          ],
+          { startDate: '2026-09-01', endDate: '2026-09-05' },
+        )}
+      />,
+    );
+
+    // Both marked days, so there ARE ranges - one per person. This asserts the
+    // component does not claim nobody has marked anything.
+    expect(screen.queryByText(/nobody has marked days yet/i)).not.toBeInTheDocument();
+  });
+
+  it('names the filtered people when none of them has a day', () => {
+    // Zero ranges under a filter means the filtered people have marked nothing - the
+    // algorithm reports per-subset ranges, so two people with non-overlapping days
+    // still produce one range each rather than an empty result.
+    render(
+      <BestDates
+        trip={trip([
+          { name: 'Ada', availableDates: [] },
+          { name: 'Bo', availableDates: [] },
+          { name: 'Cy', availableDates: ['2026-09-02'] },
+        ])}
+        selectedParticipants={['Ada', 'Bo']}
+      />,
+    );
+
+    expect(screen.getByText(/No days work for Ada, Bo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Try including more people/i)).toBeInTheDocument();
   });
 
   it('shows a single day for one person on one date', () => {

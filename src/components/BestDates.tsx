@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Trip } from '@/lib/tripStore';
 import { findBestDateRanges } from '@/lib/bestDates';
 import { format, parseISO } from 'date-fns';
-import { Star, Users, HelpCircle } from 'lucide-react';
+import { Star, Users, HelpCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import {
@@ -38,11 +38,53 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
     [allRanges, minDays],
   );
 
-  if (allRanges.length === 0) {
-    return null;
-  }
-
   const maxCount = Math.max(...topRanges.map((r) => r.count), 0);
+
+  /**
+   * The empty state lives here rather than in the parent, because this is the only
+   * component that knows whether any ranges exist.
+   *
+   * It used to return null, while TripPage rendered a placeholder gated on
+   * `participants.length === 0`. The state in between - somebody has joined but marked
+   * nothing yet - fell through both and rendered an empty bordered card. That is exactly
+   * what an organiser sees in the seconds after creating a trip.
+   */
+  if (allRanges.length === 0) {
+    const filtered = selectedParticipants.length > 0;
+    const nobodyHasMarked = trip.participants.every((p) => p.availableDates.length === 0);
+
+    return (
+      <div data-testid="best-dates-empty" className="text-center py-6 text-muted-foreground">
+        <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        {trip.participants.length === 0 ? (
+          <>
+            <p className="text-sm text-foreground">Best dates will appear here</p>
+            <p className="text-xs">Send the link to everyone, then their days show up</p>
+          </>
+        ) : filtered ? (
+          <>
+            <p className="text-sm text-foreground">
+              No days work for {selectedParticipants.join(', ')}
+            </p>
+            <p className="text-xs">Try including more people</p>
+          </>
+        ) : nobodyHasMarked ? (
+          <>
+            <p className="text-sm text-foreground">
+              {trip.participants.length === 1 ? 'Someone has joined' : 'People have joined'}, but
+              nobody has marked days yet
+            </p>
+            <p className="text-xs">Best dates appear as soon as anyone does</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-foreground">No overlapping days yet</p>
+            <p className="text-xs">Nobody is free on the same day so far</p>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
