@@ -277,19 +277,31 @@ export default function TripPage() {
       <header className="py-3 px-4 border-b">
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-16 h-16">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0">
               <img src="/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
             </div>
             <div className="h-8 flex items-center">
-              <span className="font-display font-semibold text-2xl select-none">
+              <span className="font-display font-semibold text-xl sm:text-2xl select-none">
                 WeGoWhen
               </span>
             </div>
           </Link>
           
-          <Button variant="outline" onClick={handleCopyLink} className="gap-2">
+          {/*
+            The full "Share Link" label made this button 126px wide, which held the
+            header wider than a 320px viewport and gave the whole page 66px of
+            horizontal overflow. The word "Link" carries nothing the icon does not, so
+            it is dropped on the narrowest screens rather than wrapping the header.
+          */}
+          <Button variant="outline" onClick={handleCopyLink} className="gap-2 shrink-0">
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied!' : 'Share Link'}
+            {copied ? (
+              'Copied!'
+            ) : (
+              <>
+                Share<span className="hidden sm:inline">&nbsp;Link</span>
+              </>
+            )}
           </Button>
         </div>
       </header>
@@ -385,7 +397,7 @@ export default function TripPage() {
                           >
                             {userName}
                             <Pencil className="w-3 h-3" />
-                          </button>! Click and drag to select dates you're available.
+                          </button>! Tap or drag across the days you're free.
                         </p>
                       )}
                     </div>
