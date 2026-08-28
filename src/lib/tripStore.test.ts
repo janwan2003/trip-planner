@@ -65,16 +65,75 @@ describe('getDatesBetween', () => {
     ]);
   });
 
-  it('does not shift dates in a timezone behind UTC', () => {
-    // The implementation normalises to UTC midnight precisely so that a machine in,
-    // say, UTC-10 does not report the previous day. Guard that intent.
-    const original = Date.prototype.getTimezoneOffset;
-    Date.prototype.getTimezoneOffset = () => 600; // UTC-10
-    try {
-      expect(getDatesBetween('2026-09-01', '2026-09-02')).toEqual(['2026-09-01', '2026-09-02']);
-    } finally {
-      Date.prototype.getTimezoneOffset = original;
-    }
+  describe('timezones', () => {
+    /**
+     * The previous guard here stubbed `Date.prototype.getTimezoneOffset` and asserted the
+     * range came back unshifted. It passed for months while the bug was live, because the
+     * implementation never called that method: `new Date('2026-09-01')` and `getFullYear()`
+     * read the engine's own timezone, which a stub cannot reach. The suite now runs in
+     * America/New_York (see src/test/setup.ts), so these assertions are made from the
+     * offset where the bug shows.
+     */
+    // Skipped only when WGW_TEST_TZ is set, which means someone is deliberately
+    // cross-checking another offset rather than running the default suite.
+    it.skipIf(Boolean(process.env.WGW_TEST_TZ))(
+      'defaults to running these tests somewhere the bug would actually show',
+      () => {
+        // If this fails, the default has drifted back to UTC and every assertion below
+        // is vacuous - the same failure mode as the guard this replaced.
+        expect(new Date('2026-09-01').getTimezoneOffset()).toBeGreaterThan(0);
+        expect(new Date('2026-09-01').getDate()).toBe(31);
+      },
+    );
+
+    it('starts at the date it was given, not the day before', () => {
+      // The single most visible symptom: west of UTC, the trip's own start date was
+      // missing from its calendar and a day before the trip appeared instead.
+      const dates = getDatesBetween('2026-09-01', '2026-09-03');
+
+      expect(dates[0]).toBe('2026-09-01');
+      expect(dates).toEqual(['2026-09-01', '2026-09-02', '2026-09-03']);
+    });
+
+    it('does not shift a range that crosses a month boundary', () => {
+      expect(getDatesBetween('2026-08-31', '2026-09-01')).toEqual(['2026-08-31', '2026-09-01']);
+    });
+
+    it('does not shift a range that crosses a year boundary', () => {
+      expect(getDatesBetween('2026-12-31', '2027-01-01')).toEqual(['2026-12-31', '2027-01-01']);
+    });
+
+    it('does not shift across a daylight-saving change', () => {
+      // US clocks go forward on 8 March 2026, so this range contains a 23-hour day.
+      // Stepping by 24 hours through local time would skip or repeat a date.
+      expect(getDatesBetween('2026-03-07', '2026-03-10')).toEqual([
+        '2026-03-07',
+        '2026-03-08',
+        '2026-03-09',
+        '2026-03-10',
+      ]);
+    });
+
+    it('does not shift across the autumn daylight-saving change either', () => {
+      // 1 November 2026: a 25-hour day.
+      expect(getDatesBetween('2026-10-31', '2026-11-02')).toEqual([
+        '2026-10-31',
+        '2026-11-01',
+        '2026-11-02',
+      ]);
+    });
+
+    it('gives nothing for a date that does not exist', () => {
+      // Date.UTC rolls 31 February forward to 3 March rather than rejecting it.
+      expect(getDatesBetween('2026-02-31', '2026-03-05')).toEqual([]);
+      expect(getDatesBetween('2026-13-01', '2026-13-05')).toEqual([]);
+    });
+
+    it('gives nothing for a string that is not a date', () => {
+      expect(getDatesBetween('not-a-date', '2026-09-02')).toEqual([]);
+      expect(getDatesBetween('2026-9-1', '2026-09-02')).toEqual([]);
+      expect(getDatesBetween('', '')).toEqual([]);
+    });
   });
 });
 

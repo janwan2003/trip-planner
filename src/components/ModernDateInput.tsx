@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,12 +29,12 @@ export function ModernDateInput({
 }: ModernDateInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    value ? new Date(value) : undefined
+    value ? parseISO(value) : undefined
   );
 
   useEffect(() => {
     if (value) {
-      setSelectedDate(new Date(value));
+      setSelectedDate(parseISO(value));
     }
   }, [value]);
 
@@ -48,7 +48,7 @@ export function ModernDateInput({
 
   const getDefaultMonth = () => {
     if (minDate) {
-      return new Date(minDate);
+      return parseISO(minDate);
     }
     if (selectedDate) {
       return selectedDate;
@@ -56,7 +56,7 @@ export function ModernDateInput({
     return new Date();
   };
 
-  const minDateObj = minDate ? new Date(minDate) : new Date(new Date().setHours(0, 0, 0, 0));
+  const minDateObj = minDate ? parseISO(minDate) : new Date(new Date().setHours(0, 0, 0, 0));
 
   return (
     <div className="space-y-2">

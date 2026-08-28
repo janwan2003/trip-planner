@@ -23,7 +23,9 @@ export function CreateTripForm() {
     
     if (!name || !startDate || !endDate) return;
 
-    if (new Date(endDate) < new Date(startDate)) {
+    // Both are YYYY-MM-DD, which sorts correctly as text; parsing them into Dates only
+    // reintroduces the timezone question this format exists to avoid.
+    if (endDate < startDate) {
       toast({
         title: "Invalid dates",
         description: "End date must be after start date.",

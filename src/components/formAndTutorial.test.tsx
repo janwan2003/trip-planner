@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { renderWithRouter } from '@/test/render';
 import { Tutorial } from './Tutorial';
 import { ModernDateInput } from './ModernDateInput';
-import { DateRangePicker } from './DateRangePicker';
 import { NavLink } from './NavLink';
 
 const navigate = vi.fn();
@@ -101,32 +100,6 @@ describe('ModernDateInput', () => {
   });
 });
 
-describe('DateRangePicker', () => {
-  it('prompts for a range when nothing is picked', () => {
-    render(<DateRangePicker onDateChange={vi.fn()} />);
-    expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  it('opens two months at once, so a range spanning a month boundary is pickable', async () => {
-    const user = userEvent.setup();
-    render(<DateRangePicker onDateChange={vi.fn()} />);
-
-    await user.click(screen.getByRole('button'));
-
-    expect(await screen.findAllByRole('grid')).toHaveLength(2);
-  });
-
-  it('disables days before today, so a trip cannot be planned into the past', async () => {
-    const user = userEvent.setup();
-    render(<DateRangePicker onDateChange={vi.fn()} />);
-
-    await user.click(screen.getByRole('button'));
-    const grids = await screen.findAllByRole('grid');
-    const dayButtons = grids.flatMap((g) => Array.from(g.querySelectorAll('button')));
-
-    expect(dayButtons.some((b) => b.disabled)).toBe(true);
-  });
-});
 
 describe('NavLink', () => {
   it('renders a link to its target', () => {

@@ -144,20 +144,42 @@ export const removeParticipant = async (
   return expectTrip(response);
 };
 
+const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Reads a `YYYY-MM-DD` string as the calendar day it names.
+ *
+ * `new Date('2026-09-01')` is not that day: the spec parses a date-only string as an
+ * *instant*, UTC midnight, so in New York it is the evening of 31 August. Reading local
+ * getters off it - as this module used to - then yields 31/8, which is why every date in
+ * the trip shifted back one day for every user west of UTC, the start date included.
+ *
+ * Building from the string's own parts avoids the question entirely: nothing here depends
+ * on where the browser is.
+ */
+const utcFromYmd = (value: string): Date | null => {
+  const parts = YMD.exec(value);
+  if (!parts) return null;
+
+  const [, year, month, day] = parts.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  // Date.UTC rolls 2026-02-31 forward to 3 March rather than rejecting it, so a
+  // nonsense date would otherwise come back as a real one.
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+
+  return date;
+};
+
 export const getDatesBetween = (startDate: string, endDate: string): string[] => {
+  const current = utcFromYmd(startDate);
+  const end = utcFromYmd(endDate);
+  // Unparseable or inverted ranges give nothing, as before.
+  if (!current || !end) return [];
+
   const dates: string[] = [];
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  // Normalize to UTC midnight to avoid timezone issues
-  const current = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()));
-  const endUTC = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()));
-
-  while (current <= endUTC) {
-    const year = current.getUTCFullYear();
-    const month = String(current.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(current.getUTCDate()).padStart(2, '0');
-    dates.push(`${year}-${month}-${day}`);
+  while (current <= end) {
+    dates.push(current.toISOString().slice(0, 10));
     current.setUTCDate(current.getUTCDate() + 1);
   }
 

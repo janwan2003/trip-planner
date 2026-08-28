@@ -19,9 +19,15 @@ import { getAvailabilityCount, getDatesBetween, Trip } from '@/lib/tripStore';
 
 const NAMES = ['Ania', 'Bartek', 'Celina', 'Dawid', 'Ewa', 'Filip'];
 
-/** 14 days starting on the 1st of next month, so the example never reads as stale. */
+/**
+ * 14 days starting on the 1st of next month, so the example never reads as stale.
+ *
+ * "Next month" is taken from the visitor's local calendar - reading UTC getters off
+ * `new Date()` would show October to someone in New York on the evening of 31 August -
+ * and the arithmetic from there is UTC, so the strings do not depend on the offset.
+ */
 const previewRange = (today: Date): { startDate: string; endDate: string } => {
-  const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1));
+  const first = new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 1));
   const last = new Date(first);
   last.setUTCDate(last.getUTCDate() + 13);
   return { startDate: first.toISOString().slice(0, 10), endDate: last.toISOString().slice(0, 10) };
