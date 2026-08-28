@@ -63,14 +63,21 @@ The app automatically falls back to localStorage if Supabase is not configured.
 ### Cloudflare Pages
 
 Production is served by Cloudflare Pages at [wegowhen.com](https://wegowhen.com),
-built automatically from the `main` branch.
+built automatically from the `main` branch. The Pages project is named
+`wegowhen`; `wegowhen.com`, `www.wegowhen.com` and `wegowhen.pages.dev` all
+serve it.
 
 | Setting | Value |
 | --- | --- |
-| Framework preset | Vite |
+| Framework preset | None (build command set explicitly) |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
-| Node version | 20 |
+| Node version | 22 (Cloudflare default) |
+
+Do not commit a `bun.lockb`: Cloudflare detects bun from it and runs
+`bun install --frozen-lockfile`, which cannot parse the old binary lockfile
+format and fails the build before vite runs. `package-lock.json` is the
+lockfile this project builds from.
 
 Build-time environment variables (set for Production and Preview):
 
