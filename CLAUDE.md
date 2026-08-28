@@ -24,13 +24,19 @@ because both compile native binaries; nothing else is.
 ## Commands
 
 ```bash
-pnpm dev            # vite dev server, port 8080
-pnpm run build      # -> dist/
-pnpm test           # vitest run
-pnpm lint           # eslint
+pnpm dev              # vite dev server, port 8080
+pnpm run build        # -> dist/
+pnpm run typecheck    # tsc --noEmit
+pnpm lint             # eslint
+pnpm test             # vitest run
+pnpm run test:coverage
+pnpm run check        # typecheck + lint + test, the same gates CI runs
 ```
 
-There is no `typecheck` script yet; run `npx tsc -p tsconfig.app.json --noEmit` directly.
+`.husky/pre-commit` runs lint-staged, typecheck and the tests on every commit, so a
+failure surfaces before the push rather than in CI. `.github/workflows/ci.yml` runs
+typecheck, lint, coverage and build on every PR and every push to `main`, on Node 22
+to match Cloudflare's build image.
 
 ## Deployment
 
@@ -72,14 +78,16 @@ Pages build-time variables. Do not treat that `.env` as a working backend.
   works but trips are per-browser and **sharing a trip link does not work**.
 - **Decided:** replace Supabase with **Cloudflare Pages Functions + D1**. Stay entirely
   inside Cloudflare. `supabase-schema.sql` is the starting point for the D1 schema.
-- **No CI and no pre-commit hooks.** The only workflow (`deploy.yml`, GitHub Pages) was
-  removed when the site moved to Cloudflare. Gates are not wired yet.
-- **Tests are a placeholder.** `src/test/example.test.ts` is the entire suite; one trivial
-  assertion. Treat any coverage claim with suspicion until this changes.
-- `tsconfig.app.json` has `strict: false`. Turning it on produces **0 errors**, and adding
-  `noUnusedLocals`/`noUnusedParameters` produces 8, all dead imports. It is cheap to fix.
-- `pnpm lint` currently exits non-zero: 5 errors, 7 warnings. The 7 warnings are
-  `react-refresh/only-export-components` in vendored shadcn files and do not fail the run.
+- **Typing is fully strict.** `strict`, `noUnusedLocals`, `noUnusedParameters`,
+  `noImplicitAny` and `noFallthroughCasesInSwitch` are all on, and the tree is clean.
+- `pnpm lint` exits 0. The 7 remaining warnings are all
+  `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
+  the run, and those files are not ours to restructure.
+- **Coverage baseline is 0%.** Measured, not guessed: `pnpm run test:coverage` reports 0
+  statements, branches, functions and lines across `src/lib`, `src/components` and
+  `src/pages`. Thresholds in `vitest.config.ts` are set to 0 so the gate cannot pass
+  vacuously while pretending otherwise — raise them as real tests land.
+  `src/components/ui/**` is excluded from coverage because it is vendored third-party code.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 
