@@ -152,6 +152,66 @@ describe('findBestDateRanges', () => {
     expect(result[0].names).toEqual(['Ada']);
   });
 
+  describe('onlyParticipants', () => {
+    const group = [
+      { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+      { name: 'Bo', availableDates: ['2026-09-02', '2026-09-03', '2026-09-04'] },
+      { name: 'Cy', availableDates: ['2026-09-02'] },
+    ];
+
+    it('answers for the whole group when no filter is given', () => {
+      expect(shape(findBestDateRanges(trip(group)))[0]).toBe(
+        '2026-09-02..2026-09-02 (3) Ada+Bo+Cy',
+      );
+    });
+
+    it('treats an empty filter as the whole group', () => {
+      expect(shape(findBestDateRanges(trip(group), { onlyParticipants: [] }))[0]).toBe(
+        '2026-09-02..2026-09-02 (3) Ada+Bo+Cy',
+      );
+    });
+
+    it('answers only for the named participants', () => {
+      const result = findBestDateRanges(trip(group), { onlyParticipants: ['Ada', 'Bo'] });
+
+      expect(shape(result)).toEqual(['2026-09-02..2026-09-04 (2) Ada+Bo']);
+    });
+
+    it('never names someone who was filtered out', () => {
+      const result = findBestDateRanges(trip(group), { onlyParticipants: ['Ada', 'Bo'] });
+
+      // This is the failure that made the filter a liability: the ranked answer used to
+      // keep recommending ranges attributed to people the organiser had excluded.
+      expect(result.flatMap((r) => r.names)).not.toContain('Cy');
+    });
+
+    it('matches names case-insensitively, like the rest of the app', () => {
+      const result = findBestDateRanges(trip(group), { onlyParticipants: ['ADA', 'bo'] });
+
+      expect(result[0].names).toEqual(['Ada', 'Bo']);
+    });
+
+    it('answers for one person', () => {
+      const result = findBestDateRanges(trip(group), { onlyParticipants: ['Cy'] });
+
+      expect(shape(result)).toEqual(['2026-09-02..2026-09-02 (1) Cy']);
+    });
+
+    it('returns nothing when the filter names nobody on the trip', () => {
+      expect(findBestDateRanges(trip(group), { onlyParticipants: ['Nobody'] })).toEqual([]);
+    });
+
+    it('can narrow the answer to a longer stretch than the whole group could make', () => {
+      // The point of the filter: excluding Cy reveals a three-day option that the full
+      // group does not have.
+      const all = findBestDateRanges(trip(group));
+      const narrowed = findBestDateRanges(trip(group), { onlyParticipants: ['Ada', 'Bo'] });
+
+      expect(all[0].days).toBe(1);
+      expect(narrowed[0].days).toBe(3);
+    });
+  });
+
   /**
    * The reason this module exists. The previous implementation iterated
    * `mask < (1 << n)` over the power set of participants.

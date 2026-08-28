@@ -14,16 +14,23 @@ import {
 
 interface BestDatesProps {
   trip: Trip;
+  /** Names the organiser has filtered to. Empty means the whole group. */
+  selectedParticipants?: string[];
 }
 
-export function BestDates({ trip }: BestDatesProps) {
+export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
   const [minDays, setMinDays] = useState<number>(1);
 
   // Computed without the length filter so that raising "Min" past every option empties
   // the list without removing the control that would let you lower it again.
   const allRanges = useMemo(
-    () => findBestDateRanges(trip, { minDays: 1, limit: Number.MAX_SAFE_INTEGER }),
-    [trip],
+    () =>
+      findBestDateRanges(trip, {
+        minDays: 1,
+        limit: Number.MAX_SAFE_INTEGER,
+        onlyParticipants: selectedParticipants,
+      }),
+    [trip, selectedParticipants],
   );
 
   const topRanges = useMemo(
@@ -41,9 +48,17 @@ export function BestDates({ trip }: BestDatesProps) {
     <div className="space-y-3">
       {/* Header with filter */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Star className="w-4 h-4 text-accent" />
-          Best Dates
+        <div className="flex items-center gap-2 text-sm font-medium min-w-0">
+          <Star className="w-4 h-4 text-accent shrink-0" />
+          <span className="shrink-0">Best Dates</span>
+          {selectedParticipants.length > 0 && (
+            <span
+              data-testid="best-dates-scope"
+              className="text-xs font-normal text-muted-foreground truncate"
+            >
+              for {selectedParticipants.join(', ')}
+            </span>
+          )}
         </div>
         
         <div className="flex items-center gap-1.5">
