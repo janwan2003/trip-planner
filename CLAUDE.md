@@ -102,11 +102,13 @@ not a key. `.env` is still gitignored if you need one.
 - `pnpm lint` exits 0. The 7 remaining warnings are all
   `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
   the run, and those files are not ours to restructure.
-- **Coverage is 96.65% of lines, 88.76% of branches** across `src/lib`,
-  `src/components` and `src/pages`, from 110 unit tests. Thresholds in
+- **Coverage is 96.78% of lines, 89.13% of branches** across `src/lib`,
+  `src/components` and `src/pages`, from 137 unit tests. Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
+  Re-measure with `pnpm run test:coverage` rather than trusting this line; it is a
+  snapshot and goes stale the moment a test lands.
 - **21 integration tests** in `test/api.integration.test.ts` run the API against a real
   `wrangler pages dev` with a local D1. Nothing is mocked, so they cover the Functions,
   the SQL, the unique index and the middleware together.
@@ -137,6 +139,34 @@ Things in this repo that marketing depends on, so do not break them silently:
 - `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
   dimensions matching the actual PNG, title and description lengths, and the absence of
   invented ratings.
+
+## Test data left on production
+
+Two trips exist in the production D1 purely from smoke tests during the Cloudflare
+migration: `prodsmoke0000000000000000000001` ("prod smoke") and
+`prodtouch000000000000000000000001` ("touch check"). Their participants were removed, so
+they hold no personal data, but the rows are still there.
+
+**There is no way to delete a trip.** The API exposes create, read, and
+add/rename/remove participant — nothing deletes a trip. That is worth knowing for two
+reasons: this junk cannot be cleaned up through the app, and `PrivacyPolicy.tsx` makes
+claims about retention that nothing in the code implements (see below).
+
+## Claims in the legal pages that the code does not back
+
+Both were checked against the codebase, not assumed:
+
+- **§2.2 claims automatic collection of "Usage Data: Pages visited, time spent on
+  pages, and interaction patterns".** There is no analytics anywhere — no gtag, no
+  Plausible, no PostHog, nothing. `grep -riE "gtag|analytics|plausible|posthog" src/
+  index.html functions/` is empty. Cloudflare keeps edge request logs, but the app
+  collects none of this.
+- **§9 claims trips "may be archived or removed after an extended period of inactivity
+  (typically 24 months)".** Nothing archives or removes anything: there is no cron, no
+  scheduled job, and Pages Functions have no cron triggers, so implementing it would
+  need a separate Worker.
+
+Neither was rewritten, because narrowing a privacy policy is the product owner's call.
 
 ## Two defects found and fixed here
 
