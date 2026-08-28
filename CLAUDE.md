@@ -205,7 +205,16 @@ Neither was rewritten, because narrowing a privacy policy is the product owner's
 
 ## Conventions
 
-- Branch off `main`, open a PR, never push straight to `main`.
-- Commit and PR bodies state what was verified and what was not. "Implemented" is not a
+- **Commit straight to `main`. Do not open pull requests.** This is the owner's explicit
+  instruction, and it replaces the branch-and-PR rule that used to sit here.
+- **Therefore run the gates locally before every push.** CI does run on pushes to `main`,
+  but only after the fact, and Cloudflare Pages deploys `main` automatically — so a bad
+  commit reaches production before the tests have finished disagreeing with it.
+  `pnpm run check` before `git push` is the whole safety net.
+- **Check `git status` before staging.** More than one session has worked in this
+  checkout at once, and `git add -A` will happily commit someone else's work in progress.
+  It has already happened once. If the tree holds changes that are not yours, use your own
+  `git worktree` instead of stashing or reverting theirs.
+- Commit messages state what was verified and what was not. "Implemented" is not a
   result; the run where it worked is.
 - Keep this file and `README.md` true as part of the change that invalidates them.
