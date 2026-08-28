@@ -18,9 +18,11 @@ submission is the one that gets a moderator's editorial attention, and spending 
   is a bot block, not a dead site: those entries are marked "blocked", which says nothing
   about whether the directory works in a browser. Two entries failed for real and were
   dropped: `crozdesk.com/vendor` returned 404 and `tools.arc.dev` did not resolve.
-- **Account** says whether submitting requires creating an account. I cannot create
-  accounts or submit forms, so every row is yours to execute; the value of this column is
-  that it tells you which ones are a 30-second paste and which need a signup first.
+- **Account** says whether submitting requires creating an account. Sites offering Google
+  sign-in were completed end to end; sites wanting a password, an emailed code, or an
+  anti-bot answer are marked "needs you" in the tracker at the bottom, which is the section
+  to read for current state. The batch tables below are the original plan, kept for the
+  reasoning, not a record of what happened.
 
 ## Before batch 1: the free wins that need no directory
 
@@ -114,44 +116,107 @@ Saying why is the point of this section — otherwise someone re-adds them in th
 
 Findings from working through the list on 2026-08-28, because the plan above was
 written on the assumption that "free directory" still means free. Mostly it does not.
+Every row was checked by opening the submit flow, not by reading the marketing page.
 
 | Site | Free route | What it really requires |
 | --- | --- | --- |
 | AlternativeTo | Genuinely free | Nothing. Listing went live the same hour |
-| SaaSHub | Genuinely free | Nothing. Free queue is up to 32 days |
+| SaaSHub | Genuinely free | Nothing. Free queue quoted up to 32 days; it actually went live the same day |
 | dev.to | Genuinely free | A post worth reading, which is the point |
+| PeerPush | Genuinely free | Nothing. Free queue is ~38 days, but the product page is public immediately |
+| PitchWall | Genuinely free | Nothing. 30+ day queue, and the free tier is explicitly **nofollow** |
+| FiveTaco | Genuinely free | A Google sign-in. URL-only form |
+| TinyLaunch | Free "Standard Launch" | Both add-on sections must be set to "None — $0" before the CTA unlocks. Free dates start ~4 weeks out |
 | OpenHunts | Free **only** via badge | Every free launch week to mid-2028 shows *Full*. Their badge on the site skips the queue |
 | Fazier | Free via badge + work | 3 helpful comments on other products, their badge on the site, **and Domain Rating > 0** |
-| TinyLaunch | Free "Standard Launch" | Its dashboard does not respond to automation; two minutes by hand |
+| Startup Fame | Free "Verified" tier | Their badge on the site **and Domain Rating > 0**, same gate as Fazier. The listing page is live and indexable anyway; the link is nofollow until verified |
+| Open Launch | Free tier exists on paper | "Free launches are fully booked into 2027." Cheapest real date is $12 |
+| Microlaunch | None any more | `/submit` redirects to a $39 Pro Launch page |
 | Uneed | **No free route** | "The free waiting line is closed." $14.99 fast-track or $29.99 pick-a-date |
 | Product Hunt | Free | Hard Cloudflare block on an automated browser. Manual only |
+| BetaList, StartupBuffer | Free | Same Cloudflare bot wall. Manual only |
+| Launching Next | Free | Plain form, no account — but it ends in an anti-bot arithmetic field, so the last click is manual |
+| 10words | Free | Account creation with an email **and password**, no OAuth. Manual only |
+| F6S | Free | Emails a 6-digit code to the address on file. Manual only |
+| DevHunt | Free, but off-topic | Accepts dev tools only: open-source projects, APIs/SDKs, frameworks, IDEs, testing, monitoring. WeGoWhen is none of those, and the repo has no licence, so submitting would be spam |
 
 The reciprocal-badge trade is the modern price, and it is a fair one: the badges live at
 the very bottom of the footer, in `index.html` rather than in React, because both sites
 verify by fetching the page rather than by running it.
 
+**The DR > 0 gate blocks two free tiers at once.** Both Fazier and Startup Fame require
+Ahrefs Domain Rating above zero. As of 2026-08-28 the DataForSEO backlinks summary for
+`wegowhen.com` returns zero items — no crawler has processed today's links yet — and
+Ahrefs' own free checker sits behind a Cloudflare turnstile, so there is no honest way to
+tick the box. Retry both once a crawl has landed; the work either side of the box is done.
+
 ## Tracker
 
-Once a listing is live, confirm the backlink is real and dofollow:
+Once a listing is live, confirm the backlink is real and dofollow. Note that many of these
+domains 403 a bare `curl`, so a 403 is not evidence of absence — check in a browser:
 
 ```bash
-curl -sIL "https://directory.example/your-listing" | grep -i 'rel='
+curl -s -L -A "Mozilla/5.0 Chrome/140.0" "https://directory.example/your-listing" \
+  | grep -o '<a[^>]*yourdomain\.com[^>]*>'
 ```
 
-| Directory | Submitted | Status | Live URL | Notes |
-| --- | --- | --- | --- | --- |
-| AlternativeTo | 2026-08-28 | **Live** | https://alternativeto.net/software/wegowhen/ | Listed as an alternative to When2Meet, Doodle, Framadate, Crab Fit, OurCalendar, TimeOverlap. Icon + 2 screenshots. Tagged `scheduling`, `travel-planner`; features "No registration required", "No Tracking", "Ad-free" |
-| SaaSHub | 2026-08-28 | Pending approval | https://www.saashub.com/wegowhen | Free queue, up to 32 days. 8 categories, 6 competitors, logo, description, pricing. Also registered as a competitor on Let's Meet On, Venn Poll and Yepday |
-| dev.to | 2026-08-28 | **Live** | https://dev.to/janwan2003/the-bug-that-made-my-best-dates-feature-return-nothing-at-31-people-2e4a | Technical post on the `1 << 31` bug. Two links to the site |
-| OpenHunts | 2026-08-28 | Pending review | — | Free via badge; badge verified against the live site. Dofollow backlink only if it finishes top 3 |
-| GitHub | 2026-08-28 | **Live** | https://github.com/janwan2003/trip-planner | Repo description, homepage link, 14 topics |
-| awesome-no-login-web-apps | 2026-08-28 | PR open | https://github.com/aviaryan/awesome-no-login-web-apps/pull/566 | Maintainer dormant since 2023; free, so worth the wait |
-| Fazier | — | **Blocked** | — | 3/3 comments done, badge live. Their checklist requires Domain Rating > 0 and DataForSEO has no backlink data for the domain at all, so the box cannot honestly be ticked yet. Retry once Ahrefs has crawled the links above |
-| TinyLaunch | — | Needs you | — | Free Standard Launch exists and the account is signed in, but the dashboard's Submit Product button does nothing under automation |
-| Uneed | 2026-08-28 | Built, unpaid | https://www.uneed.best/tool/wegowhen | Product page complete: copy, tags, logo, 3 screenshots. Free waiting line is closed, so it will not publish without $14.99 |
-| Indie Hackers | — | Needs sign-in | — | Tab was still at `/sign-in` |
-| Product Hunt | — | Needs you | — | Cloudflare blocks the automated browser. Also still wants the demo video |
-| Show HN | — | Not started | — | Draft in launch-copy.md. Needs a Hacker News account |
+Every row below was re-checked on 2026-08-28 by fetching the page and reading the `rel`
+attribute on the outbound link.
+
+| Directory | Submitted | Status | Live URL | Link | Notes |
+| --- | --- | --- | --- | --- | --- |
+| AlternativeTo | 2026-08-28 | **Live** | https://alternativeto.net/software/wegowhen/about/ | nofollow | Alternative to When2Meet, Doodle, Framadate, Crab Fit, OurCalendar, TimeOverlap. Icon, 2 screenshots, and the demo video is on the page |
+| SaaSHub | 2026-08-28 | **Live** | https://www.saashub.com/wegowhen | nofollow | Approved faster than the 32-day estimate. 8 categories, 6 competitors, demo video added |
+| dev.to | 2026-08-28 | **Live** | https://dev.to/janwan2003/the-bug-that-made-my-best-dates-feature-return-nothing-at-31-people-2e4a | **dofollow** | Technical post on the `1 << 31` bug. Two links to the site |
+| PeerPush | 2026-08-28 | **Live** | https://peerpush.com/p/wegowhen | **dofollow** | Product page public immediately; free launch queue position #2243, ~38 days. When2meet, Doodle, LettuceMeet and Rallly registered as alternatives |
+| GitHub | 2026-08-28 | **Live** | https://github.com/janwan2003/trip-planner | nofollow | Repo description, homepage link, 14 topics |
+| YouTube | 2026-08-28 | **Live** | https://youtu.be/__WmHyLytdI | nofollow | 0:48 demo, public. Description carries the site and repo links |
+| Startup Fame | 2026-08-28 | **Live page, unverified** | https://startupfa.me/s/wegowhen | nofollow | Listing page is indexable now. Free "Verified" tier needs badge + DR > 0; dashboard shows "not listed" until then |
+| TinyLaunch | 2026-08-28 | Scheduled | — | — | Free Standard Launch, awaiting approval, goes live **28 Sep 2026** at midnight PT. Launch id 20731 |
+| PitchWall | 2026-08-28 | Under review | https://pitchwall.co/product/wegowhen-group-trip-date-planner (404 until published) | nofollow when live | Free tier: 30+ day queue, 1-day homepage slot. Logo, 3 screenshots, demo video |
+| FiveTaco | 2026-08-28 | Under review | — | — | URL-only submission accepted, notified by email on approval |
+| OpenHunts | 2026-08-28 | Pending review | — | — | Free via badge; badge verified against the live site. Dofollow only if it finishes top 3 |
+| awesome-no-login-web-apps | 2026-08-28 | PR open | https://github.com/aviaryan/awesome-no-login-web-apps/pull/566 | — | Maintainer dormant since 2023; free, so worth the wait |
+| Fazier | — | **Blocked on DR** | — | — | 3/3 comments done, badge live. Retry when DR > 0 |
+| Open Launch | — | Abandoned | — | — | Draft built, then found free dates are booked into 2027. Not paid |
+| Microlaunch | — | Skipped | — | — | Paid only, $39 |
+| Uneed | 2026-08-28 | Built, unpaid | https://www.uneed.best/tool/wegowhen (404) | — | Page complete but will not publish without $14.99 |
+| Launching Next | — | **Staged, needs you** | — | — | Whole form filled in an open tab; needs the email field and the "what is 2+3" anti-bot answer |
+| 10words | — | Needs you | — | — | Email + password signup, no OAuth |
+| F6S | — | Needs you | — | — | 6-digit code sent to jan@wangrat.com |
+| BetaList | — | Needs you | — | — | Cloudflare bot wall |
+| StartupBuffer | — | Needs you | — | — | Cloudflare bot wall |
+| Indie Hackers | — | Needs sign-in | — | — | Tab was still at `/sign-in` |
+| Product Hunt | — | Needs you | — | — | Cloudflare blocks the automated browser. Video now exists, so the asset gap is closed |
+| Show HN | — | Not started | — | — | Draft in launch-copy.md. Needs a Hacker News account |
+| DevHunt | — | Deliberately skipped | — | — | Dev tools only; WeGoWhen is off-topic and the repo has no licence |
+
+**Live pages linking to the site: 7.** Two of them are dofollow (dev.to, PeerPush). Five
+more are queued or under review and should land without any payment.
+
+## Indexing, without Search Console
+
+IndexNow needs no account and covers Bing, Yandex, Seznam and Naver. All eight indexable
+URLs were submitted on 2026-08-28 and the endpoint returned `HTTP 200`:
+
+```bash
+curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' \
+  -d @- <<'JSON'
+{"host":"wegowhen.com","key":"5336c16045b1067eef246cc17ea1297d",
+ "keyLocation":"https://wegowhen.com/5336c16045b1067eef246cc17ea1297d.txt",
+ "urlList":["https://wegowhen.com/","https://wegowhen.com/when2meet-alternative",
+ "https://wegowhen.com/doodle-alternative","https://wegowhen.com/faq",
+ "https://wegowhen.com/about","https://wegowhen.com/contact",
+ "https://wegowhen.com/terms","https://wegowhen.com/privacy"]}
+JSON
+```
+
+Google has no equivalent: its sitemap ping was retired in 2023, so `sitemap.xml` still has
+to be submitted by hand in Search Console. That remains item 3 of the list at the top.
+
+Archiving the URLs on the Wayback Machine was attempted and **failed** — `web.archive.org/save`
+timed out on every one of the eight URLs from this machine and `archive.org/wayback/available`
+reports no snapshots. It now wants an archive.org account. Low value, not retried.
 
 ## Comments left on other products
 
