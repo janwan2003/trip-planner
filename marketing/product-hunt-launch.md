@@ -11,12 +11,14 @@ Product Hunt cannot be submitted by an agent, and this was checked three ways on
 
 | Route | Result |
 | --- | --- |
-| Automated Chrome | Cloudflare interstitial, never clears |
-| Second, independent automated browser | Hard block: "Sorry, you have been blocked… Ray ID a324fc9b3af36527" |
 | API v2 | **No create-post mutation exists.** Write scope is partial and approval-only ("get in touch with us"), and the terms state the API "must not be used for commercial purposes" |
+| Browser | Reachable. Needs a signed-in account, which is an account action rather than a wall |
 
-So this file is the deliverable, not a listing. Everything below is prepared; the clicking
-is yours.
+An earlier version of this file claimed Cloudflare hard-blocks the site in two independent
+automated browsers. That was **wrong**: it was a VPN on the dev machine. With the VPN off,
+producthunt.com loads normally in the same automated browser. The API limitation is the real
+one and it is not going away, so this file is still the deliverable — everything below is
+prepared and the clicking is yours.
 
 ## Assets, already built
 
