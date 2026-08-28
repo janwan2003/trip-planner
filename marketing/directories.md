@@ -160,18 +160,34 @@ curl -s -L -A "Mozilla/5.0 Chrome/140.0" "https://directory.example/your-listing
   | grep -o '<a[^>]*yourdomain\.com[^>]*>'
 ```
 
-Every row below was re-checked on 2026-08-28 by fetching the page and reading the `rel`
-attribute on the outbound link.
+**Three things have to be true before a row counts as a backlink, and checking only the
+first is how this file was wrong once already:**
+
+1. The page returns 200 **to a request with no cookies.** A directory page can 200 for the
+   signed-in submitter and be invisible to everyone else. AlternativeTo does exactly this,
+   and because it 403s a bare `curl`, the only check that had succeeded was one made inside
+   the logged-in browser — which proved nothing.
+2. The page is not `noindex`. SaaSHub and PeerPush both serve their listing publicly and
+   both carry a `noindex` robots meta while queued, so neither is search-visible yet.
+3. The outbound link is not `nofollow`.
+
+```bash
+# 1 + 2 + 3 in one go, cookie-free
+curl -s -L -A "Mozilla/5.0 Chrome/140.0" "https://directory.example/listing" \
+  | grep -Eio '<meta[^>]*robots[^>]*>|<a[^>]*yourdomain\.com[^>]*>'
+```
+
+Every row below was re-checked this way on 2026-08-28.
 
 | Directory | Submitted | Status | Live URL | Link | Notes |
 | --- | --- | --- | --- | --- | --- |
-| AlternativeTo | 2026-08-28 | **Live** | https://alternativeto.net/software/wegowhen/about/ | nofollow | Alternative to When2Meet, Doodle, Framadate, Crab Fit, OurCalendar, TimeOverlap. Icon, 2 screenshots, and the demo video is on the page |
-| SaaSHub | 2026-08-28 | **Live** | https://www.saashub.com/wegowhen | nofollow | Approved faster than the 32-day estimate. 8 categories, 6 competitors, demo video added |
+| AlternativeTo | 2026-08-28 | **Not public — in review queue** | https://alternativeto.net/software/wegowhen/about/ (submitter only) | nofollow when live | Page says "Only you can see this app right now" and "expect a few months". Content is complete: alternative to When2Meet, Doodle, Framadate, Crab Fit, OurCalendar, TimeOverlap, plus the demo video. A **$5** one-time Stripe "priority review" moves it to 1-2 business days — not taken, that is a spending decision |
+| SaaSHub | 2026-08-28 | Public but **`noindex`** | https://www.saashub.com/wegowhen | nofollow | Page serves 200 to anyone, but carries `<meta name="robots" content="noindex">` while it waits in the free queue, so it is not a search-visible backlink yet. 8 categories, 6 competitors, demo video added |
 | dev.to | 2026-08-28 | **Live** | https://dev.to/janwan2003/the-bug-that-made-my-best-dates-feature-return-nothing-at-31-people-2e4a | **dofollow** | Technical post on the `1 << 31` bug. Two links to the site |
-| PeerPush | 2026-08-28 | **Live** | https://peerpush.com/p/wegowhen | **dofollow** | Product page public immediately; free launch queue position #2243, ~38 days. When2meet, Doodle, LettuceMeet and Rallly registered as alternatives |
+| PeerPush | 2026-08-28 | Public but **`noindex, follow`** | https://peerpush.com/p/wegowhen | **dofollow** | Page serves 200 to anyone and the outbound link is dofollow, but the page is `noindex` until the free queue publishes it (position #2243, ~38 days), so it is not a search-visible backlink yet. When2meet, Doodle, LettuceMeet and Rallly registered as alternatives |
 | GitHub | 2026-08-28 | **Live** | https://github.com/janwan2003/trip-planner | nofollow | Repo description, homepage link, 14 topics |
 | YouTube | 2026-08-28 | **Live** | https://youtu.be/__WmHyLytdI | nofollow | 0:48 demo, public. Description carries the site and repo links |
-| Startup Fame | 2026-08-28 | **Live page, unverified** | https://startupfa.me/s/wegowhen | nofollow | Listing page is indexable now. Free "Verified" tier needs badge + DR > 0; dashboard shows "not listed" until then |
+| Startup Fame | 2026-08-28 | **Live and indexable** | https://startupfa.me/s/wegowhen | nofollow | No robots meta, serves 200 anonymously, carries our full copy. Free "Verified" tier needs badge + DR > 0; dashboard still shows "not listed", but the page is public regardless |
 | TinyLaunch | 2026-08-28 | Scheduled | — | — | Free Standard Launch, awaiting approval, goes live **28 Sep 2026** at midnight PT. Launch id 20731 |
 | PitchWall | 2026-08-28 | Under review | https://pitchwall.co/product/wegowhen-group-trip-date-planner (404 until published) | nofollow when live | Free tier: 30+ day queue, 1-day homepage slot. Logo, 3 screenshots, demo video |
 | FiveTaco | 2026-08-28 | Under review | — | — | URL-only submission accepted, notified by email on approval |
@@ -191,8 +207,14 @@ attribute on the outbound link.
 | Show HN | — | Not started | — | — | Draft in launch-copy.md. Needs a Hacker News account |
 | DevHunt | — | Deliberately skipped | — | — | Dev tools only; WeGoWhen is off-topic and the repo has no licence |
 
-**Live pages linking to the site: 7.** Two of them are dofollow (dev.to, PeerPush). Five
-more are queued or under review and should land without any payment.
+**Pages that are public, indexable, and link to the site: 4** — dev.to, Startup Fame,
+GitHub and YouTube. Exactly **one of those four is dofollow** (dev.to).
+
+Three more are built and public but not yet search-visible: SaaSHub and PeerPush are
+`noindex` while queued, and AlternativeTo is not public at all. Five others are queued or
+under review. All of them are free and should convert on their own timers, so the honest
+figure to watch is "indexable and dofollow", which is 1, not the 7 an earlier version of
+this file claimed.
 
 ## Indexing, without Search Console
 

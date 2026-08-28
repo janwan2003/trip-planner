@@ -126,8 +126,10 @@ not a key. `.env` is still gitignored if you need one.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 - **The site is not in Google's index yet**: `site:wegowhen.com` returned nothing on
-  2026-08-28. It now has eight indexable URLs rather than one, and **seven live pages
-  linking to it** — two of them dofollow (dev.to, PeerPush). All eight URLs were pushed to
+  2026-08-28. It now has eight indexable URLs rather than one, and **four public,
+  indexable pages linking to it** — dev.to, Startup Fame, GitHub and YouTube, of which
+  only dev.to is dofollow. SaaSHub and PeerPush are public but `noindex` while queued, and
+  the AlternativeTo listing is still submitter-only. All eight URLs were pushed to
   Bing, Yandex, Seznam and Naver via IndexNow, which needs no account; Google still needs
   `sitemap.xml` submitted by hand in Search Console. Current per-directory state, checked
   by fetching each page, is the tracker at the bottom of `marketing/directories.md`.
