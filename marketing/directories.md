@@ -133,8 +133,9 @@ Every row was checked by opening the submit flow, not by reading the marketing p
 | Open Launch | Free tier exists on paper | "Free launches are fully booked into 2027." Cheapest real date is $12 |
 | Microlaunch | None any more | `/submit` redirects to a $39 Pro Launch page |
 | Uneed | **No free route** | "The free waiting line is closed." $14.99 fast-track or $29.99 pick-a-date |
-| Product Hunt | Free | Hard Cloudflare block on an automated browser, and no API route either — write scope is approval-only and exposes no create-post mutation. Manual only; the whole submission is prepared in [product-hunt-launch.md](product-hunt-launch.md) |
-| BetaList, StartupBuffer | Free | Same Cloudflare bot wall. Manual only |
+| Product Hunt | Free | No API route — write scope is approval-only and exposes no create-post mutation. Reachable in a browser once the VPN is off. Manual only; the whole submission is prepared in [product-hunt-launch.md](product-hunt-launch.md) |
+| BetaList | Free | Reachable once the VPN is off. Sign-in is X, email + password, or a magic link — no Google, so that step is manual |
+| StartupBuffer | Free | Reachable once the VPN is off, and needs **no account at all**: a three-step form taking name, URL, a business email, two descriptions, one screenshot under 500kb, country, category and tags |
 | Launching Next | Free, no queue quoted | Plain form, no account — but it ends in an anti-bot arithmetic field, so the last click is manual |
 | 10words | Free, and the queue is ~2,338 days | Signup needs an email **and password**, no OAuth, so that step is manual. The form itself is a minute — but the free queue is quoted at about 6.4 years, with a paid skip-the-line as the only alternative |
 | F6S | Free | Emails a 6-digit code to the address on file. Manual only |
@@ -156,6 +157,39 @@ Ahrefs Domain Rating above zero. As of 2026-08-28 the DataForSEO backlinks summa
 `wegowhen.com` returns zero items — no crawler has processed today's links yet — and
 Ahrefs' own free checker sits behind a Cloudflare turnstile, so there is no honest way to
 tick the box. Retry both once a crawl has landed; the work either side of the box is done.
+
+## The VPN trap, which cost a whole category
+
+Four sites were recorded here as having a "hard Cloudflare bot wall" that blocks automation:
+Product Hunt, BetaList, StartupBuffer, and F6S, which went as far as "We think you might be
+a bot" with an IP printed in the message.
+
+**All of it was a VPN on this machine's connection.** With the VPN off, every one of those
+sites loads normally in the same automated browser, and StartupBuffer submitted end to end
+without an account. The Cloudflare-fronted sites were reacting to a datacentre exit IP with
+a poor reputation, not to automation.
+
+Before concluding that a site blocks agents, check the exit IP. The tell is a cluster of
+unrelated domains failing the same way at the same time — that is a property of the
+connection, not of four separate sites. A genuine automation block tends to be one site,
+consistently, and it survives an IP change.
+
+What survived the retest is the part that had nothing to do with the network: Product Hunt's
+API v2 exposes **no create-post mutation**, so a launch cannot be filed programmatically
+however clean the IP is.
+
+## Wrong paths, and one genuinely dead site
+
+Four submit URLs in the batch tables above returned `404` because the path was wrong, not
+because the directory was gone. Check a homepage for its real submit link before writing
+copy for it.
+
+| Site | Real path | State |
+| --- | --- | --- |
+| Firsto | `firsto.co/projects/submit` | Signed in via Google, draft built — it autofills name, description, logo and cover from the URL. **Every free date from Aug 2026 to Feb 2027 is Full**, and the picker spans only that ~180-day window, so the free tier is unbookable. $19.90 skips the queue; new free slots release daily at 00:00 UTC and have to be grabbed as they open. Not paid |
+| Startup Stash | `startupstash.com/add-listing/` | Not attempted |
+| Best of Web | — | **Dead.** `bestofweb.io` does not resolve, VPN or no VPN |
+| Promote Project, Today Launches | not found | Homepages load but expose no submit link |
 
 ## Tracker
 
@@ -207,10 +241,10 @@ Every row below was re-checked this way on 2026-08-28.
 | Launching Next | — | **Staged, one field left** | — | — | Whole form filled in an open tab, contact email included. Needs only the "What is 2+3?" anti-bot answer and the Submit click |
 | 10words | 2026-08-28 | Submitted, **queue is 2,338 days** | — | — | Submission id 30788. On submitting it quotes an estimated feature date about 6.4 years out and offers a paid skip-the-line. Cost a minute, so worth having, but it should not be counted |
 | F6S | — | Needs you | — | — | 6-digit code sent to jan@wangrat.com |
-| BetaList | — | Needs you | — | — | Cloudflare bot wall |
-| StartupBuffer | — | Needs you | — | — | Cloudflare bot wall |
+| BetaList | — | Needs sign-in | — | — | Site is reachable; sign-in offers X, email + password, or a magic link, none of which an agent should do |
+| StartupBuffer | 2026-08-28 | **Submitted, in review** | — | nofollow expected | No account needed. Three-step form; one screenshot, Travel category, Poland, eight tags, demo video. "Your submission is in… this listing is still in review". Declined the promotion upsell |
 | Indie Hackers | — | Needs sign-in | — | — | Tab was still at `/sign-in` |
-| Product Hunt | — | Needs you — **fully prepared** | — | — | Blocked three ways: Cloudflare interstitial in automated Chrome, hard block in a second independent browser, and API v2 exposes no create-post mutation. Every field, both image sizes and the first comment are paste-ready in [product-hunt-launch.md](product-hunt-launch.md) |
+| Product Hunt | — | Needs you — **fully prepared** | — | — | Loads fine once the VPN is off; the earlier "hard block" was our own exit IP, not a site-level ban on automation. What remains is the sign-in. API v2 still exposes no create-post mutation, so the submission is manual either way. Every field, both image sizes and the first comment are paste-ready in [product-hunt-launch.md](product-hunt-launch.md) |
 | Show HN | — | Not started | — | — | Draft in launch-copy.md. Needs a Hacker News account |
 | DevHunt | — | Deliberately skipped | — | — | Dev tools only; WeGoWhen is off-topic and the repo has no licence |
 

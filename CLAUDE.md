@@ -141,9 +141,11 @@ The go-to-market side lives in `marketing/` — the plan and the honest baseline
 paste-ready submission copy in `marketing/positioning-kit.md`, the directory tracker in
 `marketing/directories.md`, launch drafts in `marketing/launch-copy.md`, and the
 paste-ready Product Hunt submission — every field, both image sizes, the first comment — in
-`marketing/product-hunt-launch.md`. Product Hunt cannot be automated: Cloudflare blocks it
-in two independent browsers and the v2 API exposes no create-post mutation, so that file is
-the deliverable rather than a listing.
+`marketing/product-hunt-launch.md`. Product Hunt still cannot be automated, but for one
+reason rather than two: its v2 API exposes no create-post mutation. The "Cloudflare blocks
+it in two browsers" note this file used to carry was wrong — that was a VPN on the dev
+machine, and with it off the site loads fine. See the VPN section in
+`marketing/directories.md` before recording any site as bot-walled.
 
 Things in this repo that marketing depends on, so do not break them silently:
 
