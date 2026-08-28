@@ -110,25 +110,59 @@ Saying why is the point of this section — otherwise someone re-adds them in th
 | Wikipedia and Wikidata | Notability rules. A new product with no coverage gets reverted, and trying looks bad. |
 | Paid submission bundles ("submit to 100 directories, $99") | The whole exercise is free and takes an afternoon. |
 
+## What the free tier actually costs now
+
+Findings from working through the list on 2026-08-28, because the plan above was
+written on the assumption that "free directory" still means free. Mostly it does not.
+
+| Site | Free route | What it really requires |
+| --- | --- | --- |
+| AlternativeTo | Genuinely free | Nothing. Listing went live the same hour |
+| SaaSHub | Genuinely free | Nothing. Free queue is up to 32 days |
+| dev.to | Genuinely free | A post worth reading, which is the point |
+| OpenHunts | Free **only** via badge | Every free launch week to mid-2028 shows *Full*. Their badge on the site skips the queue |
+| Fazier | Free via badge + work | 3 helpful comments on other products, their badge on the site, **and Domain Rating > 0** |
+| TinyLaunch | Free "Standard Launch" | Its dashboard does not respond to automation; two minutes by hand |
+| Uneed | **No free route** | "The free waiting line is closed." $14.99 fast-track or $29.99 pick-a-date |
+| Product Hunt | Free | Hard Cloudflare block on an automated browser. Manual only |
+
+The reciprocal-badge trade is the modern price, and it is a fair one: the badges live at
+the very bottom of the footer, in `index.html` rather than in React, because both sites
+verify by fetching the page rather than by running it.
+
 ## Tracker
 
-Fill this in as you go. Once a listing is live, confirm the backlink is real and dofollow:
+Once a listing is live, confirm the backlink is real and dofollow:
 
 ```bash
 curl -sIL "https://directory.example/your-listing" | grep -i 'rel='
 ```
 
-| Directory | Submitted | Status | Live URL | Dofollow verified | Notes |
-| --- | --- | --- | --- | --- | --- |
-| AlternativeTo | | Not started | | | |
-| SaaSHub | | Not started | | | |
-| Product Hunt | | Blocked on video + gallery | | | |
-| Show HN | | Not started | | | |
-| Uneed | | Not started | | | |
-| Fazier | | Not started | | | |
-| Microlaunch | | Not started | | | |
-| DevHunt | | Not started | | | |
-| Startup Fame | | Not started | | | |
-| BetaList | | Not started | | | |
-| Indie Hackers | | Not started | | | |
-| Slant | | Not started | | | |
+| Directory | Submitted | Status | Live URL | Notes |
+| --- | --- | --- | --- | --- |
+| AlternativeTo | 2026-08-28 | **Live** | https://alternativeto.net/software/wegowhen/ | Listed as an alternative to When2Meet, Doodle, Framadate, Crab Fit, OurCalendar, TimeOverlap. Icon + 2 screenshots. Tagged `scheduling`, `travel-planner`; features "No registration required", "No Tracking", "Ad-free" |
+| SaaSHub | 2026-08-28 | Pending approval | https://www.saashub.com/wegowhen | Free queue, up to 32 days. 8 categories, 6 competitors, logo, description, pricing. Also registered as a competitor on Let's Meet On, Venn Poll and Yepday |
+| dev.to | 2026-08-28 | **Live** | https://dev.to/janwan2003/the-bug-that-made-my-best-dates-feature-return-nothing-at-31-people-2e4a | Technical post on the `1 << 31` bug. Two links to the site |
+| OpenHunts | 2026-08-28 | Pending review | — | Free via badge; badge verified against the live site. Dofollow backlink only if it finishes top 3 |
+| GitHub | 2026-08-28 | **Live** | https://github.com/janwan2003/trip-planner | Repo description, homepage link, 14 topics |
+| awesome-no-login-web-apps | 2026-08-28 | PR open | https://github.com/aviaryan/awesome-no-login-web-apps/pull/566 | Maintainer dormant since 2023; free, so worth the wait |
+| Fazier | — | **Blocked** | — | 3/3 comments done, badge live. Their checklist requires Domain Rating > 0 and DataForSEO has no backlink data for the domain at all, so the box cannot honestly be ticked yet. Retry once Ahrefs has crawled the links above |
+| TinyLaunch | — | Needs you | — | Free Standard Launch exists and the account is signed in, but the dashboard's Submit Product button does nothing under automation |
+| Uneed | 2026-08-28 | Built, unpaid | https://www.uneed.best/tool/wegowhen | Product page complete: copy, tags, logo, 3 screenshots. Free waiting line is closed, so it will not publish without $14.99 |
+| Indie Hackers | — | Needs sign-in | — | Tab was still at `/sign-in` |
+| Product Hunt | — | Needs you | — | Cloudflare blocks the automated browser. Also still wants the demo video |
+| Show HN | — | Not started | — | Draft in launch-copy.md. Needs a Hacker News account |
+
+## Comments left on other products
+
+Fazier requires three before a free launch. Left on 2026-08-28, one specific question each,
+no self-promotion:
+
+- **SVGicons.com** — whether icon search matches aliases (bin vs trash, cog vs gear).
+- **VoteGenerator** — whether its meeting-scheduling poll does whole days or only time
+  slots inside a day.
+- **Light Pollution Map** — which light-pollution dataset and year the Bortle readings use.
+
+The first draft for SVGicons.com asked about per-icon licences; their own feature list
+already answered that, so it was rewritten before posting. Worth the extra minute: a
+comment that shows you did not read the page is worse than no comment.
