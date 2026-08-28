@@ -98,14 +98,18 @@ describe('AvailabilityCalendar', () => {
     expect(onToggleDate).toHaveBeenCalledTimes(2);
   });
 
-  it('ignores interaction when read-only', () => {
+  it('never edits availability when read-only', () => {
     const onToggleDate = vi.fn();
     render(<AvailabilityCalendar {...props({ onToggleDate, readOnly: true })} />);
 
     fireEvent.mouseDown(dayCell('3'));
+    fireEvent.click(dayCell('3'));
+    fireEvent.keyDown(dayCell('3'), { key: 'Enter' });
 
     expect(onToggleDate).not.toHaveBeenCalled();
-    expect(dayCell('3')).toBeDisabled();
+    // Deliberately NOT disabled any more: a disabled button cannot be focused or tapped,
+    // which is what made "who is free" unreachable by keyboard and on a phone.
+    expect(dayCell('3')).toBeEnabled();
   });
 
   it('shows how many people are free on a date in read-only mode', () => {
@@ -182,24 +186,82 @@ describe('AvailabilityCalendar', () => {
     expect(badge?.className).not.toContain('text-muted-foreground');
   });
 
-  it('does not render the hover tooltip on small screens, where it is unreachable', () => {
-    // It is hover-only on a disabled button, so touch users could never see it, and at
-    // 178px of whitespace-nowrap it was what pushed the page 29px wider than a phone.
-    render(
-      <AvailabilityCalendar
-        {...props({
-          readOnly: true,
-          participants: [{ name: 'Ada', availableDates: ['2026-09-03'] }],
-          availability: { '2026-09-03': ['Ada'] },
-          totalParticipants: 1,
-        })}
-      />,
-    );
+  describe('who is free, in read-only mode', () => {
+    const group = () =>
+      props({
+        readOnly: true,
+        participants: [
+          { name: 'Ada', availableDates: ['2026-09-03'] },
+          { name: 'Bo', availableDates: ['2026-09-03'] },
+          { name: 'Cy', availableDates: ['2026-09-04'] },
+        ],
+        availability: { '2026-09-03': ['Ada', 'Bo'], '2026-09-04': ['Cy'] },
+        totalParticipants: 3,
+      });
 
-    const tooltip = dayCell('3').querySelector('div.absolute');
-    expect(tooltip).not.toBeNull();
-    expect(tooltip?.className).toContain('hidden');
-    expect(tooltip?.className).toContain('sm:block');
+    it('replaces the hover tooltip entirely', () => {
+      const { container } = render(<AvailabilityCalendar {...group()} />);
+      // The old mechanism was a hover-only absolute div inside each cell.
+      expect(container.querySelector('button[data-date] div.absolute')).toBeNull();
+    });
+
+    it('prompts for the interaction rather than hiding it', () => {
+      render(<AvailabilityCalendar {...group()} />);
+      expect(screen.getByTestId('availability-detail')).toHaveTextContent(/Tap a day to see who/i);
+    });
+
+    it('names who is free when a day is tapped', () => {
+      render(<AvailabilityCalendar {...group()} />);
+
+      fireEvent.click(dayCell('3'));
+
+      expect(screen.getByTestId('availability-detail')).toHaveTextContent('Ada, Bo');
+    });
+
+    it('answers by keyboard too', () => {
+      render(<AvailabilityCalendar {...group()} />);
+
+      fireEvent.keyDown(dayCell('4'), { key: 'Enter' });
+
+      expect(screen.getByTestId('availability-detail')).toHaveTextContent('Cy');
+    });
+
+    it('says so for a day nobody picked', () => {
+      render(<AvailabilityCalendar {...group()} />);
+
+      fireEvent.click(dayCell('6'));
+
+      expect(screen.getByTestId('availability-detail')).toHaveTextContent(/nobody is free/i);
+    });
+
+    it('tapping the same day again closes it', () => {
+      render(<AvailabilityCalendar {...group()} />);
+
+      fireEvent.click(dayCell('3'));
+      fireEvent.click(dayCell('3'));
+
+      expect(screen.getByTestId('availability-detail')).toHaveTextContent(/Tap a day to see who/i);
+    });
+
+    it('honours the participant filter', () => {
+      render(<AvailabilityCalendar {...group()} selectedParticipants={['Ada']} />);
+
+      fireEvent.click(dayCell('3'));
+
+      const panel = screen.getByTestId('availability-detail');
+      expect(panel).toHaveTextContent('Ada');
+      expect(panel).not.toHaveTextContent('Bo');
+    });
+
+    it('announces changes without stealing focus', () => {
+      render(<AvailabilityCalendar {...group()} />);
+      expect(screen.getByTestId('availability-detail')).toHaveAttribute('aria-live', 'polite');
+    });
+
+    it('puts the count in the cell name, which aria-label would otherwise hide', () => {
+      render(<AvailabilityCalendar {...group()} />);
+      expect(dayCell('3')).toHaveAccessibleName('Thursday 3 September 2026, 2 available');
+    });
   });
 
   it('toggles a date on a touch tap', () => {

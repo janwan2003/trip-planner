@@ -70,6 +70,17 @@ export function AvailabilityCalendar({
 
   const gridRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Which day's participant list is currently shown, in read-only mode.
+   *
+   * This replaces a hover tooltip that was unreachable by everyone the product is built
+   * for: it lived on a `disabled` button, so there was no hover on a phone and no focus
+   * for a keyboard, and `aria-label` on the cell overrode its contents so a screen reader
+   * never heard the names either. The heat map's actual payload - who is free - reached
+   * only sighted mouse users.
+   */
+  const [revealedDate, setRevealedDate] = useState<string | null>(null);
+
   /** Starts a drag and toggles the date it started on. */
   const beginDrag = useCallback((date: string) => {
     if (readOnly) return;
@@ -136,6 +147,18 @@ export function AvailabilityCalendar({
     grid.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => grid.removeEventListener('touchmove', onTouchMove);
   }, [readOnly, isDragging, extendDrag]);
+
+  const namesAvailableOn = useCallback(
+    (date: string): string[] => {
+      const active =
+        selectedParticipants.length === 0 ? participants.map((p) => p.name) : selectedParticipants;
+
+      return active.filter((name) =>
+        participants.find((p) => p.name === name)?.availableDates.includes(date),
+      );
+    },
+    [participants, selectedParticipants],
+  );
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   
@@ -209,9 +232,13 @@ export function AvailabilityCalendar({
                     key={date}
                     type="button"
                     data-date={date}
-                    disabled={readOnly}
                     aria-pressed={readOnly ? undefined : isSelected}
-                    aria-label={format(dateObj, 'EEEE d MMMM yyyy')}
+                    aria-expanded={readOnly ? revealedDate === date : undefined}
+                    aria-label={
+                      readOnly
+                        ? `${format(dateObj, 'EEEE d MMMM yyyy')}, ${availableCount} available`
+                        : format(dateObj, 'EEEE d MMMM yyyy')
+                    }
                     onMouseDown={() => beginDrag(date)}
                     onMouseEnter={() => extendDrag(date)}
                     onTouchStart={() => beginDrag(date)}
@@ -221,17 +248,26 @@ export function AvailabilityCalendar({
                       // the calendar is unusable by keyboard.
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        toggleOne(date);
+                        if (readOnly) {
+                          setRevealedDate((current) => (current === date ? null : date));
+                        } else {
+                          toggleOne(date);
+                        }
                       }
                     }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      // In read-only mode a tap is the only way to ask who is free.
+                      if (readOnly) {
+                        setRevealedDate((current) => (current === date ? null : date));
+                      }
                     }}
                     className={cn(
                       "aspect-square min-h-11 min-w-11 rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-200 relative group select-none",
-                      !readOnly && "hover:scale-105 cursor-pointer",
-                      readOnly && "cursor-default",
+                      "cursor-pointer",
+                      !readOnly && "hover:scale-105",
+                      readOnly && revealedDate === date && "ring-2 ring-primary ring-offset-1",
                       isSelected && "bg-success-light border-2 border-success text-foreground font-semibold",
                       !isSelected && !readOnly && "bg-muted hover:bg-muted/80 border border-transparent",
                     )}
@@ -286,34 +322,7 @@ export function AvailabilityCalendar({
                       </span>
                     )}
                     
-                    {/* Tooltip for hover */}
-                    {readOnly && availableCount > 0 && (() => {
-                      const activeParticipants = selectedParticipants.length === 0
-                        ? participants.map(p => p.name)
-                        : selectedParticipants;
-                      
-                      const availableNames = activeParticipants.filter(name => {
-                        const participant = participants.find(p => p.name === name);
-                        return participant?.availableDates.includes(date);
-                      });
-                      // Hidden below sm, on purpose. This tooltip is hover-only on a
-                      // disabled button, so on a phone it was already unreachable - no
-                      // hover, and not focusable - while still being 178px of
-                      // whitespace-nowrap that hung past both edges of the grid and
-                      // widened the page. Hiding it costs touch users nothing they could
-                      // reach and stops it damaging the layout. Making "who is free"
-                      // available on touch is separate work, not a width tweak.
-                      return availableNames.length > 0 ? (
-                        <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                          <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs w-max max-w-[min(60vw,14rem)] break-words">
-                            <div className="font-medium mb-1 text-popover-foreground">{format(dateObj, 'MMM d, yyyy')}</div>
-                            <div className="text-muted-foreground">
-                              {availableNames.join(', ')}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null;
-                    })()}
+                    {/* Who is free is answered by the panel under the grid, not by hover. */}
                   </button>
                 );
               })}
@@ -321,6 +330,27 @@ export function AvailabilityCalendar({
           </div>
         );
       })}
+
+      {readOnly && (
+        <div
+          data-testid="availability-detail"
+          aria-live="polite"
+          className="min-h-11 px-4 sm:px-0 flex items-center"
+        >
+          {revealedDate ? (
+            <p className="text-sm">
+              <span className="font-medium">{format(parseISO(revealedDate), 'EEE d MMM')}</span>
+              <span className="text-muted-foreground">
+                {namesAvailableOn(revealedDate).length > 0
+                  ? ` — ${namesAvailableOn(revealedDate).join(', ')}`
+                  : ' — nobody is free'}
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">Tap a day to see who is free</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
