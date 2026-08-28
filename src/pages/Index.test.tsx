@@ -39,6 +39,47 @@ describe('Index', () => {
     expect(screen.getByRole('button', { name: /show tutorial/i })).toBeInTheDocument();
   });
 
+  it('puts the pitch before the teaching on a phone', () => {
+    // Single-column order used to be tutorial-first, which pushed the headline, the form
+    // and the only CTA below an 812px fold. Asserted through the order utilities, since
+    // jsdom does not lay out.
+    const { container } = renderWithRouter(<Index />);
+
+    const grid = container.querySelector('.grid.grid-cols-1')!;
+    const [first, second] = Array.from(grid.children) as HTMLElement[];
+
+    expect(first.className).toContain('order-2');
+    expect(first.className).toContain('lg:order-1');
+    expect(second.className).toContain('order-1');
+    expect(second.className).toContain('lg:order-2');
+  });
+
+  it('gives every footer link a 44px tap target', () => {
+    renderWithRouter(<Index />);
+
+    const footerLinks = screen
+      .getAllByRole('link')
+      .filter((a) => /about|contact|faq|alternative|terms|privacy/i.test(a.textContent ?? ''));
+
+    expect(footerLinks.length).toBeGreaterThan(4);
+    for (const link of footerLinks) {
+      expect(link.className).toContain('min-h-11');
+    }
+  });
+
+  it('does not claim to be the best at anything, having no users', () => {
+    renderWithRouter(<Index />);
+    expect(screen.queryByText(/best way to plan/i)).not.toBeInTheDocument();
+  });
+
+  it('does not end the page on a version number', () => {
+    renderWithRouter(<Index />);
+
+    // Still inspectable as an attribute; just not the last thing a visitor reads.
+    expect(screen.queryByText(/^v1\./)).not.toBeInTheDocument();
+    expect(document.querySelector('[data-app-version]')).toBeInTheDocument();
+  });
+
   it('links to the legal and informational pages', () => {
     renderWithRouter(<Index />);
 
