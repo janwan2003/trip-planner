@@ -7,6 +7,14 @@ export interface Participant {
   created_at?: string;
 }
 
+/** Shape of a participant row as the database returns it (snake_case columns). */
+interface ParticipantRow {
+  id?: string;
+  name: string;
+  available_dates?: string[] | null;
+  created_at?: string;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -77,10 +85,10 @@ export const getTrip = async (id: string): Promise<Trip | null> => {
       name: data.name,
       startDate: data.start_date,
       endDate: data.end_date,
-      participants: (data.participants || []).map((p: any) => ({
+      participants: (data.participants || []).map((p: ParticipantRow) => ({
         id: p.id,
         name: p.name,
-        availableDates: p.available_dates || [],
+        availableDates: p.available_dates ?? [],
         created_at: p.created_at,
       })),
       created_at: data.created_at,

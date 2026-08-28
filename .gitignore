@@ -31,3 +31,6 @@ dist-ssr
 # Impeccable runtime artifacts
 .impeccable/live/
 .impeccable/critique/
+
+# Test coverage output
+coverage/

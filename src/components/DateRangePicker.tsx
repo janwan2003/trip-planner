@@ -34,7 +34,6 @@ export function DateRangePicker({
     return undefined;
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [selectionStep, setSelectionStep] = useState<'start' | 'end'>('start');
 
   useEffect(() => {
     if (date?.from && date?.to) {
@@ -83,17 +82,7 @@ export function DateRangePicker({
           mode="range"
           defaultMonth={date?.from}
           selected={date}
-          onSelect={(newDate) => {
-            setDate(newDate);
-            // Update selection step based on what's selected
-            if (!newDate?.from) {
-              setSelectionStep('start');
-            } else if (newDate?.from && !newDate?.to) {
-              setSelectionStep('end');
-            } else if (newDate?.from && newDate?.to) {
-              setSelectionStep('start');
-            }
-          }}
+          onSelect={setDate}
           numberOfMonths={2}
           disabled={(day) => day < new Date(new Date().setHours(0, 0, 0, 0))}
         />

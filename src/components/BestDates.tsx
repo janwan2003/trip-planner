@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Trip, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
-import { format, parseISO, addDays, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { Star, Users, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';

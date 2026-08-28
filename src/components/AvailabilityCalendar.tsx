@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { getDatesBetween, Participant } from '@/lib/tripStore';
-import { format, parseISO, getDay, startOfMonth, isSameMonth } from 'date-fns';
+import { format, parseISO, getDay } from 'date-fns';
 
 interface AvailabilityCalendarProps {
   startDate: string;
