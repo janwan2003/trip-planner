@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Trip, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { useMemo, useState } from 'react';
+import { Trip } from '@/lib/tripStore';
+import { findBestDateRanges } from '@/lib/bestDates';
+import { format, parseISO } from 'date-fns';
 import { Star, Users, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -15,170 +16,26 @@ interface BestDatesProps {
   trip: Trip;
 }
 
-interface DateRange {
-  startDate: string;
-  endDate: string;
-  count: number;
-  names: string[];
-}
-
 export function BestDates({ trip }: BestDatesProps) {
   const [minDays, setMinDays] = useState<number>(1);
-  const availability = getAvailabilityCount(trip);
-  const dates = getDatesBetween(trip.startDate, trip.endDate);
-  
-  if (trip.participants.length === 0) {
-    return null;
-  }
-  
-  // Build availability map: date -> set of names
-  const availabilityMap = new Map<string, Set<string>>();
-  for (const date of dates) {
-    const names = availability[date] || [];
-    if (names.length > 0) {
-      availabilityMap.set(date, new Set(names));
-    }
-  }
 
-  if (availabilityMap.size === 0) {
+  // Computed without the length filter so that raising "Min" past every option empties
+  // the list without removing the control that would let you lower it again.
+  const allRanges = useMemo(
+    () => findBestDateRanges(trip, { minDays: 1, limit: Number.MAX_SAFE_INTEGER }),
+    [trip],
+  );
+
+  const topRanges = useMemo(
+    () => allRanges.filter((range) => range.days >= minDays).slice(0, 5),
+    [allRanges, minDays],
+  );
+
+  if (allRanges.length === 0) {
     return null;
   }
 
-  // Get all unique participant sets (as sorted string keys)
-  const allParticipants = new Set<string>();
-  for (const names of availabilityMap.values()) {
-    for (const name of names) {
-      allParticipants.add(name);
-    }
-  }
-
-  // Generate all non-empty subsets of participants (power set minus empty)
-  const participantList = Array.from(allParticipants);
-  const participantSubsets: Set<string>[] = [];
-  
-  // Only consider subsets of size 1 to all participants
-  for (let mask = 1; mask < (1 << participantList.length); mask++) {
-    const subset = new Set<string>();
-    for (let i = 0; i < participantList.length; i++) {
-      if (mask & (1 << i)) {
-        subset.add(participantList[i]);
-      }
-    }
-    participantSubsets.push(subset);
-  }
-
-  // Sort subsets by size descending (prefer larger groups)
-  participantSubsets.sort((a, b) => b.size - a.size);
-
-  // For each participant subset, find maximal consecutive ranges where ALL are available
-  const allRanges: DateRange[] = [];
-  
-  for (const subset of participantSubsets) {
-    // Find dates where ALL members of this subset are available
-    const validDates: string[] = [];
-    for (const date of dates) {
-      const available = availabilityMap.get(date);
-      if (available) {
-        let allPresent = true;
-        for (const name of subset) {
-          if (!available.has(name)) {
-            allPresent = false;
-            break;
-          }
-        }
-        if (allPresent) {
-          validDates.push(date);
-        }
-      }
-    }
-
-    if (validDates.length === 0) continue;
-
-    // Group into consecutive ranges
-    let rangeStart = validDates[0];
-    let rangeEnd = validDates[0];
-
-    for (let i = 1; i < validDates.length; i++) {
-      const prevDate = parseISO(rangeEnd);
-      const currDate = parseISO(validDates[i]);
-      const daysDiff = differenceInDays(currDate, prevDate);
-
-      if (daysDiff === 1) {
-        rangeEnd = validDates[i];
-      } else {
-        allRanges.push({
-          startDate: rangeStart,
-          endDate: rangeEnd,
-          count: subset.size,
-          names: Array.from(subset),
-        });
-        rangeStart = validDates[i];
-        rangeEnd = validDates[i];
-      }
-    }
-    // Push the last range
-    allRanges.push({
-      startDate: rangeStart,
-      endDate: rangeEnd,
-      count: subset.size,
-      names: Array.from(subset),
-    });
-  }
-
-  // Remove ranges that are subsets of larger ranges with the same people
-  // Also remove ranges where the same date range exists with MORE people
-  const maximalRanges = allRanges.filter(range => {
-    const rangeKey = [...range.names].sort().join(',');
-    const rangeStart = parseISO(range.startDate).getTime();
-    const rangeEnd = parseISO(range.endDate).getTime();
-    
-    for (const other of allRanges) {
-      if (other === range) continue;
-      
-      const otherStart = parseISO(other.startDate).getTime();
-      const otherEnd = parseISO(other.endDate).getTime();
-      const otherKey = [...other.names].sort().join(',');
-      
-      // Case 1: Same participants, other range strictly contains this one
-      if (otherKey === rangeKey) {
-        if (otherStart <= rangeStart && otherEnd >= rangeEnd && 
-            (otherStart < rangeStart || otherEnd > rangeEnd)) {
-          return false;
-        }
-      }
-      
-      // Case 2: Same date range but other has MORE people - this range is dominated
-      if (otherStart === rangeStart && otherEnd === rangeEnd && other.count > range.count) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  // Filter by minimum days
-  const filteredRanges = maximalRanges.filter(range => {
-    const rangeLength = differenceInDays(parseISO(range.endDate), parseISO(range.startDate)) + 1;
-    return rangeLength >= minDays;
-  });
-
-  const maxCount = Math.max(...filteredRanges.map(r => r.count), 0);
-
-  // Sort: first by people count (desc), then by length (desc), then chronologically (asc)
-  const sortedRanges = filteredRanges.sort((a, b) => {
-    // First priority: number of people
-    if (b.count !== a.count) return b.count - a.count;
-    
-    // Second priority: length of period
-    const aLength = differenceInDays(parseISO(a.endDate), parseISO(a.startDate)) + 1;
-    const bLength = differenceInDays(parseISO(b.endDate), parseISO(b.startDate)) + 1;
-    if (bLength !== aLength) return bLength - aLength;
-    
-    // Third priority: chronological order
-    return parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime();
-  });
-
-  // Take top 5 ranges
-  const topRanges = sortedRanges.slice(0, 5);
+  const maxCount = Math.max(...topRanges.map((r) => r.count), 0);
 
   return (
     <div className="space-y-3">
@@ -246,7 +103,7 @@ export function BestDates({ trip }: BestDatesProps) {
                       {format(startDateObj, 'd MMM')} - {format(endDateObj, 'd MMM')}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {differenceInDays(endDateObj, startDateObj) + 1} days
+                      {range.days} days
                     </div>
                   </>
                 ) : (

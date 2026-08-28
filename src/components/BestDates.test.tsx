@@ -157,6 +157,17 @@ describe('BestDates', () => {
     expect(rows[0].label).toContain('3 days');
   });
 
+  it('keeps the minimum control on screen when the filter empties the list', () => {
+    render(<BestDates trip={trip([{ name: 'Ada', availableDates: ['2026-09-03'] }])} />);
+
+    fireEvent.change(screen.getByTitle('Min days'), { target: { value: '9' } });
+
+    expect(suggestions()).toHaveLength(0);
+    // Without this, raising the minimum would remove the only way to lower it.
+    expect(screen.getByTitle('Min days')).toBeInTheDocument();
+    expect(screen.getByText('Best Dates')).toBeInTheDocument();
+  });
+
   it('clamps a minimum of zero back up to one day', () => {
     render(<BestDates trip={trip([{ name: 'Ada', availableDates: ['2026-09-03'] }])} />);
 
