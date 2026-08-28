@@ -20,7 +20,8 @@ export default function Contact() {
         <div className="prose prose-slate max-w-none">
           <h1 className="text-4xl font-display font-bold mb-6">Contact Us</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            Have feedback or need support? We're working on setting up dedicated contact channels.
+            Most questions are answered below. There is no support address yet, and this page says so
+            rather than pointing you at a channel that does not exist.
           </p>
 
           <div className="mb-12 not-prose">
@@ -30,18 +31,28 @@ export default function Contact() {
                   <MessageCircle className="w-5 h-5 text-primary" />
                   Get in Touch
                 </CardTitle>
-                <CardDescription>Contact options coming soon</CardDescription>
+                <CardDescription>No contact address yet</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm mb-4">
-                  We're currently setting up official support and feedback channels. In the meantime, 
-                  you can use the app and provide feedback through the following ways:
+                  WeGoWhen is run by one person and has no support inbox at the moment. Two things you
+                  can do without one:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-sm">
-                  <li>Use the app and explore its features</li>
-                  <li>Check back soon for direct contact options</li>
-                  <li>Report critical bugs using the information below</li>
+                  <li>
+                    Remove your own name and availability from a trip yourself, with Withdraw on that
+                    trip's page - no request to us needed
+                  </li>
+                  <li>
+                    Read the{' '}
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for
+                    exactly what is stored and where
+                  </li>
                 </ul>
+                <p className="text-sm mt-4">
+                  Requests that do need a human - deleting a whole trip, for instance - cannot be
+                  actioned until an address is published here.
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -89,8 +100,9 @@ export default function Contact() {
               <div className="border-l-4 border-primary pl-4">
                 <h3 className="text-xl font-semibold mb-2">Can I delete a trip?</h3>
                 <p className="text-muted-foreground">
-                  Currently, trips are stored indefinitely. Manual deletion features are not yet available. 
-                  Trips that haven't been accessed for extended periods may be archived in the future.
+                  You can remove yourself from a trip at any time: open it and use Withdraw, which
+                  deletes your name and the dates you marked. Deleting an entire trip is not yet
+                  possible - trips are stored indefinitely and nothing expires them automatically.
                 </p>
               </div>
 

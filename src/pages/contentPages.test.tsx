@@ -73,6 +73,56 @@ describe('content pages', () => {
     }
   });
 
+  /**
+   * A privacy policy is a factual claim about the code. These lock the claims to what the
+   * app actually does, because an overclaiming policy is still a false one: it said the
+   * site collected browser type, pages visited, time on page and interaction patterns,
+   * none of which anything measures - there is no analytics script at all.
+   */
+  it('the privacy policy does not claim analytics the app does not run', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    expect(screen.getByText(/We run no analytics/i)).toBeInTheDocument();
+    expect(screen.queryByText(/time spent on pages/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/interaction patterns/i)).not.toBeInTheDocument();
+  });
+
+  it('the privacy policy does not promise an archival schedule nothing implements', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // It promised removal "typically 24 months" after last access. No job does this.
+    expect(screen.queryByText(/24 months/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/no automatic expiry or archival/i)).toBeInTheDocument();
+  });
+
+  it('the privacy policy discloses every local-storage key the app writes', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // recentTrips and identity both write; the policy covered only the first.
+    expect(screen.getAllByText(/trips you have opened in this browser/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/the name you last used to join a trip/i)).toBeInTheDocument();
+  });
+
+  it('the privacy policy says how to exercise the rights it lists', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // Listing GDPR rights with no mechanism is not a policy, it is a template.
+    expect(screen.getByText(/withdraw entirely/i)).toBeInTheDocument();
+    const contact = screen.getAllByRole('link', { name: /contact/i });
+    expect(contact.length).toBeGreaterThan(0);
+    expect(contact[0]).toHaveAttribute('href', '/contact');
+  });
+
+  it('the contact page does not point at contact details it does not have', () => {
+    renderWithRouter(<Contact />);
+
+    // It offered "Report critical bugs using the information below" and listed "Use the
+    // app and explore its features" as a way of getting in touch. Neither was true.
+    expect(screen.queryByText(/information below/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/explore its features/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/no support address yet/i)).toBeInTheDocument();
+  });
+
   it('the terms name Cloudflare infrastructure', () => {
     renderWithRouter(<TermsOfService />);
 

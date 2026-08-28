@@ -39,10 +39,14 @@ export default function PrivacyPolicy() {
             </ul>
 
             <h3 className="text-xl font-semibold mb-3 mt-4">2.2 Automatically Collected Information</h3>
+            <p className="mb-4">
+              We run no analytics. Nothing on this site measures which pages you visit, how long you
+              spend on them, or how you interact with them, and there are no advertising or tracking
+              scripts of any kind.
+            </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li><strong>Browser Information:</strong> Browser type and version</li>
-              <li><strong>Usage Data:</strong> Pages visited, time spent on pages, and interaction patterns</li>
-              <li><strong>Local Storage:</strong> Tutorial preferences, UI state, and a list of trips you have opened in this browser (trip name, dates and link), stored in your browser</li>
+              <li><strong>Server Request Logs:</strong> Our host, Cloudflare, records standard request metadata such as your IP address and browser user agent in order to serve and protect the site. We do not query, export, or link this to your trips</li>
+              <li><strong>Local Storage:</strong> Your tutorial preference, the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us</li>
             </ul>
           </section>
 
@@ -53,8 +57,6 @@ export default function PrivacyPolicy() {
               <li>Provide and maintain the trip planning service</li>
               <li>Coordinate availability between trip participants</li>
               <li>Display group availability and suggest optimal dates</li>
-              <li>Improve and optimize the Service</li>
-              <li>Respond to user inquiries and support requests</li>
             </ul>
           </section>
 
@@ -94,6 +96,15 @@ export default function PrivacyPolicy() {
               <li><strong>Data Portability:</strong> Request transfer of your data</li>
               <li><strong>Object:</strong> Object to processing of your data</li>
             </ul>
+            <p className="mb-4">
+              How this works in practice: we hold no accounts, no email addresses and no way to
+              identify you across trips, so a trip can only be identified by its link. You can exercise
+              rectification and erasure yourself on any trip you have joined - the trip page lets you
+              rename your entry, change the dates you marked, and withdraw entirely, which deletes your
+              name and availability. For anything else, or to have a whole trip removed, see{' '}
+              <Link to="/contact" className="text-primary hover:underline">Contact</Link> and include the
+              trip link.
+            </p>
           </section>
 
           <section className="mb-8">
@@ -119,8 +130,10 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">9. Data Retention</h2>
             <p className="mb-4">
-              Trip data is retained indefinitely unless explicitly deleted. Trips that are not accessed may 
-              be archived or removed after an extended period of inactivity (typically 24 months).
+              Trip data is retained indefinitely. There is no automatic expiry or archival: we do not
+              currently delete inactive trips, and we would update this policy before starting to.
+              You can remove your own name and availability from any trip at any time using Withdraw
+              on that trip's page. To have an entire trip deleted, contact us with its link.
             </p>
           </section>
 
@@ -136,8 +149,10 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">11. Contact Us</h2>
             <p className="mb-4">
-              If you have any questions about this Privacy Policy or wish to exercise your data rights, 
-              please contact us through the website or via email.
+              Questions about this policy, or requests about your data, go through our{' '}
+              <Link to="/contact" className="text-primary hover:underline">Contact</Link> page. We do not
+              yet publish an email address; that page says what is available today rather than implying
+              a channel that does not exist.
             </p>
           </section>
         </div>
