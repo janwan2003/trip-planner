@@ -121,7 +121,18 @@ describe('TripPage', () => {
     // The greeting puts the name in a button so it can be edited in place, which
     // means the text is split across elements.
     expect(screen.getAllByRole('button', { name: /Ada/ }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Click and drag to select dates/i)).toBeInTheDocument();
+    expect(screen.getByText(/days you're free/i)).toBeInTheDocument();
+  });
+
+  it('does not tell a phone user to click', async () => {
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    expect(screen.getByText(/days you're free/i)).toBeInTheDocument();
+    // PRODUCT.md puts touch first; the instruction used to read "Click and drag".
+    expect(screen.queryByText(/click and drag/i)).not.toBeInTheDocument();
   });
 
   it('will not join with a blank name', async () => {

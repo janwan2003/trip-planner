@@ -145,6 +145,63 @@ describe('AvailabilityCalendar', () => {
     expect(dayCell('3').textContent).toContain('1');
   });
 
+  it('gives every cell a target of at least 44px', () => {
+    // jsdom has no layout, so this asserts the utility that guarantees the floor rather
+    // than a measured box. The measured result - 44.7px at 375px wide, 44px at 320px -
+    // is recorded in the PR that introduced it.
+    render(<AvailabilityCalendar {...props()} />);
+
+    for (const cell of screen.getAllByRole('button')) {
+      expect(cell.className).toContain('min-h-11');
+      expect(cell.className).toContain('min-w-11');
+    }
+  });
+
+  it('makes the availability count legible on every heat level, not only a unanimous one', () => {
+    // The count used to fall back to text-muted-foreground unless heatLevel was 'high',
+    // which only happens when literally everyone is free - measured 1.8:1 on a 4-of-5
+    // fill, against 5.7:1 after this change.
+    render(
+      <AvailabilityCalendar
+        {...props({
+          readOnly: true,
+          participants: [
+            { name: 'Ada', availableDates: ['2026-09-03'] },
+            { name: 'Bo', availableDates: ['2026-09-03'] },
+            { name: 'Cy', availableDates: [] },
+          ],
+          availability: { '2026-09-03': ['Ada', 'Bo'] },
+          totalParticipants: 3,
+        })}
+      />,
+    );
+
+    const badge = [...dayCell('3').querySelectorAll('span')][1];
+    expect(badge).toHaveTextContent('2');
+    expect(badge?.className).toContain('text-foreground/80');
+    expect(badge?.className).not.toContain('text-muted-foreground');
+  });
+
+  it('does not render the hover tooltip on small screens, where it is unreachable', () => {
+    // It is hover-only on a disabled button, so touch users could never see it, and at
+    // 178px of whitespace-nowrap it was what pushed the page 29px wider than a phone.
+    render(
+      <AvailabilityCalendar
+        {...props({
+          readOnly: true,
+          participants: [{ name: 'Ada', availableDates: ['2026-09-03'] }],
+          availability: { '2026-09-03': ['Ada'] },
+          totalParticipants: 1,
+        })}
+      />,
+    );
+
+    const tooltip = dayCell('3').querySelector('div.absolute');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip?.className).toContain('hidden');
+    expect(tooltip?.className).toContain('sm:block');
+  });
+
   it('toggles a date on a touch tap', () => {
     const onToggleDate = vi.fn();
     render(<AvailabilityCalendar {...props({ onToggleDate })} />);

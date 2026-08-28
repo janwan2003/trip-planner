@@ -155,7 +155,10 @@ export function AvailabilityCalendar({
   return (
     <div
       ref={gridRef}
-      className="space-y-6"
+      // -mx-4 lets the grid escape the card's 24px padding on a phone, which is what
+      // buys each cell its 44px minimum; sm:mx-0 hands the padding back on wider
+      // screens, where the cells are already ~90px.
+      className="space-y-6 -mx-4 sm:mx-0"
       onMouseUp={endDrag}
       onMouseLeave={endDrag}
       onTouchEnd={endDrag}
@@ -176,7 +179,7 @@ export function AvailabilityCalendar({
             )}
             
             {/* Week day headers */}
-            <div className="grid grid-cols-7 gap-1 text-center mb-1">
+            <div className="grid grid-cols-7 gap-0.5 sm:gap-1 text-center mb-1">
               {weekDays.map(day => (
                 <div key={day} className="text-xs font-medium text-muted-foreground py-2">
                   {day}
@@ -185,7 +188,7 @@ export function AvailabilityCalendar({
             </div>
             
             {/* Calendar grid */}
-            <div className={cn("grid grid-cols-7 gap-1", isDragging && "touch-none")}>
+            <div className={cn("grid grid-cols-7 gap-0.5 sm:gap-1", isDragging && "touch-none")}>
               {/* Empty cells for alignment - only for first week of each month */}
               {monthIndex === 0 || getDay(firstDate) !== 0 ? (
                 Array.from({ length: firstDayOfWeek }).map((_, i) => (
@@ -226,7 +229,7 @@ export function AvailabilityCalendar({
                       e.stopPropagation();
                     }}
                     className={cn(
-                      "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-200 relative group select-none",
+                      "aspect-square min-h-11 min-w-11 rounded-lg flex flex-col items-center justify-center text-sm transition-all duration-200 relative group select-none",
                       !readOnly && "hover:scale-105 cursor-pointer",
                       readOnly && "cursor-default",
                       isSelected && "bg-success-light border-2 border-success text-foreground font-semibold",
@@ -262,10 +265,20 @@ export function AvailabilityCalendar({
                       readOnly && heatLevel === 'high' && "text-primary-foreground"
                     )}>{format(dateObj, 'd')}</span>
                     {availableCount > 0 && (
-                      <span className={cn(
-                        "text-[10px] font-medium",
-                        readOnly && heatLevel === 'high' ? "text-primary-foreground/80" : "text-muted-foreground"
-                      )}>
+                      <span
+                        className={cn(
+                          "text-[11px] font-semibold",
+                          // The count used to be text-muted-foreground unless heatLevel
+                          // was 'high', which only happens when literally everyone is
+                          // free - so on a trip where no day reaches 100% it was never
+                          // legible: measured 1.8:1 on a 4-of-5 fill. The day number
+                          // beside it already uses the dark foreground and measures
+                          // 5.7:1 on the darkest fill, so the count uses it too.
+                          readOnly && heatLevel === 'high'
+                            ? "text-primary-foreground"
+                            : "text-foreground/80",
+                        )}
+                      >
                         {availableCount}
                       </span>
                     )}
@@ -280,9 +293,16 @@ export function AvailabilityCalendar({
                         const participant = participants.find(p => p.name === name);
                         return participant?.availableDates.includes(date);
                       });
+                      // Hidden below sm, on purpose. This tooltip is hover-only on a
+                      // disabled button, so on a phone it was already unreachable - no
+                      // hover, and not focusable - while still being 178px of
+                      // whitespace-nowrap that hung past both edges of the grid and
+                      // widened the page. Hiding it costs touch users nothing they could
+                      // reach and stops it damaging the layout. Making "who is free"
+                      // available on touch is separate work, not a width tweak.
                       return availableNames.length > 0 ? (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                          <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs whitespace-nowrap">
+                        <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+                          <div className="bg-popover border border-border shadow-lg rounded-lg px-3 py-2 text-xs w-max max-w-[min(60vw,14rem)] break-words">
                             <div className="font-medium mb-1 text-popover-foreground">{format(dateObj, 'MMM d, yyyy')}</div>
                             <div className="text-muted-foreground">
                               {availableNames.join(', ')}
