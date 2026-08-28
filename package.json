@@ -15,7 +15,8 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.functions.json --noEmit",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:api": "pnpm run build && vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -74,6 +75,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",

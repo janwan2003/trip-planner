@@ -227,15 +227,19 @@ export function BestDates({ trip }: BestDatesProps) {
           return (
             <div
               key={`${range.startDate}-${range.endDate}`}
+              data-testid="best-date-row"
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
                 isBest ? "bg-heat-high/20 border border-heat-high/30" : "bg-muted"
               )}
             >
-              <div className={cn(
-                "text-center min-w-[72px]",
-                isBest && "text-primary"
-              )}>
+              <div
+                data-testid="best-date-label"
+                className={cn(
+                  "text-center min-w-[72px]",
+                  isBest && "text-primary"
+                )}
+              >
                 {isRange ? (
                   <>
                     <div className="text-base font-display font-semibold">
@@ -265,14 +269,16 @@ export function BestDates({ trip }: BestDatesProps) {
                     format(startDateObj, 'EEEE')
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div data-testid="best-date-names" className="text-xs text-muted-foreground">
                   {range.names.join(', ')}
                 </div>
               </div>
               
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Users className="w-3 h-3" />
-                <span className="text-sm font-medium">{range.count}</span>
+                <span data-testid="best-date-count" className="text-sm font-medium">
+                  {range.count}
+                </span>
               </div>
             </div>
           );

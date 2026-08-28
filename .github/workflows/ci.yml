@@ -32,9 +32,13 @@ jobs:
 
       - run: pnpm run test:coverage
 
-      # Build last: it is the slowest step and the least likely to catch what the
-      # cheaper gates above have not already caught.
+      # Build before the API tests, because Pages serves dist alongside the Functions.
       - run: pnpm run build
+
+      # Integration tests boot a real `wrangler pages dev` with a local D1 and hit the
+      # API over HTTP. They are out of the default test run because booting workerd
+      # takes seconds; they belong in CI, where that cost is worth paying.
+      - run: pnpm exec vitest run --config vitest.integration.config.ts
 
       - uses: actions/upload-artifact@v4
         if: always()
