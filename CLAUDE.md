@@ -149,6 +149,10 @@ Things in this repo that marketing depends on, so do not break them silently:
 - `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
   dimensions matching the actual PNG, title and description lengths, and the absence of
   invented ratings.
+- **The home page carries no marketing prose.** It had a "a trip is not an hour" section
+  with links to the comparison pages; the product owner removed it on 2026-08-28 because
+  it cluttered a UI whose job is the trip form. The comparison and FAQ pages are reached
+  from the footer instead. Do not reintroduce body copy there.
 - **`src/lib/siteMeta.ts` is the single source for every indexable URL.** The router,
   the per-route static HTML, `sitemap.xml` and the `FAQPage` structured data all come
   from it, so a new page cannot be added in one place and forgotten in another. Adding a

@@ -51,35 +51,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-
-          <section className="mt-16 max-w-3xl mx-auto lg:mx-0 border-t border-border/40 pt-8">
-            <h2 className="text-2xl font-display font-semibold mb-3">
-              A trip is not an hour
-            </h2>
-            <p className="text-muted-foreground mb-4 leading-relaxed">
-              Meeting pollers answer "which hour suits everyone" and hand you a grid of
-              time slots to read. A trip is a stretch of days, so WeGoWhen asks only about
-              days and answers with the ranked date ranges that fit the most people —
-              "6 of 6 free, Fri 12 to Mon 15" rather than a wall of ticks.
-            </p>
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <li>
-                <Link to="/when2meet-alternative" className="text-primary hover:underline">
-                  Compared with When2meet
-                </Link>
-              </li>
-              <li>
-                <Link to="/doodle-alternative" className="text-primary hover:underline">
-                  Compared with Doodle
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-primary hover:underline">
-                  Questions and answers
-                </Link>
-              </li>
-            </ul>
-          </section>
         </div>
       </main>
 
