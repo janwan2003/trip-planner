@@ -76,34 +76,41 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, params, env })
   const dates = JSON.stringify([...new Set(availableDates)].sort());
   const timestamp = nowIso();
 
-  const existing = await env.DB.prepare(
-    'SELECT id FROM participants WHERE trip_id = ? AND lower(name) = lower(?)',
+  // Update first. Someone already on the trip is not subject to the participant cap -
+  // locking out the people who are already there would be a worse bug than the one the
+  // cap prevents - so this path never consults it.
+  const updated = await env.DB.prepare(
+    `UPDATE participants
+        SET name = ?, available_dates = ?, updated_at = ?
+      WHERE trip_id = ? AND lower(name) = lower(?)`,
   )
-    .bind(tripId, trimmed)
-    .first<{ id: string }>();
+    .bind(trimmed, dates, timestamp, tripId, trimmed)
+    .run();
 
-  if (existing) {
-    await env.DB.prepare(
-      'UPDATE participants SET name = ?, available_dates = ?, updated_at = ? WHERE id = ?',
-    )
-      .bind(trimmed, dates, timestamp, existing.id)
-      .run();
-  } else {
-    const count = await env.DB.prepare(
-      'SELECT COUNT(*) AS total FROM participants WHERE trip_id = ?',
-    )
-      .bind(tripId)
-      .first<{ total: number }>();
+  if ((updated.meta.changes ?? 0) > 0) {
+    return respondWithTrip(env, tripId);
+  }
 
-    if ((count?.total ?? 0) >= LIMITS.participants) {
-      return badRequest(`A trip can hold at most ${LIMITS.participants} participants.`);
-    }
+  // Nobody by that name yet, so this is an insert and the cap applies. The count lives
+  // inside the statement rather than in a preceding SELECT: read-then-insert let two
+  // simultaneous requests at 199 both pass the check and land a 201st participant.
+  //
+  // ON CONFLICT absorbs the other race - two requests inserting the same name at once -
+  // which the unique index would otherwise turn into a constraint error and a 500.
+  const inserted = await env.DB.prepare(
+    `INSERT INTO participants (id, trip_id, name, available_dates, updated_at)
+     SELECT ?, ?, ?, ?, ?
+      WHERE (SELECT COUNT(*) FROM participants WHERE trip_id = ?) < ?
+     ON CONFLICT (trip_id, lower(name)) DO UPDATE
+        SET name = excluded.name,
+            available_dates = excluded.available_dates,
+            updated_at = excluded.updated_at`,
+  )
+    .bind(newId(), tripId, trimmed, dates, timestamp, tripId, LIMITS.participants)
+    .run();
 
-    await env.DB.prepare(
-      'INSERT INTO participants (id, trip_id, name, available_dates, updated_at) VALUES (?, ?, ?, ?, ?)',
-    )
-      .bind(newId(), tripId, trimmed, dates, timestamp)
-      .run();
+  if ((inserted.meta.changes ?? 0) === 0) {
+    return badRequest(`A trip can hold at most ${LIMITS.participants} participants.`);
   }
 
   return respondWithTrip(env, tripId);

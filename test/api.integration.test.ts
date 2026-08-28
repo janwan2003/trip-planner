@@ -389,6 +389,69 @@ describe('limits', () => {
   });
 });
 
+describe('concurrency', () => {
+  /**
+   * These pin the *outcome* the atomic upsert is meant to guarantee. They do not
+   * reproduce the race: checked against the previous read-then-insert implementation,
+   * they pass there too, because the local miniflare runtime appears to serialise these
+   * requests. The argument for the single-statement version is structural rather than
+   * test-demonstrated - a read followed by a write cannot be atomic across isolates -
+   * and these tests exist to catch a regression in the observable behaviour.
+   */
+
+  it('never exceeds the participant cap under simultaneous inserts', async () => {
+    const { id } = await createTrip();
+
+    for (let i = 0; i < 199; i += 1) {
+      await putParticipant(id, `P${i}`, []);
+    }
+
+    // Five distinct newcomers arriving at once, with one slot left. Read-then-insert
+    // let all five pass the count check.
+    const results = await Promise.all(
+      ['A', 'B', 'C', 'D', 'E'].map((n) => putParticipant(id, `Late${n}`, ['2026-09-02'])),
+    );
+
+    const trip = await (await fetch(`${API}/${id}`)).json();
+    expect(trip.participants).toHaveLength(200);
+    expect(results.filter((r) => r.status === 200)).toHaveLength(1);
+    expect(results.filter((r) => r.status === 400)).toHaveLength(4);
+  }, 90_000);
+
+  it('creates one participant, not several, when the same name arrives at once', async () => {
+    const { id } = await createTrip();
+
+    // Same person, five taps in flight. The unique index would turn a racing insert
+    // into a constraint error and a 500; ON CONFLICT absorbs it into an update.
+    const results = await Promise.all([
+      putParticipant(id, 'Ada', ['2026-09-02']),
+      putParticipant(id, 'ada', ['2026-09-03']),
+      putParticipant(id, 'ADA', ['2026-09-04']),
+      putParticipant(id, ' Ada ', ['2026-09-05']),
+      putParticipant(id, 'aDa', ['2026-09-06']),
+    ]);
+
+    expect(results.every((r) => r.status === 200)).toBe(true);
+
+    const trip = await (await fetch(`${API}/${id}`)).json();
+    expect(trip.participants).toHaveLength(1);
+    // Whichever write landed last wins; the point is that exactly one row exists.
+    expect(trip.participants[0].availableDates).toHaveLength(1);
+  }, 30_000);
+
+  it('lets an existing participant save while the trip is full', async () => {
+    const { id } = await createTrip();
+
+    for (let i = 0; i < 200; i += 1) {
+      await putParticipant(id, `Q${i}`, []);
+    }
+
+    // The cap guards inserts, not writes.
+    expect((await putParticipant(id, 'Q0', ['2026-09-02'])).status).toBe(200);
+    expect((await putParticipant(id, 'Q201', ['2026-09-02'])).status).toBe(400);
+  }, 90_000);
+});
+
 describe('routing', () => {
   /**
    * public/_redirects serves index.html for anything unmatched, which is right for app
