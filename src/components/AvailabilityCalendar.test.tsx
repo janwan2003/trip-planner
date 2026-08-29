@@ -287,6 +287,33 @@ describe('AvailabilityCalendar', () => {
   });
 
   /**
+   * A tap that ends without any preventDefault is followed by compatibility mouse
+   * events on the same element. Those ran beginDrag a second time and toggled the day
+   * straight back off, so on a phone a tap did nothing and only a press-and-hold - which
+   * fires touchmove, and touchmove preventDefaults - appeared to select anything.
+   */
+  it('toggles once for a tap, not twice when the browser echoes it as a mouse click', () => {
+    const onToggleDate = vi.fn();
+    const { container } = render(<AvailabilityCalendar {...props({ onToggleDate })} />);
+
+    const grid = container.firstChild as HTMLElement;
+    const cell = dayCell('3');
+
+    fireEvent.touchStart(cell);
+    fireEvent.touchEnd(grid);
+
+    // What a mobile browser sends afterwards.
+    fireEvent.mouseOver(cell);
+    fireEvent.mouseEnter(cell);
+    fireEvent.mouseDown(cell);
+    fireEvent.mouseUp(cell);
+    fireEvent.click(cell);
+
+    expect(onToggleDate).toHaveBeenCalledTimes(1);
+    expect(onToggleDate).toHaveBeenCalledWith('2026-09-03');
+  });
+
+  /**
    * PRODUCT.md records "must work on a phone" as non-negotiable, and the UI tells
    * people to click and drag. A touch drag cannot use mouseenter - no such event fires
    * while a finger moves - so each move is resolved through elementFromPoint to

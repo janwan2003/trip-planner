@@ -106,11 +106,31 @@ export function AvailabilityCalendar({
     }
   }, [isDragging, readOnly, selectedDates, dragStartValue, onToggleDate]);
 
+  /**
+   * When the last touch happened, so the mouse events a touch synthesises can be ignored.
+   *
+   * A tap that ends without any `preventDefault` is followed by a compatibility
+   * mousedown/mouseup/click on the same element. `beginDrag` had already run on
+   * `touchstart`, and that synthetic mousedown ran it a second time - toggling the day
+   * straight back off, so a tap looked like it did nothing. Only a press-and-hold
+   * appeared to work, because it fires `touchmove`, whose `preventDefault` suppresses
+   * the compatibility events.
+   */
+  const lastTouchAt = useRef(0);
+
+  /** True while any mouse event is still plausibly the echo of a finger. */
+  const isTouchEcho = useCallback(() => Date.now() - lastTouchAt.current < 700, []);
+
   const endDrag = useCallback(() => {
     setIsDragging(false);
     setDragStartValue(null);
     draggedDatesRef.current.clear();
   }, []);
+
+  const endTouch = useCallback(() => {
+    lastTouchAt.current = Date.now();
+    endDrag();
+  }, [endDrag]);
 
   /** Toggles a single date without starting a drag - used by the keyboard. */
   const toggleOne = useCallback((date: string) => {
@@ -184,8 +204,8 @@ export function AvailabilityCalendar({
       className="space-y-6 -mx-4 sm:mx-0"
       onMouseUp={endDrag}
       onMouseLeave={endDrag}
-      onTouchEnd={endDrag}
-      onTouchCancel={endDrag}
+      onTouchEnd={endTouch}
+      onTouchCancel={endTouch}
     >
       {months.map((monthKey, monthIndex) => {
         const monthDates = datesByMonth[monthKey];
@@ -239,9 +259,18 @@ export function AvailabilityCalendar({
                         ? `${format(dateObj, 'EEEE d MMMM yyyy')}, ${availableCount} available`
                         : format(dateObj, 'EEEE d MMMM yyyy')
                     }
-                    onMouseDown={() => beginDrag(date)}
-                    onMouseEnter={() => extendDrag(date)}
-                    onTouchStart={() => beginDrag(date)}
+                    onMouseDown={() => {
+                      if (isTouchEcho()) return;
+                      beginDrag(date);
+                    }}
+                    onMouseEnter={() => {
+                      if (isTouchEcho()) return;
+                      extendDrag(date);
+                    }}
+                    onTouchStart={() => {
+                      lastTouchAt.current = Date.now();
+                      beginDrag(date);
+                    }}
                     onKeyDown={(e) => {
                       // Buttons synthesise a click from Enter and Space, and onClick is
                       // deliberately inert so a drag does not toggle twice. Without this

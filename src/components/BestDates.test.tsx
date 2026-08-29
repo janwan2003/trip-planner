@@ -236,8 +236,10 @@ describe('BestDates', () => {
     const min = screen.getByTitle('Min days') as HTMLInputElement;
     fireEvent.change(min, { target: { value: '0' } });
 
-    expect(min.value).toBe('1');
     expect(suggestions()).toHaveLength(1);
+
+    fireEvent.blur(min);
+    expect(min.value).toBe('1');
   });
 
   it('treats a cleared minimum as one day rather than NaN', () => {
@@ -246,8 +248,41 @@ describe('BestDates', () => {
     const min = screen.getByTitle('Min days') as HTMLInputElement;
     fireEvent.change(min, { target: { value: '' } });
 
-    expect(min.value).toBe('1');
     expect(suggestions()).toHaveLength(1);
+  });
+
+  /**
+   * The box coerced itself back to 1 on every keystroke, so deleting the 1 put a 1
+   * straight back and the only way to reach 2 was to type 12 and then delete the 1.
+   */
+  it('can be emptied and retyped', () => {
+    render(
+      <BestDates
+        trip={trip([{ name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] }])}
+      />,
+    );
+
+    const min = screen.getByTitle('Min days') as HTMLInputElement;
+
+    fireEvent.change(min, { target: { value: '' } });
+    expect(min.value).toBe('');
+
+    fireEvent.change(min, { target: { value: '2' } });
+    expect(min.value).toBe('2');
+
+    // And the filter follows the box: only the two-day range survives.
+    expect(suggestions()).toHaveLength(1);
+    expect(screen.getByTestId('best-date-label')).toHaveTextContent('2 days');
+  });
+
+  it('restores a valid number when an empty box loses focus', () => {
+    render(<BestDates trip={trip([{ name: 'Ada', availableDates: ['2026-09-03'] }])} />);
+
+    const min = screen.getByTitle('Min days') as HTMLInputElement;
+    fireEvent.change(min, { target: { value: '' } });
+    fireEvent.blur(min);
+
+    expect(min.value).toBe('1');
   });
 
   it('states whose dates it is answering for when filtered', () => {

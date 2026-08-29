@@ -19,7 +19,17 @@ interface BestDatesProps {
 }
 
 export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
-  const [minDays, setMinDays] = useState<number>(1);
+  /**
+   * The raw contents of the "Min" box, not a number.
+   *
+   * It was a `number` coerced with `parseInt(value) || 1` on every keystroke, so an
+   * empty box snapped straight back to 1 and the character you had just deleted
+   * reappeared. Typing 2 over a 1 meant typing 12 and then deleting the 1. Holding the
+   * string lets the field be empty while it is being retyped; the filter reads 1 in the
+   * meantime, and the box normalises to a valid number on blur.
+   */
+  const [minDaysInput, setMinDaysInput] = useState('1');
+  const minDays = Math.max(1, parseInt(minDaysInput, 10) || 1);
 
   // Computed without the length filter so that raising "Min" past every option empties
   // the list without removing the control that would let you lower it again.
@@ -131,10 +141,16 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
           <span className="text-xs text-muted-foreground">Min:</span>
           <Input
             type="number"
-            value={minDays}
-            onChange={(e) => setMinDays(Math.max(1, parseInt(e.target.value) || 1))}
+            inputMode="numeric"
+            value={minDaysInput}
+            onChange={(e) => {
+              // Digits or nothing: a number input hands back '' for anything it cannot
+              // parse, and '' has to be allowed through or the box cannot be cleared.
+              if (/^\d*$/.test(e.target.value)) setMinDaysInput(e.target.value);
+            }}
+            onBlur={() => setMinDaysInput(String(minDays))}
             min="1"
-            className="h-6 w-10 text-xs px-1.5"
+            className="h-6 w-12 text-xs px-1.5"
             title="Min days"
           />
         </div>

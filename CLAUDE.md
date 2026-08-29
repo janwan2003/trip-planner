@@ -281,7 +281,7 @@ When touching date code, run more than one offset:
 for tz in UTC Asia/Tokyo Pacific/Kiritimati Pacific/Midway; do WGW_TEST_TZ=$tz pnpm test; done
 ```
 
-## Two defects found and fixed here
+## Four defects found and fixed here
 
 1. ~~Drag-to-select does not work on touch.~~ **Fixed.**
    `src/components/AvailabilityCalendar.tsx` now resolves each `touchmove` through
@@ -293,6 +293,20 @@ for tz in UTC Asia/Tokyo Pacific/Kiritimati Pacific/Midway; do WGW_TEST_TZ=$tz p
    intersection, so it scales with participants rather than 2^n. Verified in a browser
    with 35 participants, where the old version offered a range all 35 could make to only
    6 of them.
+3. ~~A tap on a phone selects nothing; only a press-and-hold works.~~ **Fixed.** A touch
+   that ends without any `preventDefault` is followed by compatibility
+   mousedown/mouseup/click on the same element, so `beginDrag` ran twice - once from
+   `touchstart` and once from the synthetic mousedown - and the day toggled straight back
+   off. A hold only worked because it fires `touchmove`, whose `preventDefault` suppresses
+   those compatibility events. `AvailabilityCalendar` now stamps the time of the last
+   touch and the mouse handlers ignore anything within 700ms of it. Guarded by a test that
+   fires the whole real sequence (touchstart, touchend, mouseover/enter/down/up/click) and
+   asserts one toggle; it fails with two before the fix.
+4. ~~"Min" days in `BestDates` cannot be cleared.~~ **Fixed.** The box held a `number` and
+   coerced with `parseInt(value) || 1` on every keystroke, so deleting the 1 put a 1 back
+   and the only route to 2 was typing 12 and then deleting the 1. It now holds the raw
+   string, allows an empty box while it is being retyped, reads 1 for the filter in the
+   meantime, and normalises on blur.
 
 ## Conventions
 
