@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -266,8 +267,8 @@ describe('llms-full.txt', () => {
 
 describe('sitemap lastmod', () => {
   it('names content sources that exist for every indexable route', () => {
-    // A path that no longer exists makes `git log` return nothing, which silently drops
-    // that route's lastmod - the failure looks like "Google just ignored it".
+    // A path that no longer exists makes the git audit below vacuous - it would compare
+    // against no commits and pass whatever the declared date said.
     for (const route of ROUTES) {
       expect(route.contentSources, `${route.path} has no contentSources`).toBeDefined();
       expect(route.contentSources!.length).toBeGreaterThan(0);
@@ -285,11 +286,49 @@ describe('sitemap lastmod', () => {
     expect(routeFor('/faq')!.contentSources).toContain('src/lib/siteMeta.ts');
   });
 
-  it('does not bump one page when another one changes', () => {
+  it('does not let one page share another page-s sources', () => {
     // The whole reason the dates are per route rather than one build stamp.
     const about = routeFor('/about')!.contentSources!;
     expect(about).not.toContain('src/pages/Contact.tsx');
     expect(about).not.toContain('src/components/MarketingPage.tsx');
+  });
+
+  it.each(ROUTES)('$path declares a plausible contentUpdated', (route) => {
+    expect(route.contentUpdated, `${route.path} has no contentUpdated`).toMatch(
+      /^\d{4}-\d{2}-\d{2}$/,
+    );
+    // Compared as strings: YYYY-MM-DD sorts correctly, and parsing a date-only string
+    // into a Date is the bug CLAUDE.md devotes a section to.
+    expect(route.contentUpdated! <= buildDate()).toBe(true);
+  });
+
+  it.each(ROUTES)('$path is not claiming a date older than its last content commit', (route) => {
+    // The audit that keeps the checked-in literals honest. It is skipped where git
+    // cannot answer - a shallow clone reports the tip commit for every path, which is
+    // exactly the false signal that made these literals necessary. CI checks out with
+    // fetch-depth: 0 so this actually runs there.
+    let committed: string;
+    try {
+      if (execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim() !== 'false') return;
+
+      committed = execFileSync(
+        'git',
+        ['log', '-1', '--format=%cs', '--', ...route.contentSources!],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+      ).trim();
+    } catch {
+      return;
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(committed)) return;
+    expect(
+      route.contentUpdated! >= committed,
+      `${route.path} says ${route.contentUpdated} but ${route.contentSources!.join(', ')} ` +
+        `last changed ${committed}. Bump contentUpdated in the commit that changes the page.`,
+    ).toBe(true);
   });
 
   it('emits lastmod for the routes a date is known for, and omits it otherwise', () => {
@@ -297,14 +336,19 @@ describe('sitemap lastmod', () => {
     const faqBlock = xml.slice(xml.indexOf('<loc>https://wegowhen.com/faq</loc>'));
 
     expect(faqBlock).toContain('<lastmod>2026-08-31</lastmod>');
-    // One route has a date; no other <lastmod> may appear.
     expect([...xml.matchAll(/<lastmod>/g)]).toHaveLength(1);
   });
 
-  it('omits lastmod entirely when the build cannot date anything', () => {
-    // git missing from the build image, or a clone too shallow to hold the commit.
-    // Guessing today here is what teaches Google to ignore the field.
-    expect(renderSitemap()).not.toContain('<lastmod>');
+  it('omits lastmod rather than guessing when a route has no date', () => {
+    expect(renderSitemap(() => undefined)).not.toContain('<lastmod>');
+  });
+
+  it('defaults to each route-s declared date', () => {
+    const xml = renderSitemap();
+    for (const route of ROUTES) {
+      const block = xml.slice(xml.indexOf(`<loc>${canonicalFor(route.path)}</loc>`));
+      expect(block).toContain(`<lastmod>${route.contentUpdated}</lastmod>`);
+    }
   });
 
   it('keeps lastmod after loc, where the schema requires it', () => {

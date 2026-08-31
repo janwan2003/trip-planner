@@ -32,13 +32,25 @@ export interface RouteMeta {
   /** Set on pages that must stay out of search results. */
   noindex?: boolean;
   /**
-   * The files whose git history dates this page, newest commit wins. Feeds `<lastmod>`
-   * in the sitemap and `dateModified` in the JSON-LD.
+   * The day this page's content last changed, `YYYY-MM-DD`. Feeds `<lastmod>` in the
+   * sitemap and `dateModified` in the JSON-LD.
    *
-   * Sourced from commits rather than from the clock on purpose. A date stamped at build
-   * time moves on every deploy whether or not a word changed, and Google discounts a
-   * `lastmod` it finds unreliable - which makes a wrong date worth less than no date.
-   * Listing the files per route also keeps one page's edit from bumping the other seven.
+   * A literal, checked in, and bumped by hand in the same commit that changes the page.
+   * It was computed at build time from `git log` for exactly one deploy, which is how
+   * the reason it cannot be became measurable: Cloudflare Pages builds from a shallow
+   * clone, so `git log -1 -- <file>` answers with the only commit it has - the tip - for
+   * every path. The sitemap went out with all eight URLs stamped the build day, which is
+   * the unreliable `lastmod` the field is supposed to avoid, and the "git is missing"
+   * fallback never fired because git was present and answering.
+   *
+   * `src/lib/siteMeta.test.ts` fails if this date is older than the last commit touching
+   * `contentSources`, so a page whose words changed cannot keep an old date for long.
+   */
+  contentUpdated?: string;
+  /**
+   * The files whose content this page renders. Not read at build time - only by the test
+   * that audits `contentUpdated` against git. Listed per route so one page's edit cannot
+   * be read as a change to the other seven.
    */
   contentSources?: string[];
   /**
@@ -120,6 +132,7 @@ export const FAQ: { question: string; answer: string }[] = [
 export const ROUTES: RouteMeta[] = [
   {
     path: '/',
+    contentUpdated: '2026-08-31',
     contentSources: [
       'src/pages/Index.tsx',
       'src/components/CreateTripForm.tsx',
@@ -133,6 +146,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/when2meet-alternative',
+    contentUpdated: '2026-08-28',
     contentSources: ['src/pages/When2meetAlternative.tsx', 'src/components/MarketingPage.tsx'],
     title: 'A When2meet alternative for whole days, not hours',
     description:
@@ -141,6 +155,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/doodle-alternative',
+    contentUpdated: '2026-08-28',
     contentSources: ['src/pages/DoodleAlternative.tsx', 'src/components/MarketingPage.tsx'],
     title: 'A Doodle alternative for group trip dates',
     description:
@@ -149,6 +164,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/faq',
+    contentUpdated: '2026-08-31',
     contentSources: [
       'src/pages/Faq.tsx',
       'src/components/MarketingPage.tsx',
@@ -162,6 +178,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/about',
+    contentUpdated: '2026-08-31',
     contentSources: ['src/pages/About.tsx'],
     title: 'About WeGoWhen',
     description:
@@ -170,6 +187,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/contact',
+    contentUpdated: '2026-08-28',
     contentSources: ['src/pages/Contact.tsx'],
     title: 'Contact WeGoWhen',
     description:
@@ -178,6 +196,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/terms',
+    contentUpdated: '2026-08-28',
     contentSources: ['src/pages/TermsOfService.tsx'],
     title: 'Terms of Service | WeGoWhen',
     description:
@@ -186,6 +205,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/privacy',
+    contentUpdated: '2026-08-28',
     contentSources: ['src/pages/PrivacyPolicy.tsx'],
     title: 'Privacy Policy | WeGoWhen',
     description:
@@ -372,15 +392,13 @@ export const outputFileFor = (route: RouteMeta): string =>
 /**
  * A sitemap covering exactly the routes above, so the two cannot disagree.
  *
- * `lastmodFor` returns the day a route's content last changed, as `YYYY-MM-DD`, or
- * `undefined` when the build cannot work it out - `git` missing from the build image,
- * or a clone too shallow to hold the commit. Undefined omits the element rather than
- * guessing: `lastmod` is the only one of these three fields Google reads at all
- * (`changefreq` and `priority` it ignores outright), and it reads it only while it
- * holds up against what the page actually does.
+ * `lastmodFor` defaults to each route's declared `contentUpdated` and returning
+ * `undefined` omits the element rather than guessing. `lastmod` is the only one of
+ * these three fields Google reads at all - `changefreq` and `priority` it ignores
+ * outright - and it reads it only while it holds up against what the page does.
  */
 export const renderSitemap = (
-  lastmodFor: (route: RouteMeta) => string | undefined = () => undefined,
+  lastmodFor: (route: RouteMeta) => string | undefined = (route) => route.contentUpdated,
 ): string =>
   [
     '<?xml version="1.0" encoding="UTF-8"?>',

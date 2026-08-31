@@ -245,15 +245,20 @@ Things in this repo that marketing depends on, so do not break them silently:
 - The `FAQ` array in that file is rendered by `src/pages/Faq.tsx` **and** turned into the
   `FAQPage` JSON-LD, which is why the two can never disagree — a requirement of the
   structured data, not just tidiness.
-- **Page dates come from git, not from the clock.** Each route lists the files that
-  determine its content in `contentSources`, and the build runs `git log -1 --format=%cs`
-  over them to stamp `<lastmod>` in the sitemap and `dateModified` in the JSON-LD. Two
-  reasons it is not `Date.now()`: a date that moves on every deploy whether or not a word
-  changed is one Google learns to discount, and a shared build stamp would bump all eight
-  pages when one changed. If `git` is missing or the clone is too shallow, the date is
-  omitted rather than guessed. Verified 2026-08-31: the sitemap carried eight URLs with
-  two distinct dates, `/about` and `/` on the 31st and the comparison pages still on the
-  28th.
+- **Page dates are checked-in literals, and the build must not compute them.** Each
+  route carries `contentUpdated`, which feeds `<lastmod>` in the sitemap and
+  `dateModified` in the JSON-LD, and is bumped by hand in the commit that changes the
+  page. `src/lib/siteMeta.test.ts` fails if a route's date is older than the last commit
+  touching its `contentSources`, so the literals cannot quietly rot; CI checks out with
+  `fetch-depth: 0` because that audit needs real history.
+
+  **Do not replace this with `git log` at build time.** That shipped, for one deploy, on
+  2026-08-31. Locally it produced two distinct dates; production came back with all eight
+  URLs stamped the build day, because **Cloudflare Pages builds from a shallow clone** and
+  `git log -1 -- <file>` then answers with the tip commit for every path. The
+  "git is unavailable, omit the date" fallback never fired, because git was present and
+  answering — it was answering wrongly. A uniform build-day `lastmod` is the exact signal
+  Google learns to discount, which is worse than the no-`lastmod` state it replaced.
 - **There is no way to ping a sitemap any more.** Both endpoints are retired, measured
   2026-08-31: `google.com/ping?sitemap=` answers **404** and `bing.com/ping?sitemap=`
   answers **410**. Google refetches a sitemap it already knows on its own schedule, and

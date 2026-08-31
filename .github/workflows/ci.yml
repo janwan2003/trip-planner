@@ -13,7 +13,13 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # Full history, not the default depth-1: `src/lib/siteMeta.test.ts` audits each
+      # route's declared `contentUpdated` against the last commit touching its content,
+      # and a shallow clone answers with the tip commit for every path, which makes the
+      # audit pass no matter what the dates say.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 

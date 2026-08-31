@@ -3,12 +3,10 @@ import react from "@vitejs/plugin-react-swc";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "path";
 import { pathToFileURL } from "node:url";
-import { execFileSync } from "node:child_process";
 
 import {
   PRIVATE_ROUTES,
   ROUTES,
-  RouteMeta,
   RenderedPage,
   outputFileFor,
   renderLlmsFull,
@@ -45,33 +43,6 @@ import {
  * bare `.html` file is served at the extensionless path with a 200. Verified against
  * `wrangler pages dev` both ways.
  */
-/**
- * The day the given files last changed, as `YYYY-MM-DD`, or `undefined` if git cannot
- * say - no git in the build image, a clone too shallow to hold the commit, or a file
- * that has never been committed.
- *
- * `%cs` is the committer date already formatted as a short date, so nothing here parses
- * a date string into a `Date` and back. That matters in this repo specifically: reading
- * a calendar day off an instant is the bug CLAUDE.md devotes a section to.
- *
- * Undefined is a real answer, not a failure. Callers omit the field rather than
- * substituting today, because a `lastmod` that moves on every deploy is one Google
- * learns to ignore.
- */
-const lastCommitDate = (root: string, files: string[]): string | undefined => {
-  if (files.length === 0) return undefined;
-  try {
-    const out = execFileSync("git", ["log", "-1", "--format=%cs", "--", ...files], {
-      cwd: root,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    return /^\d{4}-\d{2}-\d{2}$/.test(out) ? out : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
 const prerenderRoutes = (): Plugin => {
   let config: ResolvedConfig;
 
@@ -85,15 +56,6 @@ const prerenderRoutes = (): Plugin => {
       const outDir = path.resolve(config.root, config.build.outDir);
       const baseHtml = await readFile(path.join(outDir, "index.html"), "utf8");
 
-      // Computed once: `git log` per route is eight subprocesses, and the answer cannot
-      // change during a build.
-      const contentDates = new Map<string, string | undefined>(
-        [...ROUTES, ...PRIVATE_ROUTES].map((route) => [
-          route.path,
-          lastCommitDate(config.root, route.contentSources ?? []),
-        ]),
-      );
-      const dateFor = (route: RouteMeta) => contentDates.get(route.path);
 
       const write = async (file: string, html: string) => {
         const target = path.join(outDir, file);
@@ -142,7 +104,7 @@ const prerenderRoutes = (): Plugin => {
           rendered.push({ route, body });
           await write(
             outputFileFor(route),
-            renderRouteHtml(baseHtml, route, body, dateFor(route)),
+            renderRouteHtml(baseHtml, route, body, route.contentUpdated),
           );
         }
       } finally {
@@ -156,7 +118,7 @@ const prerenderRoutes = (): Plugin => {
         await write(outputFileFor(route), renderRouteHtml(baseHtml, route));
       }
 
-      await writeFile(path.join(outDir, "sitemap.xml"), renderSitemap(dateFor));
+      await writeFile(path.join(outDir, "sitemap.xml"), renderSitemap());
 
       // The full text of every page, for the answer engines that would otherwise have
       // to fetch and strip eight HTML documents. Generated from the bodies just
