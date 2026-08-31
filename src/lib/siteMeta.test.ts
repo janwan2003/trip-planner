@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -261,5 +261,54 @@ describe('llms-full.txt', () => {
 
   it('points back at the short index rather than replacing it', () => {
     expect(renderLlmsFull(pages)).toContain('https://wegowhen.com/llms.txt');
+  });
+});
+
+describe('sitemap lastmod', () => {
+  it('names content sources that exist for every indexable route', () => {
+    // A path that no longer exists makes `git log` return nothing, which silently drops
+    // that route's lastmod - the failure looks like "Google just ignored it".
+    for (const route of ROUTES) {
+      expect(route.contentSources, `${route.path} has no contentSources`).toBeDefined();
+      expect(route.contentSources!.length).toBeGreaterThan(0);
+      for (const file of route.contentSources!) {
+        expect(existsSync(resolve(__dirname, '../..', file)), `${file} is missing`).toBe(true);
+      }
+    }
+  });
+
+  it('lists the page that renders each route among its own sources', () => {
+    expect(routeFor('/faq')!.contentSources).toContain('src/pages/Faq.tsx');
+    expect(routeFor('/privacy')!.contentSources).toContain('src/pages/PrivacyPolicy.tsx');
+    // The FAQ answers live in the FAQ array in this module, not in the page component,
+    // so an edit to them has to move /faq's date.
+    expect(routeFor('/faq')!.contentSources).toContain('src/lib/siteMeta.ts');
+  });
+
+  it('does not bump one page when another one changes', () => {
+    // The whole reason the dates are per route rather than one build stamp.
+    const about = routeFor('/about')!.contentSources!;
+    expect(about).not.toContain('src/pages/Contact.tsx');
+    expect(about).not.toContain('src/components/MarketingPage.tsx');
+  });
+
+  it('emits lastmod for the routes a date is known for, and omits it otherwise', () => {
+    const xml = renderSitemap((route) => (route.path === '/faq' ? '2026-08-31' : undefined));
+    const faqBlock = xml.slice(xml.indexOf('<loc>https://wegowhen.com/faq</loc>'));
+
+    expect(faqBlock).toContain('<lastmod>2026-08-31</lastmod>');
+    // One route has a date; no other <lastmod> may appear.
+    expect([...xml.matchAll(/<lastmod>/g)]).toHaveLength(1);
+  });
+
+  it('omits lastmod entirely when the build cannot date anything', () => {
+    // git missing from the build image, or a clone too shallow to hold the commit.
+    // Guessing today here is what teaches Google to ignore the field.
+    expect(renderSitemap()).not.toContain('<lastmod>');
+  });
+
+  it('keeps lastmod after loc, where the schema requires it', () => {
+    const xml = renderSitemap(() => '2026-08-31');
+    expect(xml).toMatch(/<loc>[^<]+<\/loc>\n\s+<lastmod>2026-08-31<\/lastmod>/);
   });
 });

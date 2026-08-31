@@ -245,6 +245,23 @@ Things in this repo that marketing depends on, so do not break them silently:
 - The `FAQ` array in that file is rendered by `src/pages/Faq.tsx` **and** turned into the
   `FAQPage` JSON-LD, which is why the two can never disagree — a requirement of the
   structured data, not just tidiness.
+- **Page dates come from git, not from the clock.** Each route lists the files that
+  determine its content in `contentSources`, and the build runs `git log -1 --format=%cs`
+  over them to stamp `<lastmod>` in the sitemap and `dateModified` in the JSON-LD. Two
+  reasons it is not `Date.now()`: a date that moves on every deploy whether or not a word
+  changed is one Google learns to discount, and a shared build stamp would bump all eight
+  pages when one changed. If `git` is missing or the clone is too shallow, the date is
+  omitted rather than guessed. Verified 2026-08-31: the sitemap carried eight URLs with
+  two distinct dates, `/about` and `/` on the 31st and the comparison pages still on the
+  28th.
+- **There is no way to ping a sitemap any more.** Both endpoints are retired, measured
+  2026-08-31: `google.com/ping?sitemap=` answers **404** and `bing.com/ping?sitemap=`
+  answers **410**. Google refetches a sitemap it already knows on its own schedule, and
+  `robots.txt` points at ours; a manual resubmit needs Search Console. Bing wants
+  IndexNow instead, which needs no account — `public/5336c16045b1067eef246cc17ea1297d.txt`
+  is the key, and `api.indexnow.org/indexnow` plus `bing.com/indexnow` both answered 200
+  on 2026-08-31. So "resubmit the sitemap" is not an action anyone can take from a script;
+  changing `lastmod` is.
 - `public/robots.txt` disallows `/trip/`, and trip pages send `noindex` themselves: a
   trip's only credential is possession of its link, so a search result for one would
   break that. The 404 page is `noindex` too, because the SPA fallback answers an unknown

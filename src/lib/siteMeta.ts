@@ -32,6 +32,16 @@ export interface RouteMeta {
   /** Set on pages that must stay out of search results. */
   noindex?: boolean;
   /**
+   * The files whose git history dates this page, newest commit wins. Feeds `<lastmod>`
+   * in the sitemap and `dateModified` in the JSON-LD.
+   *
+   * Sourced from commits rather than from the clock on purpose. A date stamped at build
+   * time moves on every deploy whether or not a word changed, and Google discounts a
+   * `lastmod` it finds unreliable - which makes a wrong date worth less than no date.
+   * Listing the files per route also keeps one page's edit from bumping the other seven.
+   */
+  contentSources?: string[];
+  /**
    * Overrides the file name derived from `path`. Needed exactly once, and for a
    * reason that costs an afternoon to rediscover: see `outputFileFor`.
    */
@@ -110,6 +120,12 @@ export const FAQ: { question: string; answer: string }[] = [
 export const ROUTES: RouteMeta[] = [
   {
     path: '/',
+    contentSources: [
+      'src/pages/Index.tsx',
+      'src/components/CreateTripForm.tsx',
+      'src/components/Tutorial.tsx',
+      'src/components/RecentTrips.tsx',
+    ],
     title: 'WeGoWhen — Find the dates everyone is free for a group trip',
     description:
       'Share one link, everyone taps the days they are free, and WeGoWhen ranks the date ranges that fit the most people. No account, no sign-up.',
@@ -117,6 +133,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/when2meet-alternative',
+    contentSources: ['src/pages/When2meetAlternative.tsx', 'src/components/MarketingPage.tsx'],
     title: 'A When2meet alternative for whole days, not hours',
     description:
       'When2meet is built around a time-of-day grid. WeGoWhen is built around days: everyone marks the days they are free and it returns the ranked date ranges that work.',
@@ -124,6 +141,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/doodle-alternative',
+    contentSources: ['src/pages/DoodleAlternative.tsx', 'src/components/MarketingPage.tsx'],
     title: 'A Doodle alternative for group trip dates',
     description:
       'Doodle polls options and shows a tally. WeGoWhen computes the answer — the consecutive date ranges the most people can make — free, with no plan limits and no accounts.',
@@ -131,6 +149,11 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/faq',
+    contentSources: [
+      'src/pages/Faq.tsx',
+      'src/components/MarketingPage.tsx',
+      'src/lib/siteMeta.ts',
+    ],
     title: 'WeGoWhen FAQ — group trip dates, answered',
     description:
       'How to find dates a whole group is free, whether anyone needs an account, how many people a trip can hold, and how WeGoWhen differs from a meeting poll.',
@@ -139,6 +162,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/about',
+    contentSources: ['src/pages/About.tsx'],
     title: 'About WeGoWhen',
     description:
       'What WeGoWhen is for, how a trip works from creating it to picking the dates, and what it is built on.',
@@ -146,6 +170,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/contact',
+    contentSources: ['src/pages/Contact.tsx'],
     title: 'Contact WeGoWhen',
     description:
       'How to reach the person who builds WeGoWhen, with feedback, a bug report, or a question about a trip.',
@@ -153,6 +178,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/terms',
+    contentSources: ['src/pages/TermsOfService.tsx'],
     title: 'Terms of Service | WeGoWhen',
     description:
       'The terms that apply to using WeGoWhen: what the service does, what it does not promise, and how trip data is handled.',
@@ -160,6 +186,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/privacy',
+    contentSources: ['src/pages/PrivacyPolicy.tsx'],
     title: 'Privacy Policy | WeGoWhen',
     description:
       'What WeGoWhen stores, what it does not ask for, and who can see a trip. No accounts, no email addresses, no advertising.',
@@ -342,21 +369,34 @@ export const renderRouteHtml = (
 export const outputFileFor = (route: RouteMeta): string =>
   route.file ?? (route.path === '/' ? 'index.html' : `${route.path.replace(/^\//, '')}.html`);
 
-/** A sitemap covering exactly the routes above, so the two cannot disagree. */
-export const renderSitemap = (): string =>
+/**
+ * A sitemap covering exactly the routes above, so the two cannot disagree.
+ *
+ * `lastmodFor` returns the day a route's content last changed, as `YYYY-MM-DD`, or
+ * `undefined` when the build cannot work it out - `git` missing from the build image,
+ * or a clone too shallow to hold the commit. Undefined omits the element rather than
+ * guessing: `lastmod` is the only one of these three fields Google reads at all
+ * (`changefreq` and `priority` it ignores outright), and it reads it only while it
+ * holds up against what the page actually does.
+ */
+export const renderSitemap = (
+  lastmodFor: (route: RouteMeta) => string | undefined = () => undefined,
+): string =>
   [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<!-- Generated at build time from src/lib/siteMeta.ts. Do not edit by hand. -->',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...ROUTES.map((route) =>
-      [
+    ...ROUTES.map((route) => {
+      const lastmod = lastmodFor(route);
+      return [
         '  <url>',
         `    <loc>${canonicalFor(route.path)}</loc>`,
+        ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []),
         '    <changefreq>monthly</changefreq>',
         `    <priority>${route.priority}</priority>`,
         '  </url>',
-      ].join('\n'),
-    ),
+      ].join('\n');
+    }),
     '</urlset>',
     '',
   ].join('\n');
