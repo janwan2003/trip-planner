@@ -21,9 +21,10 @@ US (`location_code 2840`), desktop, pulled 2026-08-31. Not cached — both calls
 Zero citations is the expected result for a domain with no referring domains. But there is
 a second cause, and it is entirely ours.
 
-### Every page serves an empty body to every non-rendering reader
+### Every page served an empty body to every non-rendering reader — fixed the same day
 
-Measured 2026-08-31 with `curl` — no cookies, no JavaScript, which is what a crawler is:
+Measured 2026-08-31 with `curl` — no cookies, no JavaScript, which is what a crawler is —
+**before** commit `4278170`:
 
 ```
 $ curl -s https://wegowhen.com/when2meet-alternative | grep -o '<div id="root"></div>'
@@ -53,12 +54,18 @@ That is Google quoting a `<noscript>` warning as if it were the product descript
 the most direct evidence available that this layer reads served bytes, and it is what
 WeGoWhen's comparison pages would get if they were ever retrieved today.
 
-**Status: being fixed.** As of this writing the working tree carries an unpushed
-prerender-the-body change — `src/entry-prerender.tsx`, `src/AppShell.tsx`, and a rewritten
-`prerenderRoutes` plugin in `vite.config.ts` — which bakes each route's rendered HTML into
-its static file. That work belongs to another session and is not mine to commit. Nothing in
-this document's recommendations lands properly until it ships, so ship it first, then
-re-run the `curl` table above and confirm the byte counts move.
+**Fixed and deployed on 2026-08-31**, in commit `4278170` — `src/entry-prerender.tsx`,
+`src/AppShell.tsx` and a rewritten `prerenderRoutes` plugin, which bake each route's
+rendered HTML into its static file. The same `curl`, after:
+
+| URL | Before | After |
+| --- | --- | --- |
+| `/` | 5,394 | 17,491 |
+| `/when2meet-alternative` | 5,475 | 14,063 |
+| `/faq` | 9,332 | 19,517 (after the three FAQ entries in `31a72fe`) |
+
+Re-run it that way rather than trusting a green build: the bytes are the measurement, and
+a build can succeed while writing an empty root.
 
 ### Crawler access is clean — verified, not assumed
 
@@ -73,6 +80,9 @@ user-agent:
 | ClaudeBot | Claude | 200, 5,475 b |
 | PerplexityBot | Perplexity | 200, 5,475 b |
 | bingbot | Copilot | 200, 5,475 b |
+
+Identical byte counts because that was the pre-prerender page; the point of the check is
+the status code and the absence of a challenge, both of which held for all five.
 
 No change to `robots.txt` is needed, and adding named `Allow:` lines for these agents would
 be decoration — `User-agent: *` already covers them. Worth re-checking after any Cloudflare
@@ -117,59 +127,129 @@ answering them literally is the cheapest AI-visibility work there is:
 - **"When to meet but for days?"**
 - "How do I get more dates on When2meet?"
 
-The third is the product's thesis as a question, and the FAQ does not carry that wording.
-`related_searches` on both queries repeats it as "When 2 meet but for days".
+The third is the product's thesis as a question, and the FAQ did not carry that wording
+until `31a72fe`; it now answers three of these four in the words above. The fourth, "How
+do I get more dates on When2meet?", is about operating someone else's product and is
+deliberately left alone. `related_searches` on both queries repeats the third as
+"When 2 meet but for days".
 
 ## What to do, in order
 
-1. **Ship the body prerender.** Everything else is downstream of it. Verify with the `curl`
-   table above, not with a green build.
-2. **Answer the PAA questions in the FAQ, in their words.** Add to the `FAQ` array in
-   `src/lib/siteMeta.ts` — which feeds both the rendered page and the `FAQPage` JSON-LD, so
-   the two cannot disagree:
-   - "When to meet, but for days — is there a tool for that?"
-   - "Is there anything better than When2meet?" (answer honestly: for an hour, no; for a
-     stretch of days, it is the wrong shape)
-   - "Which is better, Doodle or When2meet?" (answer the comparison neutrally, then say
-     what neither does)
-   Each answer self-contained in 40–60 words, because that is the unit that gets extracted.
-3. **Answer the Software Recs Stack Exchange question** (`softwarerecs.stackexchange.com/questions/82438`).
-   This is the single highest-leverage item on the list: it is the source Google's AI
-   Overview quotes for the money query, it is a four-year-old question still collecting
-   views, and the site's rules permit a disclosed self-recommendation. Disclose authorship,
-   answer the asker's literal example ("is there a stretch of days that works"), no
-   marketing voice. Same for `ask.metafilter.com/363165` ("when2meet but for longer term
-   scales"), which Google surfaces in the discussions block for the same query.
-4. **Add freshness signals.** Nothing on the site carries a date a machine can read. Add
-   `datePublished` / `dateModified` to the `WebApplication` JSON-LD and a visible "Last
-   checked" line on the two comparison pages (the When2meet page already has "Checked
-   against when2meet.com on 28 August 2026" — make the Doodle page match and keep both
-   current). Recency is a documented weighting in every answer engine.
-5. **Name the entity.** The JSON-LD has no `author`, `publisher` or `sameAs`. Adding
-   `sameAs` pointing at the GitHub repo, the dev.to post and the YouTube video is how the
-   scattered third-party mentions get tied to one entity rather than read as unrelated
-   pages.
-6. **Generate `llms-full.txt` at build time.** The prerender plugin will already hold every
-   route's rendered HTML in memory; stripping tags into one concatenated text file is a few
-   lines in the same loop, and it cannot go stale because it is generated. Do not
-   hand-write one.
+Items 1, 2, 4, 5 and 6 shipped on 2026-08-31 and are struck through with the evidence
+that they hold. Item 3 needs an account and is the only one left that moves a citation.
+
+1. ~~**Ship the body prerender.**~~ Done, commit `4278170`, deployed. `/faq` went from
+   9,332 bytes with no prose to 19,517 bytes with the answers in them.
+2. ~~**Answer the PAA questions in the FAQ, in their words.**~~ Done, commit `31a72fe`.
+   Three entries added to the `FAQ` array in `src/lib/siteMeta.ts`, which feeds the
+   rendered page and the `FAQPage` JSON-LD from one source: "When to meet, but for days —
+   is there a tool for that?", "Is there anything better than When2meet?" and "Which is
+   better, Doodle or When2meet?". Each answer is self-contained in 40–60 words, because
+   that is the unit that gets extracted. Live: `curl https://wegowhen.com/faq` matches the
+   first of those twice, once as prose and once in the structured data.
+3. **Answer the Software Recs Stack Exchange question** — `softwarerecs.stackexchange.com/questions/82438`,
+   "Web app for scheduling dates (like when2meet but excluding time-of-day)". Still open.
+   The single highest-leverage item left: Google's AI Overview for
+   `when2meet but for multiple days` sources its lead recommendation to this page, the
+   question has **9,026 views** and three answers, and every one of those three is a
+   disclosed vendor (a Schej maintainer, a PollUnit employee, Set The Date). So the norm
+   is established. The draft is below.
+   - Post it in the **"Your Answer"** box. Answering needs no reputation; the "You must
+     have 50 reputation to comment" gate applies to comments only, so do not try to reply
+     under Set The Date's answer — the comparison belongs in the last paragraph of ours.
+   - Expect a captcha, a new-contributor banner, and a first-post review queue.
+4. ~~**Add freshness signals.**~~ Done, and then done properly in `b09fcb7` and
+   `8376643`. Each route now carries a `contentUpdated` literal that feeds both
+   `dateModified` in the JSON-LD and `<lastmod>` in the sitemap, with a test that fails any
+   route whose declared date is older than the last commit touching its `contentSources`.
+   The first attempt stamped the build day on all eight URLs, because Cloudflare Pages
+   builds from a shallow clone and `git log -1 -- <path>` there answers with the tip commit
+   for every path — a uniform `lastmod` being exactly the unreliable signal Google
+   discounts. Live now: five URLs dated 2026-08-28, three 2026-08-31. Both comparison pages
+   also carry a visible "checked on" line against the competitor's own site.
+5. ~~**Name the entity.**~~ Done. `creator.sameAs` in the JSON-LD points at the GitHub
+   repo, the demo video and the PeerPush listing. The dev.to post is deliberately not in
+   it: `sameAs` is for the entity's own profiles, and an article about the product is not
+   one.
+6. ~~**Generate `llms-full.txt` at build time.**~~ Done. The prerender plugin writes it
+   from the bodies it just rendered — 23,738 bytes, eight pages, served as `text/plain`.
+   Generated rather than written, because a hand-kept copy of the site's own copy goes
+   stale and then is the version that gets quoted.
 7. **Reddit, honestly and later.** `r/opensource`'s "I made a better when2meet" thread is
    rank 1 for the primary query and is cited by the AI Overview. A genuine post is worth as
-   much as a backlink here. It is also the surface where an account with no history posting
-   its own product goes badly, so this comes after there is something to say beyond
-   "I built a thing".
+   much as a backlink here. But that thread is Timeful's own launch announcement, so
+   posting a competing product under it reads as what it is. This waits for a thread of our
+   own, and for something to say beyond "I built a thing".
 
-## What shipped with this document
+**Ask MetaFilter is a dead end, contrary to what an earlier draft of this file said.**
+`ask.metafilter.com/363165` ("when2meet but for longer term scales") carries the line
+"This thread is closed to new comments". Checked 2026-08-31. Google still surfaces it in
+the discussions block, and there is nothing to be done about that.
+
+### The Stack Exchange answer, paste-ready
+
+Leads on the asker's own example — "is there a stretch of 3-5 days this summer that works
+for everyone?" — because that sentence is the product.
+
+```markdown
+[WeGoWhen](https://wegowhen.com) is built around the exact question in your
+example — "is there a stretch of 3–5 days this summer that works for everyone?"
+
+Against your requirements:
+
+- **No time-of-day dimension at all.** It never asks for hours. The unit is a
+  whole day, so there is no midnight-to-midnight workaround.
+- **No pre-defined list to vote on.** The organiser sets one outer window —
+  "any time from June to September" — and each person marks the days they are
+  free inside it, which is the "mark all dates that work" behaviour you
+  described rather than picking from a shortlist.
+- **Several months at once.** The window can be any length; one participant can
+  mark up to 1000 days.
+- **It aggregates into ranges, not just per-day counts.** The output is every
+  run of consecutive days that some group can *all* make, ranked by how many
+  people are in it, then by length: "6 of 6 free, Fri 12 – Mon 15". There is a
+  per-day heat map beside it if you want to eyeball the aggregate the way your
+  screenshot does, and you can filter people out to see what happens if two
+  drop.
+- **No account for anyone**, organiser included — a name typed plus the link.
+  Free, no paid tier, nothing to install.
+
+Where it does not match your screenshot: voting is binary. You mark the days
+you are free, and there is no separate "particularly bad" red vote. If that
+distinction matters, the tri-state voting in the Set The Date answer above is
+closer on that one point.
+
+It is new — public since August 2026 — so it does not have the track record the
+other answers here do.
+
+Disclosure: I built it.
+```
+
+Softwarerecs answers are `nofollow`, so this is not worth much as a link. It is worth
+posting because it is the page the AI Overview reads.
+
+Sweep boundary: the only other softwarerecs questions checked were the top 20 matching
+"scheduling" by title, all of which are resource, job, staff or class scheduling. Quora,
+Reddit and the review sites were not swept for answerable questions; that is a separate
+pass.
+
+## What shipped
+
+All of it is in commit `31a72fe`, pushed to `main`, CI green (run 33387250894), deployed
+and verified against the live site rather than against `dist`:
 
 - `public/llms.txt` rewritten: dated, with the literal query phrasings people type, the
   Set The Date and When2meet distinctions, and a short extractable Q&A block.
 - `public/pricing.md` added: free with no paid tier, stated in the machine-readable form
   agents filter on. Small file, but "is there a free option with no account" is exactly the
   filter this product wins.
-
-Not touched, because another session is actively editing them: `src/lib/siteMeta.ts`,
-`vite.config.ts`, `index.html`, `src/App.tsx`, `src/main.tsx`, `public/_redirects` and the
-tests. Items 2, 4, 5 and 6 above all live in those files.
+- `llms-full.txt` generated at build, `creator.sameAs` added, three FAQ entries added.
+- `dateModified` and sitemap `<lastmod>`, per page, from a checked-in date per route with
+  a test auditing it against git history — commits `b09fcb7` and `8376643`. The build-time
+  date this document originally recommended is the wrong mechanism on Cloudflare Pages; see
+  item 4.
+- All eight URLs resubmitted through IndexNow, HTTP 200. Google still needs the sitemap
+  submitted by hand in Search Console.
 
 ## Re-measuring
 
