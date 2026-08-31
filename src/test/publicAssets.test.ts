@@ -37,7 +37,16 @@ describe('published assets', () => {
 
   it('still publishes what the metadata and crawlers point at', () => {
     const files = filesInPublic();
-    for (const required of ['favicon.png', 'favicon.ico', 'og-image.png', 'robots.txt']) {
+    for (const required of [
+      'favicon.png',
+      'favicon.ico',
+      'og-image.png',
+      'robots.txt',
+      // Both are named by llms.txt and by the answer engines' own conventions, and both
+      // are plain files with nothing to fail loudly if they disappear.
+      'llms.txt',
+      'pricing.md',
+    ]) {
       expect(files).toContain(required);
     }
   });

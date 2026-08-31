@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   FAQ,
+  buildDate,
+  htmlToText,
+  renderLlmsFull,
   PRIVATE_ROUTES,
   ROUTES,
   canonicalFor,
@@ -173,5 +176,90 @@ describe('output file names', () => {
     // trip.html would serve a blank shell at /trip, a path the router does not have.
     expect(outputFileFor(routeFor('/trip')!)).toBe('trip-shell.html');
     expect(outputFileFor(routeFor('/trip')!)).not.toBe('trip.html');
+  });
+});
+
+describe('freshness stamp', () => {
+  it('rewrites dateModified with the day the bundle was built', () => {
+    // A literal in index.html is true the day someone types it and quietly false
+    // afterwards. Answer engines weight recency, and a wrong date is worse than none.
+    const html = renderRouteHtml(indexHtml, routeFor('/')!, undefined, '2026-09-15');
+    expect(html).toContain('"dateModified": "2026-09-15"');
+    expect(html).not.toContain('"dateModified": "2026-08-28"');
+  });
+
+  it('throws if the field it stamps is removed from the JSON-LD', () => {
+    const without = indexHtml.replace(/"dateModified": "[^"]*",/, '');
+    expect(() => renderRouteHtml(without, routeFor('/')!)).toThrow(/dateModified/);
+  });
+
+  it('reads the build date in UTC, not in the local calendar', () => {
+    // The suite runs in America/New_York. A local read of this instant gives the 14th.
+    expect(buildDate(new Date('2026-09-15T02:30:00Z'))).toBe('2026-09-15');
+  });
+
+  it('ties the site to its entity profiles, and claims no rating', () => {
+    // Read out of the JSON-LD rather than off the file, so the comment that explains
+    // the missing rating cannot satisfy the assertion about it.
+    const jsonLd = indexHtml.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    )![1];
+    const data = JSON.parse(jsonLd);
+
+    expect(data['@type']).toBe('WebApplication');
+    expect(data.creator.sameAs).toContain('https://github.com/janwan2003/trip-planner');
+    expect(data.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // There are no reviews. Inventing them is a fabrication and a policy violation.
+    expect(data.aggregateRating).toBeUndefined();
+  });
+});
+
+describe('llms-full.txt', () => {
+  const pages = [
+    { route: routeFor('/faq')!, body: '<main><h1>Questions</h1><p>Does everyone need an account?</p></main>' },
+  ];
+
+  it('strips markup down to the prose an answer engine would extract', () => {
+    const text = htmlToText(
+      '<main><!--$--><h2>Side by side</h2><script>ignored()</script>' +
+        '<p>A trip is not an&nbsp;hour.</p><tr><td>Them</td><td>Us</td></tr><!--/$--></main>',
+    );
+
+    expect(text).toContain('Side by side');
+    expect(text).toContain('A trip is not an hour.');
+    // React's suspense markers land mid-sentence if they survive.
+    expect(text).not.toContain('$');
+    expect(text).not.toContain('ignored');
+    expect(text).not.toMatch(/<[a-z]/i);
+    // A table row has to stay legible as a row, not run into the next one.
+    expect(text).toContain('Them — Us');
+  });
+
+  it('separates a run of nav links without spacing out the punctuation', () => {
+    const text = htmlToText(
+      '<nav><a href="/">Home</a><a href="/faq">FAQ</a></nav>' +
+        '<p>More on the <a href="/faq">FAQ</a>, and elsewhere.</p>',
+    );
+
+    expect(text).toContain('Home FAQ');
+    expect(text).toContain('More on the FAQ, and elsewhere.');
+  });
+
+  it('drops the empty corner cell a header row starts with', () => {
+    expect(htmlToText('<tr><th></th><th>When2meet</th><th>WeGoWhen</th></tr>')).toBe(
+      'When2meet — WeGoWhen',
+    );
+  });
+
+  it('names each page with its title and canonical URL', () => {
+    const full = renderLlmsFull(pages, '2026-09-15');
+    expect(full).toContain('## WeGoWhen FAQ — group trip dates, answered');
+    expect(full).toContain('URL: https://wegowhen.com/faq');
+    expect(full).toContain('Does everyone need an account?');
+    expect(full).toContain('2026-09-15');
+  });
+
+  it('points back at the short index rather than replacing it', () => {
+    expect(renderLlmsFull(pages)).toContain('https://wegowhen.com/llms.txt');
   });
 });

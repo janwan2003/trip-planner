@@ -7,7 +7,9 @@ import { pathToFileURL } from "node:url";
 import {
   PRIVATE_ROUTES,
   ROUTES,
+  RenderedPage,
   outputFileFor,
+  renderLlmsFull,
   renderRouteHtml,
   renderSitemap,
 } from "./src/lib/siteMeta";
@@ -68,6 +70,7 @@ const prerenderRoutes = (): Plugin => {
       //
       // `configFile: false` with an explicit plugin list keeps this plugin out of the
       // inner build, which would otherwise recurse into itself.
+      const rendered: RenderedPage[] = [];
       const ssrDir = path.join(config.root, "node_modules", ".wgw-prerender");
       await viteBuild({
         configFile: false,
@@ -97,6 +100,7 @@ const prerenderRoutes = (): Plugin => {
                 "plugin exists to prevent, so the build stops here.",
             );
           }
+          rendered.push({ route, body });
           await write(outputFileFor(route), renderRouteHtml(baseHtml, route, body));
         }
       } finally {
@@ -111,9 +115,16 @@ const prerenderRoutes = (): Plugin => {
       }
 
       await writeFile(path.join(outDir, "sitemap.xml"), renderSitemap());
+
+      // The full text of every page, for the answer engines that would otherwise have
+      // to fetch and strip eight HTML documents. Generated from the bodies just
+      // rendered, so it cannot describe a page the site does not serve. `public/llms.txt`
+      // stays the short index and is copied verbatim by Vite.
+      await writeFile(path.join(outDir, "llms-full.txt"), renderLlmsFull(rendered));
+
       this.info(
         `prerendered ${ROUTES.length} routes with bodies, ` +
-          `${PRIVATE_ROUTES.length} noindex shells, and sitemap.xml`,
+          `${PRIVATE_ROUTES.length} noindex shells, sitemap.xml and llms-full.txt`,
       );
     },
   };

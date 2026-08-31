@@ -51,6 +51,16 @@ export const FAQ: { question: string; answer: string }[] = [
       'You can, but it fights you. When2meet always asks for a time-of-day window as well as dates, so to use it for whole days you set it to run from midnight to midnight and end up reading a grid of time slots across every day of the trip. WeGoWhen only asks about days: each person taps the days they are free, and the result is a list of date ranges rather than a grid.',
   },
   {
+    question: 'When to meet, but for days — is there a tool for that?',
+    answer:
+      'Yes, and that phrasing is what WeGoWhen is. When2meet always asks for a time-of-day window; WeGoWhen has none at all. You set one outer window, everyone taps the whole days they are free, and what comes back is the consecutive date ranges that fit the most people, ranked — not a grid to read yourself.',
+  },
+  {
+    question: 'Is there anything better than When2meet?',
+    answer:
+      'It depends what you are picking. For an hour on a single day, When2meet does that directly and WeGoWhen cannot do it at all. For a trip that runs over several days, a time-of-day grid is the wrong shape for the question, and that is the case WeGoWhen was built for.',
+  },
+  {
     question: 'How do I find the dates a whole group is free?',
     answer:
       'Create a trip with an outer window — say, any time in September — and share the link. Everyone taps the days they are free. WeGoWhen then works out every run of consecutive days that a group could all make, and ranks those runs by how many people they include, then by how long they are. The top row is the answer: the dates, the days of the week, who is in it, and how many of the group that is - 6/6 for a range everyone can make.',
@@ -84,6 +94,11 @@ export const FAQ: { question: string; answer: string }[] = [
     question: 'How is this different from a poll like Doodle?',
     answer:
       'A poll collects votes on options and shows you the tally. WeGoWhen collects days and computes the answer: the consecutive ranges that work, ranked by how many people can make the whole stretch. It also has no plan limits — Doodle’s free tier allows one group poll and removing its ads means paying per seat.',
+  },
+  {
+    question: 'Which is better, Doodle or When2meet?',
+    answer:
+      'For a meeting, it is a trade: Doodle adds calendar sync, reminders and booking pages behind a sign-up and a paid tier, while When2meet is free and asks for no account. Neither answers which stretch of days a group can travel for, because both are built around picking one slot rather than a run of days.',
   },
   {
     question: 'What happens to the trip data?',
@@ -207,6 +222,15 @@ const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /**
+ * Today, in UTC, as `YYYY-MM-DD`.
+ *
+ * `toISOString` is the right tool here and the wrong one two lines away: it is correct
+ * for an actual instant, which this is, and wrong for a local calendar day, which is
+ * the mistake CLAUDE.md documents. Nothing here reads a local date.
+ */
+export const buildDate = (now: Date = new Date()): string => now.toISOString().slice(0, 10);
+
+/**
  * Rewrites the built `index.html` head for one route, and optionally drops that
  * route's rendered body into `<div id="root">`.
  *
@@ -218,10 +242,21 @@ const escapeAttribute = (value: string): string =>
  * how the two private shells are emitted: `/trip/:id` and the 404 page must answer
  * with an empty root, because whatever body were baked in would be the wrong page's
  * content on screen until React replaced it.
+ *
+ * `date` stamps `dateModified` in the JSON-LD with the day the bundle was built, rather
+ * than a literal in `index.html` that would be true on the day someone typed it and
+ * quietly false afterwards. Answer engines weight recency, and a wrong date is worse
+ * than none.
  */
-export const renderRouteHtml = (baseHtml: string, route: RouteMeta, body?: string): string => {
+export const renderRouteHtml = (
+  baseHtml: string,
+  route: RouteMeta,
+  body?: string,
+  date: string = buildDate(),
+): string => {
   const canonical = canonicalFor(route.path);
   const substitutions: [RegExp, string][] = [
+    [/"dateModified": "[^"]*"/, `"dateModified": "${date}"`],
     [/<title>[^<]*<\/title>/, `<title>${escapeAttribute(route.title)}</title>`],
     [
       /<meta name="description" content="[^"]*" \/>/,
@@ -324,4 +359,98 @@ export const renderSitemap = (): string =>
     ),
     '</urlset>',
     '',
+  ].join('\n');
+
+/**
+ * The rendered body of one route, as the prerenderer produced it.
+ */
+export interface RenderedPage {
+  route: RouteMeta;
+  /** The HTML that went inside `<div id="root">`. */
+  body: string;
+}
+
+const ENTITIES: [RegExp, string][] = [
+  [/&nbsp;/g, ' '],
+  [/&amp;/g, '&'],
+  [/&lt;/g, '<'],
+  [/&gt;/g, '>'],
+  [/&quot;/g, '"'],
+  [/&#39;|&apos;/g, "'"],
+  [/&mdash;/g, '—'],
+  [/&ndash;/g, '–'],
+];
+
+/**
+ * Turns one rendered page into the plain text an answer engine would have to reconstruct
+ * for itself otherwise.
+ *
+ * React's static render leaves `<!--$-->` suspense markers and `<!--/$-->` around every
+ * lazy boundary; left in, they land in the middle of sentences. Block-level tags become
+ * newlines so that a table row does not run into the next one, which is exactly the
+ * legibility the comparison tables exist for.
+ */
+export const htmlToText = (html: string): string => {
+  let text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<\/(p|div|section|article|li|tr|h[1-6]|blockquote|figcaption)>/gi, '\n')
+    .replace(/<(br|hr)\s*\/?>/gi, '\n')
+    .replace(/<\/(td|th)>/gi, ' \u2014 ')
+    // A nav is a run of inline links with no whitespace between them, which reads as
+    // one invented word: "HomeFAQWhen2meet alternative". The punctuation tidy below
+    // takes back the space this costs mid-sentence.
+    .replace(/<\/a>/gi, ' ')
+    .replace(/<[^>]+>/g, '');
+
+  for (const [pattern, replacement] of ENTITIES) {
+    text = text.replace(pattern, replacement);
+  }
+
+  return text
+    .split('\n')
+    .map((line) =>
+      line
+        .replace(/[ \t\u00a0]+/g, ' ')
+        .replace(/ ([,.;:!?])/g, '$1')
+        // A table row whose first cell is the empty corner of a header, and the
+        // trailing separator the last cell leaves behind.
+        .replace(/^ *\u2014 /, '')
+        .replace(/ +\u2014 *$/, '')
+        .trim(),
+    )
+    .filter((line, index, lines) => line !== '' || lines[index - 1] !== '')
+    .join('\n')
+    .trim();
+};
+
+/**
+ * `llms-full.txt`: every indexable page's prose in one file, generated from the same
+ * bodies that were written into the static HTML.
+ *
+ * Generated rather than written. A hand-maintained copy of the site's own copy is a
+ * second source of truth that goes stale the first time a page is edited, and a stale
+ * one is worse than none because it is the version an answer engine quotes.
+ *
+ * `llms.txt` stays what it is - a short index with the facts and the links. This is the
+ * full text for a reader that would otherwise fetch all eight pages.
+ */
+export const renderLlmsFull = (pages: RenderedPage[], date: string = buildDate()): string =>
+  [
+    '# WeGoWhen — full text of every public page',
+    '',
+    `> Generated at build time on ${date} from the same rendered pages the site serves.`,
+    '> The short index, with the product facts, is at https://wegowhen.com/llms.txt',
+    '',
+    ...pages.map((page) =>
+      [
+        `## ${page.route.title}`,
+        '',
+        `URL: ${canonicalFor(page.route.path)}`,
+        '',
+        htmlToText(page.body),
+        '',
+      ].join('\n'),
+    ),
   ].join('\n');

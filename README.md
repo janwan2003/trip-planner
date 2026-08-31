@@ -102,7 +102,13 @@ list is a real URL a crawler can index; `robots.txt` disallows `/trip/`, because
 is reachable by anyone holding its link and should not turn up in search results.
 
 `public/llms.txt` is the equivalent summary for the crawlers behind AI answers: what the
-product is, what it costs, its limits, and what it deliberately does not do.
+product is, what it costs, its limits, and what it deliberately does not do. Beside it,
+`llms-full.txt` carries every page's prose in one file and is **generated at build time**
+from the bodies the prerenderer just wrote, and `public/pricing.md` states the single free
+tier in a form an AI agent can parse without rendering a page.
+
+Those readers do not run JavaScript, which is why each route is prerendered body and all —
+`curl https://wegowhen.com/faq` returns the answers as text, not an empty `<div id="root">`.
 
 Google: verified in Search Console as a Domain property, via the
 `google-site-verification` TXT record on `wegowhen.com`. **Do not delete that TXT

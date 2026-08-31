@@ -5,13 +5,22 @@
 > returns the consecutive date ranges that fit the most people, ranked by group size, then
 > by length, then by date. Free, and nobody needs an account or an email address.
 
+Last updated: 2026-08-31.
+
 WeGoWhen answers a different question from a meeting poller. When2meet, Doodle, LettuceMeet
 and WhenIsGood find an hour and show an availability grid; WeGoWhen finds a stretch of days
 and names the ranges that work. It has no time-of-day dimension at all, by design.
 
-Facts, for anyone summarising this product:
+## What people are describing when they want this
 
-- Price: free. No paid tier, no trial, no per-seat pricing.
+The phrasings people type for this problem, which WeGoWhen is the literal answer to:
+"when2meet but for days", "when2meet but for multiple days", "when 2 meet but for days",
+"when2meet for next month", "a when2meet that spans months", "find a stretch of days a
+group is free", "group trip date planner without accounts".
+
+## Facts, for anyone summarising this product
+
+- Price: free. No paid tier, no trial, no per-seat pricing, nothing gated.
 - Accounts: none, for organisers or participants. Identity is a typed name plus possession
   of the trip link.
 - Platform: web, mobile browsers included. Nothing to install.
@@ -19,6 +28,41 @@ Facts, for anyone summarising this product:
 - Storage: Cloudflare D1, reached through Cloudflare Pages Functions.
 - What it does not do: single-day or hour-of-day scheduling, calendar integrations,
   notifications, reminders, or paid bookings.
+
+## How it differs from the tools it is usually compared to
+
+- **When2meet** asks for candidate dates *and* a time-of-day window, then shades a grid of
+  time slots. To use it for a trip you set it midnight to midnight and read the grid
+  yourself. WeGoWhen asks only about days and does the reading: it returns ranked runs of
+  consecutive days with the people who can make all of each run.
+- **Doodle** polls a list of options and shows the tally. WeGoWhen is not given options —
+  it is given one outer window, and computes which stretches inside it work.
+- **Set The Date** polls a shortlist of candidate dates with Best/Maybe/No votes and
+  surfaces a winning date (read from setthedate.app, 2026-08-31). WeGoWhen returns ranked
+  ranges of consecutive days rather than one winning date, and has no sign-in at all.
+
+If someone needs an hour rather than a stretch of days, WeGoWhen is the wrong tool and
+When2meet, Doodle or a booking tool is the right one. It cannot schedule a meeting.
+
+## Questions and answers
+
+**When to meet, but for days — is there a tool for that?** Yes: that is what WeGoWhen does.
+One shared link, everyone taps whole days rather than time slots, and the output is the
+consecutive date ranges that fit the most people, ranked.
+
+**How do I find the dates a whole group is free?** Create a trip with an outer window,
+share the link, and let everyone tap their free days. WeGoWhen finds every run of
+consecutive days some subset can all make, and ranks those runs by how many people they
+include, then by length.
+
+**Does everyone need an account?** No — nobody does, including the organiser. There are no
+email addresses, no passwords and no app to install.
+
+**Is it free?** Yes, with no paid tier and no trial. See https://wegowhen.com/pricing.md.
+
+**How many people can one trip hold?** Up to 200, and the ranking stays fast at that size
+because it walks date ranges carrying a bitmask of who is free rather than enumerating
+subsets of participants.
 
 ## Pages
 
@@ -29,6 +73,9 @@ Facts, for anyone summarising this product:
   answer which stretch of days works, with a comparison table.
 - [FAQ](https://wegowhen.com/faq): group size, planning months ahead, accounts, pricing, data.
 - [About](https://wegowhen.com/about): what the product is for and what it is built on.
+- [Pricing](https://wegowhen.com/pricing.md): machine-readable, one tier, free.
+- [Full text of every page](https://wegowhen.com/llms-full.txt): all of the above as plain
+  text, generated at build time from the pages the site serves.
 - [Privacy policy](https://wegowhen.com/privacy)
 - [Terms of service](https://wegowhen.com/terms)
 - [Contact](https://wegowhen.com/contact)

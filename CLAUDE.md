@@ -192,7 +192,8 @@ not a key. `.env` is still gitignored if you need one.
 The go-to-market side lives in `marketing/` — the plan and the honest baseline in
 `marketing/README.md`, DataForSEO keyword and SERP data in `marketing/keywords.md`,
 paste-ready submission copy in `marketing/positioning-kit.md`, the directory tracker in
-`marketing/directories.md`, launch drafts in `marketing/launch-copy.md`, and the
+`marketing/directories.md`, launch drafts in `marketing/launch-copy.md`, the AI-search
+audit and its measured citation baseline in `marketing/ai-seo.md`, and the
 paste-ready Product Hunt submission — every field, both image sizes, the first comment — in
 `marketing/product-hunt-launch.md`. Product Hunt still cannot be automated, but for one
 reason rather than two: its v2 API exposes no create-post mutation. The "Cloudflare blocks
@@ -209,7 +210,17 @@ Things in this repo that marketing depends on, so do not break them silently:
   from the same HSL tokens as `src/index.css`, so if the brand colours change, change both.
 - `index.html` also carries `WebApplication` JSON-LD. It is static rather than injected by
   React so a crawler that does not run JavaScript still sees it. It deliberately has no
-  `aggregateRating`: there are no reviews.
+  `aggregateRating`: there are no reviews. Its `dateModified` is **rewritten at build time**
+  by `renderRouteHtml` — a literal would be true the day it was typed and quietly false
+  afterwards — and its `creator.sameAs` names the GitHub repo, the demo video and the
+  PeerPush listing, so scattered third-party mentions resolve to one entity.
+- **Three files answer the crawlers behind AI answers**, and two of them are generated:
+  `public/llms.txt` is the hand-written index (facts, limits, comparisons, the phrasings
+  people type); `dist/llms-full.txt` is every page's prose, produced by the prerender
+  plugin from the same rendered bodies it writes into the HTML, so it cannot describe a
+  page the site does not serve; `public/pricing.md` states the single free tier in the
+  form an agent shortlisting tools can parse. Never hand-maintain a second copy of the
+  site's own copy — a stale one is the version that gets quoted.
 - `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
   dimensions matching the actual PNG, title and description lengths, and the absence of
   invented ratings.
