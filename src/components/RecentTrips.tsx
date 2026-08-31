@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,15 @@ const formatRange = (startDate: string, endDate: string): string | null => {
  * that has a job to do.
  */
 export function RecentTrips() {
-  const [trips, setTrips] = useState<RecentTrip[]>(() => getRecentTrips());
+  const [trips, setTrips] = useState<RecentTrip[]>([]);
+
+  // Read after mount, not in a `useState` initializer. The landing page ships
+  // prerendered now, and the build has no localStorage, so a first render that
+  // already knew about stored trips would disagree with the server markup and make
+  // React throw the whole prerendered page away and repaint it.
+  useEffect(() => {
+    setTrips(getRecentTrips());
+  }, []);
 
   if (trips.length === 0) return null;
 

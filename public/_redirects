@@ -1,1 +1,21 @@
-/*    /index.html   200
+# www serves the same Pages project as the apex, so without this line the site is live
+# on two hostnames. Both have always carried `<link rel="canonical">` pointing at the
+# apex, which is why nothing ever ranked twice, but a 301 is the signal that does not
+# depend on a crawler reading the head.
+https://www.wegowhen.com/*  https://wegowhen.com/:splat  301!
+
+# The only path the prerenderer does not emit a file for. It rewrites to a shell whose
+# `#root` is empty and whose head says `noindex`: baking the landing page's body in
+# here would show the create-trip form to someone opening an invitation link, for as
+# long as the JavaScript took to load.
+#
+# The target is written WITHOUT the `.html`, and that is not cosmetic. Pages serves
+# `trip-shell.html` at `/trip-shell` and 308s `/trip-shell.html` to it, so a target
+# spelled `/trip-shell.html` turns this 200 rewrite into a redirect: `/trip/abc123`
+# answered 308 instead of serving the shell, which is every invitation link the product
+# has ever issued. Measured against `wrangler pages dev` on 2026-08-31, both spellings.
+/trip/*  /trip-shell  200
+
+# Deliberately no `/* /index.html 200` catch-all. That answered every unknown path with
+# a 200 and the home page's head - a soft 404 on an unlimited number of URLs. Pages now
+# falls through to `dist/404.html`, which is a real 404 and carries `noindex`.

@@ -41,3 +41,6 @@ coverage/
 # Python bytecode from the image generators in scripts/
 __pycache__/
 *.pyc
+
+# `tsc -b` incremental state. Build output, not source.
+*.tsbuildinfo

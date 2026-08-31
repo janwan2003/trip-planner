@@ -8,6 +8,7 @@ import {
   ROUTES,
   canonicalFor,
   faqJsonLd,
+  outputFileFor,
   renderRouteHtml,
   renderSitemap,
   routeFor,
@@ -77,6 +78,37 @@ describe('renderRouteHtml', () => {
     expect(renderRouteHtml(indexHtml, routeFor('/about')!)).not.toContain('FAQPage');
   });
 
+  it.each(ROUTES)('puts the rendered body inside #root for $path', (route) => {
+    // The regression this catches shipped for months: the head was per-route but every
+    // page served an empty `<div id="root">`, so Bing, DuckDuckGo and every crawler
+    // behind an AI answer saw a blank document on all eight URLs.
+    const html = renderRouteHtml(indexHtml, route, '<main>rendered</main>');
+
+    expect(html).toContain('<div id="root"><main>rendered</main></div>');
+    expect(html).not.toContain('<div id="root"></div>');
+  });
+
+  it('leaves #root empty when no body is given', () => {
+    // How the two shells are emitted. A body here would be the wrong page's content on
+    // screen until React replaced it - the landing form shown to someone opening a
+    // trip invitation.
+    expect(renderRouteHtml(indexHtml, routeFor('/trip')!)).toContain('<div id="root"></div>');
+  });
+
+  it('writes robots noindex into the bytes of a private route, and only those', () => {
+    const trip = renderRouteHtml(indexHtml, routeFor('/trip')!);
+    const faq = renderRouteHtml(indexHtml, routeFor('/faq')!);
+
+    // `usePageMeta` sets this too, but the readers these shells exist for never run it.
+    expect(trip).toContain('<meta name="robots" content="noindex, nofollow" />');
+    expect(faq).not.toContain('name="robots"');
+  });
+
+  it('throws if the root element it must fill is gone', () => {
+    const withoutRoot = indexHtml.replace('<div id="root"></div>', '<div id="app"></div>');
+    expect(() => renderRouteHtml(withoutRoot, routeFor('/faq')!, '<main/>')).toThrow(/root/);
+  });
+
   it('throws rather than silently emitting an unrewritten page', () => {
     // The failure this prevents: someone reformats the head, a regex stops matching,
     // and every page ships claiming to be the home page.
@@ -116,5 +148,30 @@ describe('sitemap', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     expect(xml.trimEnd().endsWith('</urlset>')).toBe(true);
+  });
+});
+
+describe('output file names', () => {
+  it('writes extensionless paths as bare .html files', () => {
+    // `faq/index.html` makes Pages answer /faq with a 308 to /faq/, putting a redirect
+    // hop in front of every page and disagreeing with the canonical URL.
+    expect(outputFileFor(routeFor('/faq')!)).toBe('faq.html');
+    expect(outputFileFor(routeFor('/when2meet-alternative')!)).toBe('when2meet-alternative.html');
+  });
+
+  it('keeps the home page as the entry index.html', () => {
+    expect(outputFileFor(routeFor('/')!)).toBe('index.html');
+  });
+
+  it('names the shells the fallback and Pages actually look for', () => {
+    // Cloudflare Pages serves dist/404.html for an unmatched path. Renaming it
+    // silently restores the soft 404 this replaced.
+    expect(outputFileFor(routeFor('/404')!)).toBe('404.html');
+  });
+
+  it('gives the trip shell a name that is not a route of its own', () => {
+    // trip.html would serve a blank shell at /trip, a path the router does not have.
+    expect(outputFileFor(routeFor('/trip')!)).toBe('trip-shell.html');
+    expect(outputFileFor(routeFor('/trip')!)).not.toBe('trip.html');
   });
 });

@@ -22,7 +22,7 @@ export default function About() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">Our Mission</h2>
             <p className="mb-4">
-              WeGoWhen help planning group trips by simplifying the process of coordinating everyone's availability.
+              WeGoWhen makes planning a group trip easier by taking the work out of coordinating everyone's availability.
               Our goal is to make a very easy-to-use tool that removes the hassle from group trip planning, so you can focus on enjoying your time with friends and family.
             </p>
           </section>

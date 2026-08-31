@@ -62,11 +62,51 @@ mounts.
 
 Each indexable route is emitted as a real static file at build time by the
 `prerenderRoutes` plugin in `vite.config.ts`: `dist/faq.html`, `dist/about.html` and so
-on, each with its own title, description, canonical and Open Graph tags. `.html` files
-rather than directory indexes on purpose — Pages answers `/faq` with a 308 to `/faq/`
-when the file is `faq/index.html`, and serves `faq.html` at `/faq` with a 200.
-`public/_redirects` still supplies the SPA fallback for everything not prerendered,
-which is `/trip/:id` and any unknown path.
+on — **head and body**. The head carries that route's title, description, canonical and
+Open Graph tags; the body is the page itself, rendered by `src/entry-prerender.tsx` and
+hydrated by `src/main.tsx`.
+
+The body half landed 2026-08-31 and is the newer part. Before it, every one of the eight
+pages served an empty `<div id="root"></div>`: `curl https://wegowhen.com/faq` returned
+9,332 bytes in which the only occurrences of "When2meet" were inside the FAQPage JSON-LD,
+never in visible copy. Google renders JavaScript and saw the pages; Bing, DuckDuckGo and
+every crawler behind an AI answer did not, and the two comparison pages that carry all
+the commercial keywords were blank to them. Now `/when2meet-alternative` serves 670
+visible words to `curl`, `/doodle-alternative` 565, `/faq` 570, `/` 141.
+
+Three mechanics here are not obvious and each one cost a build to find:
+
+- **The prerenderer runs a second Vite build, not a dev server.**
+  `@vitejs/plugin-react-swc` picks its JSX transform from the *command*, not the mode, so
+  a `createServer` used as a module runner emits `jsxDEV` calls into a graph that resolves
+  the production `react/jsx-runtime`, and the build dies with `jsxDEV is not a function`
+  on the first page it renders.
+- **`prerenderToNodeStream`, not `renderToString`.** The routes are `lazy`, and only the
+  prerender API waits for a suspended boundary. `renderToString` emits the `Loading...`
+  fallback on every page, which looks like it worked.
+- **Pages serves `foo.html` at `/foo` and 308s `/foo.html` to `/foo`.** So a `_redirects`
+  target must be written *without* the extension. `/trip/* /trip-shell.html 200` turned
+  the rewrite into a 308 for every invitation link the product has ever issued; the
+  working spelling is `/trip/* /trip-shell 200`. Same reason the routes are emitted as
+  `faq.html` and not `faq/index.html` — the latter makes Pages 308 `/faq` to `/faq/`.
+
+`public/_redirects` carries three things and no catch-all: a 301 from `www` to the apex,
+the `/trip/*` rewrite above, and a comment saying why `/* /index.html 200` is gone. That
+catch-all answered every unknown path with a 200 and the home page's head — an unbounded
+supply of soft 404s. Pages now falls through to `dist/404.html`, a real 404. Both
+`dist/404.html` and `dist/trip-shell.html` ship with an empty `#root` and
+`<meta name="robots" content="noindex, nofollow">` in the served bytes: a body baked into
+either would be the wrong page on screen until React replaced it, and the trip screen in
+particular must never flash the landing form at someone opening an invitation link.
+
+`public/_headers` sets `max-age=31536000, immutable` on `/assets/*` (every file there is
+content-hashed, so revalidating can only confirm what the browser has), plus HSTS,
+`X-Content-Type-Options` and `Referrer-Policy`. HSTS deliberately omits
+`includeSubDomains`.
+
+Verified locally against `wrangler pages dev dist` on 2026-08-31: the eight pages 200,
+`/trip/abc123` 200 with an empty root and no landing copy, `/trip` and an unknown path
+both 404.
 
 A push to `main` is not finished until the Cloudflare build has finished. Check the
 deployed bundle hash actually changed rather than trusting a green dashboard:
@@ -125,8 +165,13 @@ not a key. `.env` is still gitignored if you need one.
   the SQL, the unique index and the middleware together.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
-- **The site is not in Google's index yet**: `site:wegowhen.com` returned nothing on
-  2026-08-28. It now has eight indexable URLs rather than one, and **four public,
+- **The site is in Google's index, seven of eight URLs**: `site:wegowhen.com` returned
+  nothing on 2026-08-28 and returns `/`, `/faq`, `/about`, `/contact`, `/terms`,
+  `/privacy` and `/doodle-alternative` on 2026-08-31. The one missing page is
+  **`/when2meet-alternative`** — the highest-priority page in the sitemap and the one
+  aimed at the highest-volume query; `site:wegowhen.com/when2meet-alternative` is empty.
+  It needs Request Indexing in Search Console and a coverage reason read off the URL
+  Inspection tool. It has **four public,
   indexable pages linking to it** — dev.to, Startup Fame, GitHub and YouTube, of which
   only dev.to is dofollow. SaaSHub and PeerPush are public but `noindex` while queued, and
   the AlternativeTo listing is still submitter-only. All eight URLs were pushed to

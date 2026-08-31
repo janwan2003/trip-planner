@@ -31,6 +31,11 @@ export interface RouteMeta {
   faq?: boolean;
   /** Set on pages that must stay out of search results. */
   noindex?: boolean;
+  /**
+   * Overrides the file name derived from `path`. Needed exactly once, and for a
+   * reason that costs an afternoon to rediscover: see `outputFileFor`.
+   */
+  file?: string;
 }
 
 /**
@@ -168,6 +173,11 @@ export const PRIVATE_ROUTES: RouteMeta[] = [
     description: 'Mark the days you are free, and see which date ranges work for the group.',
     priority: '0.0',
     noindex: true,
+    // Not `trip.html`: that would serve a blank shell at `/trip`, which is not a route
+    // this app has, where a 404 is the honest answer. The `_redirects` rule that points
+    // at this file spells the target `/trip-shell`, without the extension - see the
+    // comment there for what the `.html` spelling does to an invitation link.
+    file: 'trip-shell.html',
   },
 ];
 
@@ -197,13 +207,19 @@ const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /**
- * Rewrites the built `index.html` head for one route.
+ * Rewrites the built `index.html` head for one route, and optionally drops that
+ * route's rendered body into `<div id="root">`.
  *
  * Every substitution is asserted to have matched. A silent no-op here would ship a
  * set of pages that all claim to be the home page, which is exactly the failure that
  * is invisible until a search engine reports duplicate titles weeks later.
+ *
+ * `body` comes from `src/entry-prerender.tsx` via the build plugin. Passing none is
+ * how the two private shells are emitted: `/trip/:id` and the 404 page must answer
+ * with an empty root, because whatever body were baked in would be the wrong page's
+ * content on screen until React replaced it.
  */
-export const renderRouteHtml = (baseHtml: string, route: RouteMeta): string => {
+export const renderRouteHtml = (baseHtml: string, route: RouteMeta, body?: string): string => {
   const canonical = canonicalFor(route.path);
   const substitutions: [RegExp, string][] = [
     [/<title>[^<]*<\/title>/, `<title>${escapeAttribute(route.title)}</title>`],
@@ -255,8 +271,41 @@ export const renderRouteHtml = (baseHtml: string, route: RouteMeta): string => {
     );
   }
 
+  // `usePageMeta` also sets this once React runs, but the shells exist precisely for
+  // the readers that never run React, so the tag has to be in the served bytes.
+  if (route.noindex) {
+    html = html.replace(
+      '</head>',
+      '  <meta name="robots" content="noindex, nofollow" />\n  </head>',
+    );
+  }
+
+  if (body !== undefined) {
+    const root = '<div id="root"></div>';
+    if (!html.includes(root)) {
+      throw new Error(
+        `prerender: no empty ${root} in index.html while building ${route.path}. ` +
+          'The body was edited without updating renderRouteHtml.',
+      );
+    }
+    html = html.replace(root, `<div id="root">${body}</div>`);
+  }
+
   return html;
 };
+
+/**
+ * The file name a route is written to inside `dist`. `/` is the SPA entry point that
+ * Vite already emitted; everything else is a bare `.html` at the extensionless path,
+ * because Cloudflare Pages answers `/faq` with a 308 to `/faq/` when the file is
+ * `faq/index.html` and with a 200 when it is `faq.html`.
+ *
+ * The same extension stripping is why anything pointing at one of these files - a
+ * `_redirects` target above all - has to name it without the `.html`, or Pages answers
+ * with a 308 to the extensionless form rather than with the file.
+ */
+export const outputFileFor = (route: RouteMeta): string =>
+  route.file ?? (route.path === '/' ? 'index.html' : `${route.path.replace(/^\//, '')}.html`);
 
 /** A sitemap covering exactly the routes above, so the two cannot disagree. */
 export const renderSitemap = (): string =>
