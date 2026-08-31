@@ -1,8 +1,12 @@
-# www serves the same Pages project as the apex, so without this line the site is live
-# on two hostnames. Both have always carried `<link rel="canonical">` pointing at the
-# apex, which is why nothing ever ranked twice, but a 301 is the signal that does not
-# depend on a crawler reading the head.
-https://www.wegowhen.com/*  https://wegowhen.com/:splat  301!
+# There is no www-to-apex rule here, and adding one does not work. Cloudflare Pages
+# ignores a source with a hostname in it: `https://www.wegowhen.com/* ... 301!` shipped
+# to production on 2026-08-31 and https://www.wegowhen.com/faq still answered 200, not
+# 301. The site is therefore live on both hostnames, held together by the
+# `<link rel="canonical">` pointing at the apex that every page carries.
+#
+# The real fix is a zone-level Redirect Rule in the Cloudflare dashboard, which needs a
+# credential this repo does not have. Do not re-add the line: an inert rule reads like
+# a solved problem.
 
 # The only path the prerenderer does not emit a file for. It rewrites to a shell whose
 # `#root` is empty and whose head says `noindex`: baking the landing page's body in

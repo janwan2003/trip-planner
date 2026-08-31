@@ -71,8 +71,17 @@ describe('_redirects', () => {
     }
   });
 
-  it('301s www to the apex', () => {
-    expect(redirects).toMatch(/www\.wegowhen\.com\/\*\s+https:\/\/wegowhen\.com\/:splat\s+301/);
+  it('has no rule whose source carries a hostname', () => {
+    // Pages ignores those. A www-to-apex 301 written this way deployed and did nothing,
+    // which is worse than no rule: it reads like the problem is handled. That one needs
+    // a zone-level Redirect Rule in the dashboard instead.
+    const rules = redirects
+      .split('\n')
+      .filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#'));
+
+    for (const rule of rules) {
+      expect(rule, `${rule} matches on a hostname`).not.toMatch(/^\s*https?:\/\//);
+    }
   });
 });
 

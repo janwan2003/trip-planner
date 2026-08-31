@@ -90,10 +90,10 @@ Three mechanics here are not obvious and each one cost a build to find:
   working spelling is `/trip/* /trip-shell 200`. Same reason the routes are emitted as
   `faq.html` and not `faq/index.html` — the latter makes Pages 308 `/faq` to `/faq/`.
 
-`public/_redirects` carries three things and no catch-all: a 301 from `www` to the apex,
-the `/trip/*` rewrite above, and a comment saying why `/* /index.html 200` is gone. That
-catch-all answered every unknown path with a 200 and the home page's head — an unbounded
-supply of soft 404s. Pages now falls through to `dist/404.html`, a real 404. Both
+`public/_redirects` carries one rule and no catch-all: the `/trip/*` rewrite above. The
+catch-all `/* /index.html 200` is gone — it answered every unknown path with a 200 and
+the home page's head, an unbounded supply of soft 404s — so Pages falls through to
+`dist/404.html`, a real 404. Both
 `dist/404.html` and `dist/trip-shell.html` ship with an empty `#root` and
 `<meta name="robots" content="noindex, nofollow">` in the served bytes: a body baked into
 either would be the wrong page on screen until React replaced it, and the trip screen in
@@ -104,9 +104,17 @@ content-hashed, so revalidating can only confirm what the browser has), plus HST
 `X-Content-Type-Options` and `Referrer-Policy`. HSTS deliberately omits
 `includeSubDomains`.
 
-Verified locally against `wrangler pages dev dist` on 2026-08-31: the eight pages 200,
-`/trip/abc123` 200 with an empty root and no landing copy, `/trip` and an unknown path
+Verified locally against `wrangler pages dev dist` and again on production on
+2026-08-31: the eight pages 200 with 141-779 visible words each inside `#root`,
+`/trip/:id` 200 with an empty root and no landing copy, `/trip` and an unknown path
 both 404.
+
+**`www.wegowhen.com` still serves the site, and `_redirects` cannot fix it.** Pages
+ignores a rule whose source carries a hostname: `https://www.wegowhen.com/* ... 301!`
+was deployed and `https://www.wegowhen.com/faq` still answered 200. Both hostnames are
+held together by the canonical tag alone. The fix is a zone-level Redirect Rule in the
+Cloudflare dashboard, which needs a credential that is not in this repo — `.env` has no
+`CLOUDFLARE_API_TOKEN` and wrangler has no stored OAuth grant here.
 
 A push to `main` is not finished until the Cloudflare build has finished. Check the
 deployed bundle hash actually changed rather than trusting a green dashboard:
