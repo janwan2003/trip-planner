@@ -90,3 +90,39 @@ describe('FAQ page', () => {
     expect(document.querySelectorAll('[aria-expanded]')).toHaveLength(0);
   });
 });
+
+describe('question headings on the comparison pages', () => {
+  // Google reports these as related questions on the queries these two pages target,
+  // and a question answered under its own heading is the passage that gets quoted.
+  // Level 3 keeps the single h1 and the section h2s intact.
+  //
+  // "What are the limitations of When2meet?" is the verbatim wording of a People Also
+  // Ask entry on `when2meet alternative`, measured 2026-08-31. If a heading here stops
+  // matching the question being asked, it has stopped doing its job, so the strings are
+  // asserted rather than the shape.
+  it.each([
+    ['Can I use When2meet for multiple days?'],
+    ['Can I use When2meet for next month, or a window spanning months?'],
+    ['What are the limitations of When2meet?'],
+    ['Does everyone need an app or an account?'],
+  ])('When2meet page answers %s under its own heading', (question) => {
+    renderWithRouter(<When2meetAlternative />);
+    expect(screen.getByRole('heading', { name: question, level: 3 })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Which is better, Doodle or When2meet?'],
+    ['Is there a free Doodle alternative with no plan limits?'],
+    ['Can Doodle poll a range of dates rather than single days?'],
+  ])('Doodle page answers %s under its own heading', (question) => {
+    renderWithRouter(<DoodleAlternative />);
+    expect(screen.getByRole('heading', { name: question, level: 3 })).toBeInTheDocument();
+  });
+
+  it('keeps those answers visible rather than behind a disclosure', () => {
+    // Hidden text aimed at a crawler is cloaking, and a collapsed answer is harder to
+    // extract for no reader's benefit. Both pages show everything they claim.
+    renderWithRouter(<When2meetAlternative />);
+    expect(document.querySelectorAll('[aria-expanded], [hidden]')).toHaveLength(0);
+  });
+});

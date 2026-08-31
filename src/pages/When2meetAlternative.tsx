@@ -1,12 +1,20 @@
 import { Link } from 'react-router-dom';
 
 import { ComparisonTable, MarketingPage, Section } from '@/components/MarketingPage';
+import { QuestionAnswer } from '@/components/QuestionAnswer';
 import { usePageMeta } from '@/lib/usePageMeta';
 
 /**
  * Targets "when2meet alternative" and the phrasings around it — including the one
  * Google reports as a related query, "when 2 meet but for days", which is answered
  * here in those words on purpose.
+ *
+ * Two of the section headings are the exact wording of a People Also Ask entry on that
+ * SERP, measured 2026-08-31: "Is there anything better than When2meet?" (answered on
+ * /faq) and "What are the limitations of When2meet?" (here). Matching the question that
+ * is actually being asked is the whole trick; there is no crawler-only text on this page
+ * and there must never be, because every claim on it is one an AI engine cross-checks
+ * against when2meet.com.
  *
  * Every statement about When2meet below is checkable on when2meet.com, and was
  * checked on 2026-08-28. If that changes, this page changes.
@@ -119,11 +127,51 @@ export default function When2meetAlternative() {
       </Section>
 
       <Section heading="Questions people ask next">
-        <p>
-          Can I plan something months ahead? Yes — the window is whatever you set, so next
-          spring works like next weekend. Does everyone need an app? No, it is a web page.
-          What about a group of thirty? Fine; the limit is 200 per trip.
-        </p>
+        <QuestionAnswer question="Can I use When2meet for multiple days?">
+          <p>
+            You can, by setting the time window to midnight-to-midnight, and people do —
+            "when2meet but for days" is a phrase Google reports as a real search. What you
+            get is a grid of time slots across every day of the trip, which you then read
+            yourself. WeGoWhen skips the grid and returns the ranked date ranges.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="What are the limitations of When2meet?">
+          <p>
+            For picking an hour, the one that matters here is that the time-of-day window
+            is mandatory — there is no way to ask it about whole days — and that what it
+            returns is a shaded grid rather than an answer, so working out which stretch of
+            days the most people can make is left to whoever is reading it. Both are
+            checkable on when2meet.com and both are deliberate: it was built to find an
+            hour, and it does. Neither is a problem until the thing you are picking runs
+            across several days.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="Can I use When2meet for next month, or a window spanning months?">
+          <p>
+            You can list any dates you like, so next month is no harder than next week —
+            but the time-of-day grid comes with them, and it grows a column per day. In
+            WeGoWhen the outer window is whatever you set, so next spring works like next
+            weekend, and one participant can mark up to 1000 days.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="Does everyone need an app or an account?">
+          <p>
+            Neither. It is a web page, and nobody signs up — not the people answering, and
+            not the person who creates the trip.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="What about a group of thirty?">
+          <p>
+            Fine; the limit is 200 people per trip, and the ranking stays fast at that size
+            because it walks date ranges carrying a bitmask of who is free rather than
+            enumerating subsets of participants.
+          </p>
+        </QuestionAnswer>
+
         <p>
           More of these on the <Link to="/faq" className="text-primary hover:underline">FAQ</Link>,
           and there is a{' '}

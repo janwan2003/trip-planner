@@ -146,17 +146,25 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/when2meet-alternative',
-    contentUpdated: '2026-08-28',
-    contentSources: ['src/pages/When2meetAlternative.tsx', 'src/components/MarketingPage.tsx'],
+    contentUpdated: '2026-08-31',
+    contentSources: [
+      'src/pages/When2meetAlternative.tsx',
+      'src/components/MarketingPage.tsx',
+      'src/components/QuestionAnswer.tsx',
+    ],
     title: 'A When2meet alternative for whole days, not hours',
     description:
-      'When2meet is built around a time-of-day grid. WeGoWhen is built around days: everyone marks the days they are free and it returns the ranked date ranges that work.',
+      'When2meet is built around a time-of-day grid. WeGoWhen is built around days: mark the days you are free, get the ranked date ranges that work. Free, and no account.',
     priority: '0.9',
   },
   {
     path: '/doodle-alternative',
-    contentUpdated: '2026-08-28',
-    contentSources: ['src/pages/DoodleAlternative.tsx', 'src/components/MarketingPage.tsx'],
+    contentUpdated: '2026-08-31',
+    contentSources: [
+      'src/pages/DoodleAlternative.tsx',
+      'src/components/MarketingPage.tsx',
+      'src/components/QuestionAnswer.tsx',
+    ],
     title: 'A Doodle alternative for group trip dates',
     description:
       'Doodle polls options and shows a tally. WeGoWhen computes the answer — the consecutive date ranges the most people can make — free, with no plan limits and no accounts.',
@@ -187,7 +195,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/contact',
-    contentUpdated: '2026-08-28',
+    contentUpdated: '2026-08-31',
     contentSources: ['src/pages/Contact.tsx'],
     title: 'Contact WeGoWhen',
     description:

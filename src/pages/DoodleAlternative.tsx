@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { ComparisonTable, MarketingPage, Section } from '@/components/MarketingPage';
+import { QuestionAnswer } from '@/components/QuestionAnswer';
 import { usePageMeta } from '@/lib/usePageMeta';
 
 /**
@@ -115,6 +116,35 @@ export default function DoodleAlternative() {
           WeGoWhen does one thing: the dates of a trip for a group of friends. It has no
           accounts, no notifications and no integrations, and that is the trade it makes.
         </p>
+      </Section>
+
+      <Section heading="Questions people ask next">
+        <QuestionAnswer question="Which is better, Doodle or When2meet?">
+          <p>
+            For a meeting, it is a trade rather than a winner: Doodle adds calendar sync,
+            reminders and booking pages behind a sign-up and a paid tier, while When2meet is
+            free and asks for no account at all. Neither answers which stretch of days a
+            group can travel for, because both are built around picking one slot.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="Is there a free Doodle alternative with no plan limits?">
+          <p>
+            WeGoWhen is free with no paid tier, no trial and no per-seat pricing, and
+            nothing is gated behind a plan — where Doodle's free plan covers one group poll,
+            one booking page and one 1:1. It is also narrower: trip dates only, no bookings
+            and no integrations.
+          </p>
+        </QuestionAnswer>
+
+        <QuestionAnswer question="Can Doodle poll a range of dates rather than single days?">
+          <p>
+            Doodle can put whole days on a poll, so the answer to the literal question is
+            yes. What it does not do is work out which <em>runs</em> of consecutive days a
+            group can all make: that arithmetic across a month of options is the part it
+            leaves to you, and the part WeGoWhen does.
+          </p>
+        </QuestionAnswer>
       </Section>
 
       <Section heading="Also worth reading">
