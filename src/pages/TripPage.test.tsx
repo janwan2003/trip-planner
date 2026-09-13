@@ -514,8 +514,9 @@ describe('TripPage', () => {
     expect(before.some((r) => r.names.includes('Cy'))).toBe(true);
     expect(screen.queryByTestId('best-dates-scope')).not.toBeInTheDocument();
 
-    // Filter to Ada only.
-    await user.click(screen.getByRole('button', { name: /Ada/ }));
+    // Filter to Ada only. The row carries the day count; the pencil next to it is a
+    // separate button and must not be the one clicked.
+    await user.click(screen.getByRole('button', { name: /Ada.*days available/ }));
 
     const after = rowsFor();
     expect(after).not.toEqual(before);
@@ -537,8 +538,7 @@ describe('TripPage', () => {
     renderTripPage();
     await screen.findByText('Alps trip');
 
-    const buttons = screen.getAllByRole('button', { name: /Ada/ });
-    await user.click(buttons[buttons.length - 1]);
+    await user.click(screen.getByRole('button', { name: /Ada.*day available/ }));
 
     // Ada is now the only selected participant, and the group calendar re-renders
     // counting only her.
@@ -577,5 +577,104 @@ describe('TripPage', () => {
     expect(getRecentTrips()).toEqual([]);
 
     errorSpy.mockRestore();
+  });
+  describe('editing someone else from the participants list', () => {
+    const twoPeople = () =>
+      trip({
+        participants: [
+          { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
+          { name: 'Bo', availableDates: ['2026-09-05'] },
+        ],
+      });
+
+    it('adopts their identity and their saved days, as typing their name would', async () => {
+      getTrip.mockResolvedValue(twoPeople());
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      await user.click(screen.getByRole('button', { name: "Edit Bo's dates" }));
+
+      // Same state as joining as Bo: the editor is open, greeting Bo, with his two
+      // saved days already selected and so nothing to save.
+      expect(await screen.findByText(/Mark Your Availability/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Bo/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /no changes to save/i })).toBeDisabled();
+      // And the answer is saved under their name, not the visitor's.
+      expect(recalledName('abc123')).toBe('Bo');
+    });
+
+    it('saves the edited days under that participant', async () => {
+      getTrip.mockResolvedValue(twoPeople());
+      addParticipant.mockResolvedValue(twoPeople());
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      await user.click(screen.getByRole('button', { name: "Edit Bo's dates" }));
+      await user.click(editableDayCell('6'));
+      await user.click(screen.getByRole('button', { name: /save availability/i }));
+
+      await waitFor(() =>
+        expect(addParticipant).toHaveBeenCalledWith('abc123', {
+          name: 'Bo',
+          availableDates: ['2026-09-05', '2026-09-06'],
+        }),
+      );
+    });
+
+    /**
+     * Switching identity replaces the days on screen, so unsaved marks go with it. The
+     * product warns everywhere else it can lose them; this path is no different.
+     */
+    it('will not discard unsaved days without asking', async () => {
+      getTrip.mockResolvedValue(twoPeople());
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+      await join(user, 'Ada');
+      await user.click(editableDayCell('4'));
+
+      await user.click(screen.getByRole('button', { name: "Edit Bo's dates" }));
+
+      expect(await screen.findByText(/Discard your unsaved days/i)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /keep editing as Ada/i }));
+
+      // Still Ada, still holding the unsaved fourth day.
+      expect(screen.getByRole('button', { name: /^Ada/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /save availability/i })).toBeEnabled();
+    });
+
+    it('switches once the discard is confirmed', async () => {
+      getTrip.mockResolvedValue(twoPeople());
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+      await join(user, 'Ada');
+      await user.click(editableDayCell('4'));
+
+      await user.click(screen.getByRole('button', { name: "Edit Bo's dates" }));
+      await user.click(screen.getByRole('button', { name: /^Edit Bo's dates$/ }));
+
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: /^Bo/ })).toBeInTheDocument(),
+      );
+      expect(screen.getByRole('button', { name: /no changes to save/i })).toBeDisabled();
+    });
+
+    it('does not reload their own saved days when they pick their own pencil', async () => {
+      getTrip.mockResolvedValue(twoPeople());
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+      await join(user, 'Ada');
+      await user.click(editableDayCell('4'));
+
+      await user.click(screen.getByRole('button', { name: "Edit Ada's dates" }));
+
+      // No confirmation, and the unsaved fourth day survives.
+      expect(screen.queryByText(/Discard your unsaved days/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /save availability/i })).toBeEnabled();
+    });
   });
 });

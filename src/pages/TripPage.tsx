@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 import { forgetName, lastUsedName, recalledName, rememberName } from '@/lib/identity';
@@ -47,6 +47,13 @@ export default function TripPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
+  /**
+   * A participant whose dates were asked for from the list while the current answer has
+   * unsaved marks. Held here rather than switched straight away, so the confirmation
+   * below decides whether those marks are discarded.
+   */
+  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   /**
    * Whether this browser created the trip. Read once on mount rather than on every
    * render, because opening the trip is itself what writes the row.
@@ -281,6 +288,49 @@ export default function TripPage() {
     );
   };
 
+  /**
+   * Editing someone from the participants list is the same act as typing their name into
+   * the join form: it adopts that identity, loads their saved days and saves through the
+   * same path. It exists because one phone often answers for a friend who never opens
+   * the link, and retyping the name exactly was the only way back into that answer.
+   */
+  const switchToParticipant = (participantName: string) => {
+    const participant = trip?.participants.find((p) => p.name === participantName);
+    if (!participant) return;
+
+    setUserName(participant.name);
+    setSelectedDates(participant.availableDates);
+    setSavedDates(participant.availableDates);
+    setHasSavedAvailability(participant.availableDates.length > 0);
+    setHasJoined(true);
+    setIsEditingName(false);
+    // Remember them the way handleJoin does, so a reload comes back to this answer.
+    if (tripId) rememberName(tripId, participant.name);
+    scrollToEditor();
+  };
+
+  // The list sits in the sidebar, which is below the calendar on a phone: without this
+  // the pencil would appear to do nothing. jsdom has no scrollIntoView, hence the `?.`.
+  const scrollToEditor = () => {
+    editorRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleEditParticipant = (participantName: string) => {
+    if (hasJoined && userName.toLowerCase() === participantName.toLowerCase()) {
+      // Already answering as them; reloading their saved days would throw away marks
+      // they have not saved yet.
+      scrollToEditor();
+      return;
+    }
+
+    if (hasJoined && hasUnsavedChanges()) {
+      setPendingSwitch(participantName);
+      return;
+    }
+
+    switchToParticipant(participantName);
+  };
+
   // Check if current selection differs from saved state
   const hasUnsavedChanges = () => {
     if (selectedDates.length !== savedDates.length) return true;
@@ -436,6 +486,8 @@ export default function TripPage() {
           */}
           {/* Main Calendar Section */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Scroll target for the pencils in the participants list */}
+            <div ref={editorRef} className="scroll-mt-4">
             {!hasJoined ? (
               <Card className="animate-scale-in shadow-warm border-0">
                 <CardHeader>
@@ -607,6 +659,7 @@ export default function TripPage() {
                 </CardContent>
               </Card>
             )}
+            </div>
 
             {/* Best Dates: the answer, above the heat map that explains it */}
             <Card className="shadow-soft animate-fade-in">
@@ -660,14 +713,17 @@ export default function TripPage() {
             <Card className="shadow-soft animate-fade-in">
               <CardHeader>
                 <CardTitle className="font-display text-lg">Participants</CardTitle>
-                <p className="text-xs text-muted-foreground">Click to filter by subset</p>
+                <p className="text-xs text-muted-foreground">
+                  Click to filter by subset, or the pencil to edit someone's dates
+                </p>
               </CardHeader>
               <CardContent>
-                <ParticipantsList 
-                  participants={trip.participants} 
+                <ParticipantsList
+                  participants={trip.participants}
                   currentUser={hasJoined ? userName : undefined}
                   selectedParticipants={selectedParticipants}
                   onToggleParticipant={handleToggleParticipant}
+                  onEditParticipant={handleEditParticipant}
                 />
               </CardContent>
             </Card>
@@ -691,6 +747,40 @@ export default function TripPage() {
           </div>
         </div>
       </main>
+
+      {/*
+        Switching identity replaces the marked days on screen, so unsaved marks would go
+        with it. The rest of the product warns before losing them (see the beforeunload
+        handler above); this path has to as well.
+      */}
+      <AlertDialog
+        open={pendingSwitch !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingSwitch(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard your unsaved days?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have days marked as {userName} that are not saved. Editing{' '}
+              {pendingSwitch}'s dates loads their answer instead, and your unsaved marks
+              are lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing as {userName}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSwitch) switchToParticipant(pendingSwitch);
+                setPendingSwitch(null);
+              }}
+            >
+              Edit {pendingSwitch}'s dates
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

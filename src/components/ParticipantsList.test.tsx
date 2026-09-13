@@ -74,4 +74,29 @@ describe('ParticipantsList', () => {
     // Selection draws a filled circle with a check inside it.
     expect(container.querySelectorAll('svg').length).toBe(1);
   });
+
+  it('offers no pencil when nobody can act on it', () => {
+    render(<ParticipantsList participants={people} onToggleParticipant={() => {}} />);
+
+    expect(screen.queryByRole('button', { name: /edit .*dates/i })).not.toBeInTheDocument();
+  });
+
+  it('asks the caller to edit the person whose pencil was clicked', async () => {
+    const onEdit = vi.fn();
+    const onToggle = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ParticipantsList
+        participants={people}
+        onToggleParticipant={onToggle}
+        onEditParticipant={onEdit}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: "Edit Ada's dates" }));
+
+    expect(onEdit).toHaveBeenCalledWith('Ada');
+    // The pencil is a second action, not a click on the row: filtering must not fire too.
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 });
