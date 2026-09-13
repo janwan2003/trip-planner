@@ -56,6 +56,11 @@ Two things together, per the product owner — neither alone is the claim:
   consensus at a glance.
 - Participants can be filtered, so the organiser can ask "what if these five go".
 - Participants can edit their name and withdraw from a trip.
+- Anyone holding the link can pick up any participant's answer from the list - a pencil
+  beside each row - and edit their days, because one phone often answers for a friend who
+  never opens the link. It is the same act as typing that person's name into the join
+  form, which was always possible; the pencil only removes the retyping. With no accounts
+  there is nothing to authorise it against, so the link stays the only credential.
 - Sharing happens outside the product: the organiser copies a URL and sends it through
   whatever channel the group already uses.
 - The home page lists the trips that browser has opened, so an organiser who lost the

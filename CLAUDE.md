@@ -212,9 +212,10 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
 - `pnpm lint` exits 0. The 7 remaining warnings are all
   `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
   the run, and those files are not ours to restructure.
-- **Coverage is 97.70% of lines, 91.36% of branches** across `src/lib`,
-  `src/components` and `src/pages`, from 243 unit tests (measured 2026-08-28 with
-  `pnpm run test:coverage`; the 137 this line claimed before was long stale). Thresholds in
+- **Coverage is 98.51% of lines, 94.27% of branches** across `src/lib`,
+  `src/components` and `src/pages`, from 390 unit tests (measured 2026-09-13 with
+  `pnpm run test:coverage`; the 243 / 97.70% this line claimed before was a
+  2026-08-28 snapshot). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
