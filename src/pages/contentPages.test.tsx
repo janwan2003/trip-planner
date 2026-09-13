@@ -74,15 +74,28 @@ describe('content pages', () => {
   });
 
   /**
-   * A privacy policy is a factual claim about the code. These lock the claims to what the
-   * app actually does, because an overclaiming policy is still a false one: it said the
-   * site collected browser type, pages visited, time on page and interaction patterns,
-   * none of which anything measures - there is no analytics script at all.
+   * A privacy policy is a factual claim about the code, and it has now been wrong in both
+   * directions. First it overclaimed - browser type, pages visited, time on page,
+   * interaction patterns, none of which anything measured. Then it underclaimed: it said
+   * "We run no analytics" while Cloudflare Web Analytics was switched on at the zone and
+   * had been recording page views and referrers since at least 2026-09-04 (RUM site
+   * 5c4f103f, auto_install true). Both are false statements to a stranger.
+   *
+   * Cloudflare Web Analytics is cookieless and does not fingerprint, so the disclosure
+   * says exactly that and no more. If the analytics are ever turned off, or swapped for
+   * something that does set cookies, this test is the thing that should fail first.
    */
-  it('the privacy policy does not claim analytics the app does not run', () => {
+  it('the privacy policy describes the analytics that actually run', () => {
     renderWithRouter(<PrivacyPolicy />);
 
-    expect(screen.getByText(/We run no analytics/i)).toBeInTheDocument();
+    // Disclosed, by name, because it is running.
+    expect(screen.getAllByText(/Cloudflare Web Analytics/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/sets no cookies/i)).toBeInTheDocument();
+
+    // The old false denial must not come back.
+    expect(screen.queryByText(/We run no analytics/i)).not.toBeInTheDocument();
+
+    // Still not claimed, because Web Analytics measures none of these.
     expect(screen.queryByText(/time spent on pages/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/interaction patterns/i)).not.toBeInTheDocument();
   });

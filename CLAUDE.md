@@ -109,12 +109,30 @@ Verified locally against `wrangler pages dev dist` and again on production on
 `/trip/:id` 200 with an empty root and no landing copy, `/trip` and an unknown path
 both 404.
 
-**`www.wegowhen.com` still serves the site, and `_redirects` cannot fix it.** Pages
-ignores a rule whose source carries a hostname: `https://www.wegowhen.com/* ... 301!`
-was deployed and `https://www.wegowhen.com/faq` still answered 200. Both hostnames are
-held together by the canonical tag alone. The fix is a zone-level Redirect Rule in the
-Cloudflare dashboard, which needs a credential that is not in this repo — `.env` has no
-`CLOUDFLARE_API_TOKEN` and wrangler has no stored OAuth grant here.
+**`www.wegowhen.com` 301s to the apex, and `_redirects` is not what does it.** Pages
+ignores a rule whose source carries a hostname: `https://www.wegowhen.com/* ... 301!` was
+deployed and `https://www.wegowhen.com/faq` still answered 200. For a while both hostnames
+were held together by the canonical tag alone, and the duplicate host was serving real
+traffic — 113 requests with status 200 in the 24h to 2026-08-31.
+
+Fixed 2026-09-01 with a **zone-level Single Redirect**, created through the API with the
+`CLOUDFLARE` token. The `http_request_dynamic_redirect` phase had no ruleset at all, so
+this was a `PUT` to the phase entrypoint, which creates it:
+
+```
+PUT /zones/6839a05d9ac236e9897b253b95ecbbda/rulesets/phases/http_request_dynamic_redirect/entrypoint
+expression:  (http.host eq "www.wegowhen.com")
+action:      redirect, 301
+target_url:  concat("https://wegowhen.com", http.request.uri.path)
+preserve_query_string: true
+```
+
+Ruleset `468632e4796842b79312b44d173b07e8`, rule `bb4f38cd8112459382f5c5d85466a2ab`.
+
+Verified immediately after: `www/`, `www/faq`, `www/when2meet-alternative` and a
+`www/trip/:id?x=1&y=2` all 301 in **one hop** to the apex with path and query intact, and
+the apex is untouched — the eight pages still 200, an unknown path still 404, `/trip/:id`
+still 200. Do not re-add a hostname rule to `public/_redirects`; it does nothing.
 
 A push to `main` is not finished until the Cloudflare build has finished. Check the
 deployed bundle hash actually changed rather than trusting a green dashboard:
@@ -147,9 +165,43 @@ pnpm run build && pnpm exec wrangler pages dev   # http://127.0.0.1:8788, local 
 
 ## Credentials
 
-There are none any more. The Supabase project this repo used to point at no longer
-exists, and nothing replaced it that needs a secret: D1 is reached through a binding,
-not a key. `.env` is still gitignored if you need one.
+The app itself needs none — D1 is reached through a binding, not a key, and the Supabase
+project this repo used to point at no longer exists.
+
+`.env` (gitignored) now holds a **Cloudflare account API token** for out-of-band work the
+app never does: reading analytics, querying production D1, listing Pages projects. Two
+things about it are not guessable:
+
+- **The key is named `CLOUDFLARE`, not `CLOUDFLARE_API_TOKEN`.** Wrangler will not pick it
+  up by that name. The other `*_CLOUDFLARE` keys next to it are R2 S3 credentials and are
+  unrelated; R2 is not even enabled on the account (`/r2/buckets` answers 10042).
+- **It fails `GET /client/v4/user/tokens/verify` with `1000 Invalid API Token`.** That is
+  expected for an account-scoped token and is not a sign the token is broken. Test it
+  against a real endpoint instead, e.g. `GET /accounts/<id>/pages/projects`.
+
+Confirmed working on 2026-08-31: Pages projects, D1 list and `/d1/database/<id>/query`,
+`zones?name=wegowhen.com`, and the **account**-scoped GraphQL datasets
+`pagesFunctionsInvocationsAdaptiveGroups` and `d1AnalyticsAdaptiveGroups`.
+
+`CLOUDFLARE_ANALYTICS_TOKEN` is a second, deliberately tiny token: one policy, one
+permission group (*Analytics Read*, `9c88f9c5bce24ce7af9a958ba9c504db`), scoped to zone
+`wegowhen.com` (`6839a05d9ac236e9897b253b95ecbbda`) alone. Prefer it for anything that
+only reads traffic — `CLOUDFLARE` carries ~390 permission groups including
+`Billing Write`, `Account API Tokens Write` and `Zone Write` on every zone, which is far
+more than any analytics query needs.
+
+Two free-plan limits on zone analytics, both hit on 2026-08-31:
+
+- `httpRequestsAdaptiveGroups` **rejects any window wider than 1 day** — "cannot request a
+  time range wider than 1d". For multi-day use `httpRequests1dGroups`, which carries
+  `sum{requests pageViews bytes}` and `uniq{uniques}`.
+- The adaptive dataset is **sampled**, and its `(clientRequestPath, edgeResponseStatus)`
+  pairs do not always agree with reality: it reported `200` for
+  `//wp-includes/wlwmanifest.xml` and `/wp-admin/install.php`, while live `curl` returns
+  `404` for both on port 443, 8443 and 2087. Confirm any status finding with a real
+  request before acting on it.
+- `clientRequestScheme` is not available on this plan; `clientRequestHTTPHost`,
+  `clientRequestPath`, `edgeResponseStatus` and `datetimeHour` are.
 
 ## Known state, as of 2026-08-28
 
@@ -272,6 +324,75 @@ Things in this repo that marketing depends on, so do not break them silently:
   break that. The 404 page is `noindex` too, because the SPA fallback answers an unknown
   path with a 200.
 
+## Traffic and the arrival of real users
+
+Measured 2026-08-31 from the Cloudflare GraphQL API, the first traffic numbers this
+project has ever had. `httpRequests1dGroups`, zone `wegowhen.com`:
+
+| date | requests | page views | uniques |
+| --- | --- | --- | --- |
+| 2026-08-28 | 2,077 | 772 | 237 |
+| 2026-08-29 | 1,274 | 821 | 178 |
+| 2026-08-30 | 1,387 | 945 | 175 |
+| 2026-08-31 (partial) | 910 | 418 | 143 |
+
+Read those uniques with suspicion. A large share of the volume is **WordPress
+vulnerability scanning** — in one 24h window, `/wp-admin/install.php` plus fifteen
+spellings of `//<dir>/wp-includes/wlwmanifest.xml`, and probes on cPanel ports 2052, 2082,
+2086, 2087, 2095, 8080 and 8443. All 404, correctly, but they inflate every count.
+
+Over that window the product side contradicted the traffic entirely — 88 Pages Functions
+invocations, 305 D1 reads, 32 D1 writes, 8 trips all ours. The honest read then was:
+crawlers and scanners found the site, people had not.
+
+**That changed on 2026-09-02.** Re-measured 2026-09-13:
+
+| date | requests | page views | uniques | Functions invocations |
+| --- | --- | --- | --- | --- |
+| 2026-09-03 | 369 | 138 | 114 | 0 |
+| 2026-09-05 | 343 | 138 | 112 | 0 |
+| 2026-09-06 | 1,354 | 227 | 169 | 21 |
+| 2026-09-09 | 764 | 192 | 139 | 29 |
+| 2026-09-10 | 775 | 185 | 123 | 31 |
+| 2026-09-11 | 964 | 208 | 167 | 81 |
+| 2026-09-12 | 1,078 | 258 | 185 | 106 |
+| 2026-09-13 (partial) | 813 | 185 | 157 | 55 |
+
+Traffic itself barely moved — it is the **Functions invocations** that went from flat zero
+to 106/day, and that column is the one that means people. D1 over the last 7 days: 1,844
+reads, 87 writes. Trips created per day since: 3, 3, 1, 3, 4, 4.
+
+Two findings from the same data, both still open:
+
+- **The `504`s never reach a browser. Diagnosed 2026-09-13; not a defect.** They look
+  alarming — 87 on 08-31, 67 on 09-13 — and they land on real users' trip pages in matched
+  `/trip/:id` + `/api/trips/:id` pairs, which reads exactly like the invitation flow
+  breaking. It is not.
+
+  Split `httpRequestsAdaptiveGroups` by **`requestSource`** and the whole thing resolves:
+
+  | requestSource | status | count (24h to 2026-09-13T17:00Z) |
+  | --- | --- | --- |
+  | `eyeball` | 200 | 682 |
+  | `eyeball` | 404 | 115 |
+  | `eyeball` | 301 | 97 |
+  | `earlyHintsCache` | **504** | **92** |
+  | `eyeball` | **504** | **0** |
+
+  Every 504 is `requestSource: earlyHintsCache` — Cloudflare's own Early Hints subsystem
+  fetching pages to populate its hint cache, timing out against Pages. All carry
+  `cacheStatus: miss` and `edgeResponseContentTypeName: empty`. **Filtering
+  `requestSource:"eyeball"` returns zero 504s**, so no visitor has ever seen one. The
+  zone's `early_hints` setting reads `off`, so there is nothing to switch off either.
+
+  **Always split by `requestSource` before calling an error rate real.** `eyeball` is the
+  only value that means a person; `earlyHintsCache` and `edgeWorkerFetch` are Cloudflare
+  talking to itself. Judged on eyeball traffic alone the site has no error problem: the
+  115 eyeball 404s are the WordPress scanners plus `/trip` (deliberate) and
+  `/apple-touch-icon.png`, which the site genuinely does not ship.
+- ~~**`www.wegowhen.com` served 113 requests with status 200** in that window.~~ **Fixed**
+  2026-09-01 with a zone Single Redirect; see the `www` paragraph above.
+
 ## The browser-local trip list
 
 `src/lib/recentTrips.ts` keeps a list of the trips a browser has opened under the
@@ -295,18 +416,53 @@ It is per-browser, so it is a convenience and not an account: a different device
 cleared profile or a private window shows nothing. `PrivacyPolicy.tsx` §2.2 and §7 were
 updated in the same change to say the list exists and what it holds.
 
-## Test data left on production
+## Production data — real users since 2026-09-02
 
-Two trips exist in the production D1 purely from smoke tests during the Cloudflare
-migration: `prodsmoke0000000000000000000001` ("prod smoke") and
-`prodtouch000000000000000000000001` ("touch check"). Their participants were removed, so
-they hold no personal data, but the rows are still there.
+**The database is no longer ours to treat as scratch.** Counted 2026-09-13: **26 trips,
+63 participants**, of which 8 trips / 15 participants are the test rows below and **18
+trips / 48 participants belong to strangers**. The first arrived 2026-09-02T20:17Z.
 
-**There is no way to delete a trip.** The API exposes create, read, and
-add/rename/remove participant — nothing deletes a trip. So this junk cannot be cleaned up
-through the app, and it cannot be cleaned up with `wrangler d1 execute --remote` from a
-non-interactive session either: that needs `CLOUDFLARE_API_TOKEN`, which is not in any
-`.env` here. Either set one, or run the delete from the D1 console in the dashboard.
+They are unmistakably real: trip names in Dutch, German, Spanish, Russian, Vietnamese and
+English, one US school-district programme running three trips, group sizes up to 8. The
+7-day country mix matches them — US 2356, SG 921, NL 816, KR 597, VN 393, CN 352, AU 336,
+DE 330, GB 259, PY 182.
+
+**Consequences, and they are not optional:**
+
+- **Never run a bare `DELETE` or `UPDATE` against production D1 again.** The token in
+  `.env` reaches `/d1/database/<id>/query` with arbitrary SQL and there is no undo. Any
+  cleanup must name the eight test ids explicitly in an `IN (...)` list.
+- **Do not paste trip names or participant names into this file, a commit message, an
+  issue, or anywhere else.** They are other people's data. Counts and dates only. The
+  names were read on 2026-09-13 to tell real traffic from smoke tests, and that is the
+  only reason to read them.
+- The contact-address gap in "Claims in the legal pages" is now a live problem rather
+  than a hypothetical: strangers hold trips, the privacy policy grants them deletion
+  rights, and there is no published address to ask at.
+
+The eight test rows, counted 2026-08-31 (this line previously said two; that was wrong):
+
+| id | name | created | participants |
+| --- | --- | --- | --- |
+| `prodsmoke0000000000000000000001` | prod smoke | 2026-08-28 | 0 |
+| `prodtouch000000000000000000000001` | touch check | 2026-08-28 | 0 |
+| `prodverify00000000000000000000001` | Prod verify | 2026-08-28 | 5 |
+| `e1e0ba393081baeec0d2b15dd5698274` | Preview smoke | 2026-08-28 | 1 |
+| `f32fef50dfd4a743b62ac63ae3a65f96` | my lovely trip | 2026-08-28 | 3 |
+| `cbe96f2ef90cab8a36c5a39d1888c782` | narty | 2026-08-28 | 3 |
+| `f89ae94e17e1a9630204a34aacb33d52` | narty | 2026-08-29 | 3 |
+| `4b58069109c6bede14bdef059785b783` | ueah | 2026-08-31 | 0 |
+
+The three carrying participants that are not smoke tests are the owner's own manual
+testing, so those 15 participant rows are made-up names. That is true of these eight rows
+only — the other 18 trips are not ours.
+
+**There is no way to delete a trip through the app.** The API exposes create, read, and
+add/rename/remove participant — nothing deletes a trip. It *can* now be done out of band:
+the token in `.env` reaches
+`POST /accounts/<id>/d1/database/39bb1ce4-bc4a-4047-823a-6255e2c472bb/query`, which
+accepts arbitrary SQL against production. Read-only `SELECT`s were run there on
+2026-08-31; no delete has been run.
 
 Whether to add `DELETE /api/trips/:id` is a product decision, not a cleanup task: with no
 accounts, anyone holding the link could delete everyone's answers.
@@ -315,15 +471,33 @@ accounts, anyone holding the link could delete everyone's answers.
 
 Both were checked against the codebase, not assumed:
 
-- **§2.2 claims automatic collection of "Usage Data: Pages visited, time spent on
-  pages, and interaction patterns".** There is no analytics anywhere — no gtag, no
-  Plausible, no PostHog, nothing. `grep -riE "gtag|analytics|plausible|posthog" src/
-  index.html functions/` is empty. Cloudflare keeps edge request logs, but the app
-  collects none of this.
+- **§2.2 claimed automatic collection of "Usage Data: Pages visited, time spent on
+  pages, and interaction patterns".** No such script was in the repo, so this was
+  rewritten to deny analytics outright — which made it false the other way. See below.
 - **§9 claims trips "may be archived or removed after an extended period of inactivity
   (typically 24 months)".** Nothing archives or removes anything: there is no cron, no
   scheduled job, and Pages Functions have no cron triggers, so implementing it would
   need a separate Worker.
+
+**A third claim was false in the opposite direction, found 2026-09-13.** The policy said
+*"We run no analytics"*, and `grep` over `src/`, `index.html` and `functions/` genuinely
+finds no analytics script — but **Cloudflare Web Analytics was switched on at the zone**
+and had been recording page views and referrers since at least 2026-09-04. It is injected
+by Cloudflare at the edge, not by our code, so **grepping the repo cannot detect it** and
+the served HTML does not show the beacon to `curl` either. The evidence is the RUM
+dataset:
+
+```
+rumPageloadEventsAdaptiveGroups, account scope, siteTag 5c4f103f (wegowhen.com)
+-> 260 page loads 2026-09-04..09-13, with refererHost
+GET /accounts/<id>/rum/site_info/list -> auto_install: true, ruleset enabled: true
+```
+
+**Never conclude "no analytics" from a repo grep again.** Check
+`/accounts/<id>/rum/site_info/list` and the RUM dataset; an edge-injected beacon is
+invisible to every check that looks at source. §2.2 and §8 now name Cloudflare Web
+Analytics and state that it sets no cookies and does not fingerprint, and the guarding
+test asserts the disclosure is present and that the old denial cannot come back.
 
 **Both have since been rewritten** (commit `00bcaf4`) to describe what the code does: the
 policy now states that no analytics run, that retention is indefinite with no automatic

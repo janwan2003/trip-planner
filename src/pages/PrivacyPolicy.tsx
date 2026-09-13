@@ -40,11 +40,12 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold mb-3 mt-4">2.2 Automatically Collected Information</h3>
             <p className="mb-4">
-              We run no analytics. Nothing on this site measures which pages you visit, how long you
-              spend on them, or how you interact with them, and there are no advertising or tracking
-              scripts of any kind.
+              We run privacy-preserving analytics, and no advertising or cross-site tracking scripts
+              of any kind. There are no third-party trackers, no advertising pixels, no profiles, and
+              nothing that follows you to other websites.
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
+              <li><strong>Page Analytics:</strong> We use Cloudflare Web Analytics, which counts page views and records which website referred you, if any. It sets no cookies, uses no device fingerprinting, and does not track you across sites or sessions. We see aggregate counts, such as how many people opened a page and how many arrived from a given site. We cannot tell from it who you are or which trip you opened</li>
               <li><strong>Server Request Logs:</strong> Our host, Cloudflare, records standard request metadata such as your IP address and browser user agent in order to serve and protect the site. We do not query, export, or link this to your trips</li>
               <li><strong>Local Storage:</strong> Your tutorial preference, the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us</li>
             </ul>
@@ -122,7 +123,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-display font-semibold mb-4">8. Third-Party Services</h2>
             <p className="mb-4">Our Service uses the following third-party services:</p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li><strong>Cloudflare:</strong> Application hosting (Cloudflare Pages) and trip data storage (Cloudflare D1) (<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
+              <li><strong>Cloudflare:</strong> Application hosting (Cloudflare Pages), trip data storage (Cloudflare D1), and cookieless page analytics (Cloudflare Web Analytics) (<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
             </ul>
           </section>
 
