@@ -213,7 +213,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/privacy',
-    contentUpdated: '2026-08-28',
+    contentUpdated: '2026-09-13',
     contentSources: ['src/pages/PrivacyPolicy.tsx'],
     title: 'Privacy Policy | WeGoWhen',
     description:
