@@ -281,9 +281,12 @@ describe('sitemap lastmod', () => {
   it('lists the page that renders each route among its own sources', () => {
     expect(routeFor('/faq')!.contentSources).toContain('src/pages/Faq.tsx');
     expect(routeFor('/privacy')!.contentSources).toContain('src/pages/PrivacyPolicy.tsx');
-    // The FAQ answers live in the FAQ array in this module, not in the page component,
-    // so an edit to them has to move /faq's date.
-    expect(routeFor('/faq')!.contentSources).toContain('src/lib/siteMeta.ts');
+    // The FAQ answers live in the FAQ array, not in the page component, so an edit to
+    // them has to move /faq's date. That array sits in its own module: while it lived
+    // here in siteMeta.ts, bumping any other route's contentUpdated counted as a change
+    // to the FAQ page and demanded a date its words had not earned.
+    expect(routeFor('/faq')!.contentSources).toContain('src/lib/faq.ts');
+    expect(routeFor('/faq')!.contentSources).not.toContain('src/lib/siteMeta.ts');
   });
 
   it('does not let one page share another page-s sources', () => {
