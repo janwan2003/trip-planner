@@ -346,22 +346,64 @@ Over that window the product side contradicted the traffic entirely — 88 Pages
 invocations, 305 D1 reads, 32 D1 writes, 8 trips all ours. The honest read then was:
 crawlers and scanners found the site, people had not.
 
-**That changed on 2026-09-02.** Re-measured 2026-09-13:
+**That changed on 2026-09-02**, when the first stranger created a trip.
 
-| date | requests | page views | uniques | Functions invocations |
-| --- | --- | --- | --- | --- |
-| 2026-09-03 | 369 | 138 | 114 | 0 |
-| 2026-09-05 | 343 | 138 | 112 | 0 |
-| 2026-09-06 | 1,354 | 227 | 169 | 21 |
-| 2026-09-09 | 764 | 192 | 139 | 29 |
-| 2026-09-10 | 775 | 185 | 123 | 31 |
-| 2026-09-11 | 964 | 208 | 167 | 81 |
-| 2026-09-12 | 1,078 | 258 | 185 | 106 |
-| 2026-09-13 (partial) | 813 | 185 | 157 | 55 |
+### The usage ledger
 
-Traffic itself barely moved — it is the **Functions invocations** that went from flat zero
-to 106/day, and that column is the one that means people. D1 over the last 7 days: 1,844
-reads, 87 writes. Trips created per day since: 3, 3, 1, 3, 4, 4.
+**Keep this table current.** The owner asked for it on 2026-09-23 and cares most about the
+first two columns: **how many trips are created and how many people join them**. Whenever
+a session touches usage, traffic or marketing, regenerate it and replace the table:
+
+```bash
+scripts/usage-ledger.sh            # read-only; counts only, never names
+```
+
+Last regenerated **2026-09-23** (that day partial):
+
+| date | trips created | participants joined | API calls | page views | uniques |
+| --- | --- | --- | --- | --- | --- |
+| 2026-09-02 | 3 | 1 | 17 | 171 | 149 |
+| 2026-09-03 | 0 | 0 | 2 | 138 | 114 |
+| 2026-09-04 | 0 | 0 | 0 | 129 | 108 |
+| 2026-09-05 | 0 | 0 | 2 | 138 | 112 |
+| 2026-09-06 | 3 | 10 | 68 | 227 | 169 |
+| 2026-09-07 | 0 | 0 | 5 | 148 | 131 |
+| 2026-09-08 | 0 | 0 | 6 | 211 | 131 |
+| 2026-09-09 | 1 | 5 | 29 | 192 | 139 |
+| 2026-09-10 | 0 | 3 | 31 | 185 | 123 |
+| 2026-09-11 | 3 | 10 | 81 | 208 | 167 |
+| 2026-09-12 | 4 | 14 | 106 | 258 | 185 |
+| 2026-09-13 | 4 | 7 | 83 | 307 | 211 |
+| 2026-09-14 | 1 | 6 | 56 | 197 | 152 |
+| 2026-09-15 | 0 | 4 | 34 | 198 | 154 |
+| 2026-09-16 | 0 | 1 | 44 | 182 | 154 |
+| 2026-09-17 | 0 | 1 | 25 | 165 | 128 |
+| 2026-09-18 | 0 | 2 | 9 | 153 | 107 |
+| 2026-09-19 | 0 | 0 | 25 | 161 | 143 |
+| 2026-09-20 | 3 | 11 | 61 | 199 | 170 |
+| 2026-09-21 | 5 | 15 | 106 | 245 | 220 |
+| 2026-09-22 | 1 | 1 | 50 | 147 | 141 |
+| 2026-09-23 | 0 | 0 | 21 | 63 | 63 |
+
+Totals on 2026-09-23: **28 trips, 91 participants**, not counting the eight test trips;
+**17 of the 28 have 2+ participants**, 7 have only the creator, 4 have nobody; 12 trips
+had a participant edit in the last 7 days.
+
+How to read the columns:
+
+- **Trips created** and **participants joined** are `created_at` days from production D1,
+  test trips excluded by id. A participant removed later is gone from the table, so
+  "joined" slightly undercounts. Neither is sampled — these are exact.
+- **API calls** are `pagesFunctionsInvocationsAdaptiveGroups`: only a browser running the
+  app makes them, so this is the traffic column that means people. It is sampled, and
+  back-filled days can shift a little between runs — the 2026-09-13 snapshot this table
+  replaced had 09-06 at 21 where the same query now returns 68.
+- **Page views** and **uniques** are `httpRequests1dGroups` and include bots and scanners;
+  treat them as a ceiling. They barely moved when real use began.
+- Cloudflare Web Analytics (browsers only, sampled in tens) put roughly 300 page loads on
+  09-13..09-22, mostly `/trip/:id` invitation links. Referrers: 150 none, 130
+  `wegowhen.com`, 10 `instagram.com`, **no search engine at all** — growth so far is
+  invitation links, not SEO.
 
 Two findings from the same data, both still open:
 
@@ -421,7 +463,9 @@ updated in the same change to say the list exists and what it holds.
 
 **The database is no longer ours to treat as scratch.** Counted 2026-09-13: **26 trips,
 63 participants**, of which 8 trips / 15 participants are the test rows below and **18
-trips / 48 participants belong to strangers**. The first arrived 2026-09-02T20:17Z.
+trips / 48 participants belong to strangers**. The first arrived 2026-09-02T20:17Z. By
+2026-09-23 strangers held **28 trips / 91 participants** — current figures live in the
+usage ledger above, not here.
 
 They are unmistakably real: trip names in Dutch, German, Spanish, Russian, Vietnamese and
 English, one US school-district programme running three trips, group sizes up to 8. The
