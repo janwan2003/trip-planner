@@ -1,9 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Code-split route components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -16,8 +14,6 @@ const When2meetAlternative = lazy(() => import("./pages/When2meetAlternative"));
 const DoodleAlternative = lazy(() => import("./pages/DoodleAlternative"));
 const Faq = lazy(() => import("./pages/Faq"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-
-const queryClient = new QueryClient();
 
 /**
  * Everything below the router: the providers and the route table.
@@ -33,10 +29,9 @@ const queryClient = new QueryClient();
  * arrives, which is why there is no flash of the "Loading..." fallback.
  */
 export const AppShell = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+  <>
+    <Toaster />
+    <ErrorBoundary>
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -52,6 +47,6 @@ export const AppShell = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-    </TooltipProvider>
-  </QueryClientProvider>
+    </ErrorBoundary>
+  </>
 );

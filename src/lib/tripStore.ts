@@ -13,6 +13,8 @@ export interface Participant {
   name: string;
   availableDates: string[];
   created_at?: string;
+  /** Sent back as `expectedUpdatedAt` so a save made from a stale read is refused. */
+  updated_at?: string;
 }
 
 export interface Trip {
@@ -28,11 +30,14 @@ export interface Trip {
 /** Raised when the API could not be reached or answered with an unexpected status. */
 export class TripApiError extends Error {
   readonly status?: number;
+  /** On a 409, the trip as it now stands on the server. */
+  readonly trip?: Trip;
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, trip?: Trip) {
     super(message);
     this.name = 'TripApiError';
     this.status = status;
+    this.trip = trip;
   }
 }
 
@@ -78,8 +83,12 @@ const expectTrip = async (response: Response): Promise<Trip> => {
   }
 
   if (!response.ok) {
-    const message = (parsed as { error?: string })?.error;
-    throw new TripApiError(message ?? `Trip service failed with ${response.status}.`, response.status);
+    const { error: message, trip } = (parsed ?? {}) as { error?: string; trip?: Trip };
+    throw new TripApiError(
+      message ?? `Trip service failed with ${response.status}.`,
+      response.status,
+      trip,
+    );
   }
 
   return parsed as Trip;
@@ -111,13 +120,25 @@ export const saveTrip = async (trip: Trip): Promise<Trip> => {
   return expectTrip(response);
 };
 
-/** Adds a participant, or replaces the availability of one with the same name. */
-export const addParticipant = async (tripId: string, participant: Participant): Promise<Trip> => {
+/**
+ * Adds a participant, or replaces the availability of one with the same name.
+ *
+ * `expectedUpdatedAt` is the participant's `updated_at` as this client last read it,
+ * or `null` when it believes nobody has that name yet. If the server's row no longer
+ * matches, the save is refused with a `TripApiError` of status 409 carrying the current
+ * trip. Leave it `undefined` to skip the check.
+ */
+export const addParticipant = async (
+  tripId: string,
+  participant: Participant,
+  expectedUpdatedAt?: string | null,
+): Promise<Trip> => {
   const response = await request(`${API}/${encodeURIComponent(tripId)}/participants`, {
     method: 'PUT',
     body: JSON.stringify({
       name: participant.name,
       availableDates: participant.availableDates,
+      ...(expectedUpdatedAt === undefined ? {} : { expectedUpdatedAt }),
     }),
   });
   return expectTrip(response);
@@ -171,6 +192,20 @@ const utcFromYmd = (value: string): Date | null => {
   return date;
 };
 
+/**
+ * Longest trip in days, inclusive. Mirrors `LIMITS.tripDays` in the API, which refuses
+ * anything longer: one calendar cell per day has to stay renderable on a phone.
+ */
+export const MAX_TRIP_DAYS = 366;
+
+/** `value` moved by `days` calendar days, as `YYYY-MM-DD`; null for an unparseable value. */
+export const addDays = (value: string, days: number): string | null => {
+  const date = utcFromYmd(value);
+  if (!date) return null;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
 export const getDatesBetween = (startDate: string, endDate: string): string[] => {
   const current = utcFromYmd(startDate);
   const end = utcFromYmd(endDate);
@@ -192,13 +227,17 @@ export const getDatesBetween = (startDate: string, endDate: string): string[] =>
  */
 export const getAvailabilityCount = (trip: Trip): Record<string, string[]> => {
   const availability: Record<string, string[]> = {};
-  const dates = getDatesBetween(trip.startDate, trip.endDate);
+  for (const date of getDatesBetween(trip.startDate, trip.endDate)) {
+    availability[date] = [];
+  }
 
-  dates.forEach((date) => {
-    availability[date] = trip.participants
-      .filter((p) => p.availableDates.includes(date))
-      .map((p) => p.name);
-  });
+  // One pass over each participant's own days, rather than an `includes` scan of every
+  // participant for every date: at 365 days and 50 people that was ~6.6M comparisons.
+  for (const participant of trip.participants) {
+    for (const date of participant.availableDates) {
+      availability[date]?.push(participant.name);
+    }
+  }
 
   return availability;
 };

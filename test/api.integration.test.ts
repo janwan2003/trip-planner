@@ -135,6 +135,91 @@ describe('participants', () => {
     expect(trip.participants[0].availableDates).toEqual(['2026-09-03']);
   });
 
+  it('keeps the stored spelling when a save uses another case', async () => {
+    const { id } = await createTrip();
+
+    await putParticipant(id, 'Anna', ['2026-09-02']);
+    const trip = await (await putParticipant(id, 'anna', ['2026-09-03'])).json();
+
+    expect(trip.participants[0].name).toBe('Anna');
+  });
+
+  it('refuses a save made from a stale read, and says what is current', async () => {
+    const { id } = await createTrip();
+    const first = await (await putParticipant(id, 'Bob', ['2026-09-02'])).json();
+    const loadedAt = first.participants[0].updated_at;
+    expect(typeof loadedAt).toBe('string');
+
+    // Bob changes his own answer from another phone.
+    await putParticipant(id, 'Bob', ['2026-09-04']);
+
+    // The first phone still holds the old read and saves over it.
+    const stale = await fetch(`${API}/${id}/participants`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Bob', availableDates: ['2026-09-09'], expectedUpdatedAt: loadedAt }),
+    });
+
+    expect(stale.status).toBe(409);
+    const body = await stale.json();
+    expect(body.trip.participants[0].availableDates).toEqual(['2026-09-04']);
+  });
+
+  it('applies a save whose read is current', async () => {
+    const { id } = await createTrip();
+    const first = await (await putParticipant(id, 'Bob', ['2026-09-02'])).json();
+
+    const response = await fetch(`${API}/${id}/participants`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'bob',
+        availableDates: ['2026-09-09'],
+        expectedUpdatedAt: first.participants[0].updated_at,
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).participants[0].availableDates).toEqual(['2026-09-09']);
+  });
+
+  it('will not overwrite a row that appeared after the client saw none', async () => {
+    const { id } = await createTrip();
+    await putParticipant(id, 'Cleo', ['2026-09-02']);
+
+    const response = await fetch(`${API}/${id}/participants`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Cleo', availableDates: ['2026-09-09'], expectedUpdatedAt: null }),
+    });
+
+    expect(response.status).toBe(409);
+    expect((await response.json()).trip.participants[0].availableDates).toEqual(['2026-09-02']);
+  });
+
+  it('inserts a new participant when the client expects none', async () => {
+    const { id } = await createTrip();
+
+    const response = await fetch(`${API}/${id}/participants`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Dee', availableDates: ['2026-09-02'], expectedUpdatedAt: null }),
+    });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).participants).toHaveLength(1);
+  });
+
+  it('does not report days outside the trip', async () => {
+    const { id } = await createTrip();
+
+    const trip = await (
+      await putParticipant(id, 'Ada', ['2026-08-31', '2026-09-02', '2026-09-11'])
+    ).json();
+
+    expect(trip.participants[0].availableDates).toEqual(['2026-09-02']);
+  });
+
   it('keeps two different people apart', async () => {
     const { id } = await createTrip();
 
@@ -323,30 +408,26 @@ describe('limits', () => {
     expect((await putParticipant(id, 'p'.repeat(121), [])).status).toBe(400);
   });
 
-  it('accepts 1000 dates and rejects 1001', async () => {
-    const { id } = await createTrip({ startDate: '2026-01-01', endDate: '2029-12-31' });
+  it('accepts 366 dates and rejects 367', async () => {
+    const { id } = await createTrip({ startDate: '2028-01-01', endDate: '2028-12-31' });
 
     const isoDay = (offset: number) =>
-      new Date(Date.UTC(2026, 0, 1 + offset)).toISOString().slice(0, 10);
+      new Date(Date.UTC(2028, 0, 1 + offset)).toISOString().slice(0, 10);
 
-    const thousand = Array.from({ length: 1000 }, (_, i) => isoDay(i));
-    expect((await putParticipant(id, 'Ada', thousand)).status).toBe(200);
+    const full = Array.from({ length: 366 }, (_, i) => isoDay(i));
+    expect((await putParticipant(id, 'Ada', full)).status).toBe(200);
+    const trip = await (await fetch(`${API}/${id}`)).json();
+    expect(trip.participants[0].availableDates).toHaveLength(366);
 
-    const thousandAndOne = Array.from({ length: 1001 }, (_, i) => isoDay(i));
-    expect((await putParticipant(id, 'Bo', thousandAndOne)).status).toBe(400);
+    const tooMany = Array.from({ length: 367 }, (_, i) => isoDay(i));
+    expect((await putParticipant(id, 'Bo', tooMany)).status).toBe(400);
   });
 
-  it('stores 1000 dates without losing any', async () => {
-    const { id } = await createTrip({ startDate: '2026-01-01', endDate: '2029-12-31' });
-    const dates = Array.from({ length: 1000 }, (_, i) =>
-      new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
-    );
-
-    await putParticipant(id, 'Ada', dates);
-    const trip = await (await fetch(`${API}/${id}`)).json();
-
-    expect(trip.participants[0].availableDates).toHaveLength(1000);
-    expect(trip.participants[0].availableDates[0]).toBe('2026-01-01');
+  it('accepts a 366-day trip and rejects a 367-day one', async () => {
+    expect((await createTrip({ startDate: '2028-01-01', endDate: '2028-12-31' })).response.status).toBe(200);
+    const tooLong = await createTrip({ startDate: '2028-01-01', endDate: '2029-01-01' });
+    expect(tooLong.response.status).toBe(400);
+    expect((await tooLong.response.json()).error).toMatch(/at most 366 days/i);
   });
 
   it('accepts 200 participants and refuses the 201st', async () => {

@@ -48,7 +48,7 @@ export const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I plan a trip that is months away?',
     answer:
-      'Yes. The outer window is whatever you set when you create the trip, so a trip next spring works exactly like a trip next weekend. There is no limit on how far ahead the window can start, and a participant may mark up to 1000 days.',
+      'Yes. The outer window is whatever you set when you create the trip, so a trip next spring works exactly like a trip next weekend. There is no limit on how far ahead the window can start, and the window itself can be up to 366 days long - a full year.',
   },
   {
     question: 'How many people can join one trip?',

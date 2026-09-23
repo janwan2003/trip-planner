@@ -24,7 +24,7 @@ group is free", "group trip date planner without accounts".
 - Accounts: none, for organisers or participants. Identity is a typed name plus possession
   of the trip link.
 - Platform: web, mobile browsers included. Nothing to install.
-- Limits: up to 200 participants per trip, up to 1000 marked days per participant.
+- Limits: up to 200 participants per trip; a trip spans at most 366 days.
 - Storage: Cloudflare D1, reached through Cloudflare Pages Functions.
 - What it does not do: single-day or hour-of-day scheduling, calendar integrations,
   notifications, reminders, or paid bookings.

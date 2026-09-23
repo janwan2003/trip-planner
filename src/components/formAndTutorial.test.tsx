@@ -54,6 +54,25 @@ describe('Tutorial', () => {
     expect(screen.getByText(/Create a Trip/i)).toBeInTheDocument();
   });
 
+  it('still renders, and still hides, when the browser blocks site data', async () => {
+    // Chrome's "block all site data" throws from the storage calls themselves. This
+    // component used to call them unguarded, which blanked the whole trip page.
+    const blocked = () => {
+      throw new DOMException('blocked', 'SecurityError');
+    };
+    const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+    const user = userEvent.setup();
+
+    render(<Tutorial />);
+    expect(screen.getByText(/Create a Trip/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /hide tutorial/i }));
+    expect(screen.getByRole('button', { name: /show tutorial/i })).toBeInTheDocument();
+
+    get.mockRestore();
+    set.mockRestore();
+  });
+
   it('marks completed steps', () => {
     const { container } = render(<Tutorial completedSteps={[1, 2]} />);
     // Completed steps swap their number for a check icon.
@@ -74,6 +93,16 @@ describe('ModernDateInput', () => {
 
     expect(screen.getByText('03/09/2026')).toBeInTheDocument();
     expect(screen.queryByText('2026-09-03')).not.toBeInTheDocument();
+  });
+
+  it('follows the value when the parent clears it', () => {
+    const { rerender } = render(
+      <ModernDateInput label="Start Date" value="2026-09-03" onChange={vi.fn()} />,
+    );
+    rerender(<ModernDateInput label="Start Date" value="" onChange={vi.fn()} />);
+
+    expect(screen.getByText('Select date')).toBeInTheDocument();
+    expect(screen.queryByText('03/09/2026')).not.toBeInTheDocument();
   });
 
   it('reports the chosen date as YYYY-MM-DD', async () => {

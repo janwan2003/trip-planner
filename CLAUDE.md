@@ -212,18 +212,18 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
 - `pnpm lint` exits 0. The 7 remaining warnings are all
   `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
   the run, and those files are not ours to restructure.
-- **Coverage is 98.51% of lines, 94.27% of branches** across `src/lib`,
-  `src/components` and `src/pages`, from 390 unit tests (measured 2026-09-13 with
-  `pnpm run test:coverage`; the 243 / 97.70% this line claimed before was a
-  2026-08-28 snapshot). Thresholds in
+- **Coverage is 98.34% of lines, 93.48% of branches** across `src/lib`,
+  `src/components` and `src/pages`, from 402 unit tests (measured 2026-09-23 with
+  `pnpm run test:coverage`; earlier snapshots: 390 / 98.51% on 2026-09-13, 243 / 97.70%
+  on 2026-08-28). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
   Re-measure with `pnpm run test:coverage` rather than trusting this line; it is a
   snapshot and goes stale the moment a test lands.
-- **21 integration tests** in `test/api.integration.test.ts` run the API against a real
-  `wrangler pages dev` with a local D1. Nothing is mocked, so they cover the Functions,
-  the SQL, the unique index and the middleware together.
+- **38 integration tests** in `test/api.integration.test.ts` run the API against a real
+  `wrangler pages dev` with a local D1 (counted 2026-09-23). Nothing is mocked, so they
+  cover the Functions, the SQL, the unique index and the middleware together.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 - **The site is in Google's index, all eight URLs.** `site:wegowhen.com` returned nothing
@@ -617,6 +617,37 @@ for tz in UTC Asia/Tokyo Pacific/Kiritimati Pacific/Midway; do WGW_TEST_TZ=$tz p
    and the only route to 2 was typing 12 and then deleting the 1. It now holds the raw
    string, allows an empty box while it is being retyped, reads 1 for the filter in the
    meantime, and normalises on blur.
+
+## Saves, limits and speed — the 2026-09-23 audit
+
+- **A save cannot silently overwrite a newer answer.** `PUT .../participants` takes
+  `expectedUpdatedAt`: the participant's `updated_at` as the client read it (a string),
+  `null` for "nobody has this name yet", or absent for no check (bundles cached from
+  before the field). A mismatch is a **409 whose body carries the current trip**;
+  `TripPage` shows it, keeps the marks on screen, and a second save replaces it
+  knowingly. It exists because the pencil in the participants list lets one phone edit
+  Bob while Bob edits himself, and the whole-list replace used to erase one of them.
+- **A save never changes the stored spelling of a name.** "anna" saving over "Anna"
+  used to rename her; renaming is PATCH's job. The join form trims before matching.
+- **A trip spans at most 366 days** (`LIMITS.tripDays`, mirrored as `MAX_TRIP_DAYS` in
+  `tripStore.ts` and as the end picker's `maxDate`); `datesPerParticipant` is 366 to
+  match. Before this, 0001-01-01..9999-12-31 passed validation and would have frozen
+  every visitor's tab. Production on 2026-09-23 held 36 trips, longest 365 days, none
+  over the cap. `readTrip` also drops stored dates outside the trip's range.
+- **`readTrip` is one D1 round trip** (a `batch` of both SELECTs), and the typical save
+  is two (UPDATE, read) where it was four.
+- **The trip calendar is memoised.** `AvailabilityCalendar` is `React.memo`, the heat-map
+  counts and day labels are computed once per input change, and `TripPage` passes the
+  read-only one stable props. Measured in headless Chromium at 4x CPU throttle, a
+  366-day trip with 41 people: one drag step 200-450 ms before, 36-57 ms after (each
+  figure includes one ~16 ms frame wait).
+- **The home page ships 25% less JavaScript**: 162.9 -> 122.4 kB gzip on its critical
+  path. `sonner`, `@tanstack/react-query` and `next-themes` were bundled and never used
+  and are gone; `date-fns` is on v4 so it dedupes with `react-day-picker`'s; and the
+  date picker is a lazy chunk fetched on hover/focus of its trigger.
+- **An `ErrorBoundary` sits under the router**, so a render error or a lazy chunk that
+  fails after a deploy shows a reload button rather than a blank page. It renders no
+  DOM while nothing has failed, which keeps prerendered markup and hydration identical.
 
 ## Conventions
 

@@ -98,6 +98,33 @@ describe('CreateTripForm', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('refuses a trip longer than 366 days, and accepts exactly 366', async () => {
+    const user = userEvent.setup();
+    render(<CreateTripForm />);
+
+    fill('Year out', '2028-01-01', '2029-01-01');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+    await waitFor(() => expect(saveTrip).not.toHaveBeenCalled());
+
+    fill('Year out', '2028-01-01', '2028-12-31');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+    await waitFor(() => expect(saveTrip).toHaveBeenCalledTimes(1));
+  });
+
+  it('treats a name of only spaces as no name, and trims a real one', async () => {
+    const user = userEvent.setup();
+    render(<CreateTripForm />);
+
+    fill('   ', '2026-09-01', '2026-09-03');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+    await waitFor(() => expect(saveTrip).not.toHaveBeenCalled());
+
+    fill('  Alps  ', '2026-09-01', '2026-09-03');
+    await user.click(screen.getByRole('button', { name: /create trip/i }));
+    await waitFor(() => expect(saveTrip).toHaveBeenCalledTimes(1));
+    expect(saveTrip.mock.calls[0][0].name).toBe('Alps');
+  });
+
   it('accepts a single-day trip', async () => {
     const user = userEvent.setup();
     render(<CreateTripForm />);

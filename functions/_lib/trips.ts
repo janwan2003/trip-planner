@@ -13,6 +13,12 @@ export interface Participant {
   name: string;
   availableDates: string[];
   created_at?: string;
+  /**
+   * When this participant's row last changed. A client sends it back as
+   * `expectedUpdatedAt` on its next save, so a save made from stale data is refused
+   * instead of silently overwriting someone's newer answer.
+   */
+  updated_at?: string;
 }
 
 export interface Trip {
@@ -39,6 +45,7 @@ interface ParticipantRow {
   name: string;
   available_dates: string;
   created_at: string;
+  updated_at: string;
 }
 
 /** Caps chosen to bound what one unauthenticated request can write. */
@@ -46,8 +53,25 @@ export const LIMITS = {
   tripId: 64,
   name: 120,
   participants: 200,
-  datesPerParticipant: 1000,
+  /**
+   * Longest trip, in days, inclusive. Every client renders one calendar cell per day and
+   * runs the best-dates search over all of them, so an unbounded range - 0001-01-01 to
+   * 9999-12-31 passed validation until 2026-09-23 - would freeze every visitor's tab.
+   * 366 keeps a full leap year; the longest real trip on that date was 365 days.
+   */
+  tripDays: 366,
+  /** A participant cannot be free on more days than the longest trip has. */
+  datesPerParticipant: 366,
 } as const;
+
+/** Days from `start` to `end` inclusive, for two dates already validated as calendar dates. */
+export const daysInclusive = (start: string, end: string): number => {
+  const utc = (value: string) => {
+    const [y, m, d] = value.split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((utc(end) - utc(start)) / 86_400_000) + 1;
+};
 
 export const json = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), {
@@ -83,31 +107,44 @@ export const isName = (value: unknown): value is string =>
  * Parses the stored JSON array of dates. A row that somehow holds invalid JSON
  * yields an empty list rather than failing the whole request: one corrupt
  * participant should not make a trip unreadable.
+ *
+ * Dates outside the trip are dropped. The PUT validates each date's shape but not its
+ * range, so a direct API call could store days the trip does not cover, and every
+ * "N days available" count would then include them.
  */
-const parseDates = (raw: string): string[] => {
+const parseDates = (raw: string, start: string, end: string): string[] => {
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(isCalendarDate) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((d): d is string => isCalendarDate(d) && d >= start && d <= end)
+      : [];
   } catch {
     return [];
   }
 };
 
-/** Reads one trip and its participants, or null when the trip does not exist. */
+/**
+ * Reads one trip and its participants, or null when the trip does not exist.
+ *
+ * Both SELECTs go in one `batch`, so this is one round trip to D1 rather than two;
+ * every write endpoint ends by calling it.
+ */
 export const readTrip = async (db: D1Database, id: string): Promise<Trip | null> => {
-  const trip = await db
-    .prepare('SELECT id, name, start_date, end_date, created_at, updated_at FROM trips WHERE id = ?')
-    .bind(id)
-    .first<TripRow>();
+  const [tripResult, participantResult] = await db.batch<TripRow | ParticipantRow>([
+    db
+      .prepare('SELECT id, name, start_date, end_date, created_at, updated_at FROM trips WHERE id = ?')
+      .bind(id),
+    db
+      .prepare(
+        'SELECT id, name, available_dates, created_at, updated_at FROM participants WHERE trip_id = ? ORDER BY created_at, name',
+      )
+      .bind(id),
+  ]);
 
+  const trip = (tripResult.results as TripRow[] | undefined)?.[0];
   if (!trip) return null;
 
-  const { results } = await db
-    .prepare(
-      'SELECT id, name, available_dates, created_at FROM participants WHERE trip_id = ? ORDER BY created_at, name',
-    )
-    .bind(id)
-    .all<ParticipantRow>();
+  const results = participantResult.results as ParticipantRow[] | undefined;
 
   return {
     id: trip.id,
@@ -119,8 +156,9 @@ export const readTrip = async (db: D1Database, id: string): Promise<Trip | null>
     participants: (results ?? []).map((row) => ({
       id: row.id,
       name: row.name,
-      availableDates: parseDates(row.available_dates),
+      availableDates: parseDates(row.available_dates, trip.start_date, trip.end_date),
       created_at: row.created_at,
+      updated_at: row.updated_at,
     })),
   };
 };

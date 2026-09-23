@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { memo, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getDatesBetween, Participant } from '@/lib/tripStore';
 import { format, parseISO, getDay } from 'date-fns';
@@ -15,7 +15,16 @@ interface AvailabilityCalendarProps {
   participants?: Participant[];
 }
 
-export function AvailabilityCalendar({
+const EMPTY: string[] = [];
+const NO_PARTICIPANTS: Participant[] = [];
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * Memoised: the page holds two of these, and during a drag only the editable one's
+ * `selectedDates` changes. Without `memo` the read-only group view re-rendered - every
+ * cell, every count - on each day the finger crossed.
+ */
+export const AvailabilityCalendar = memo(function AvailabilityCalendar({
   startDate,
   endDate,
   selectedDates,
@@ -23,45 +32,72 @@ export function AvailabilityCalendar({
   readOnly = false,
   availability,
   totalParticipants = 0,
-  selectedParticipants = [],
-  participants = [],
+  selectedParticipants = EMPTY,
+  participants = NO_PARTICIPANTS,
 }: AvailabilityCalendarProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartValue, setDragStartValue] = useState<boolean | null>(null);
   const draggedDatesRef = useRef<Set<string>>(new Set());
   
-  const dates = getDatesBetween(startDate, endDate);
-  
-  // Calculate availability based on selected participants (empty means all)
-  const getFilteredAvailability = (date: string): number => {
-    const activeParticipants = selectedParticipants.length === 0 
-      ? participants.map(p => p.name)
-      : selectedParticipants;
-    
-    return activeParticipants.filter(participantName => {
-      const participant = participants.find(p => p.name === participantName);
-      return participant?.availableDates.includes(date);
-    }).length;
-  };
-  
-  const getHeatLevel = (date: string): 'none' | 'low' | 'medium' | 'high' => {
-    if (readOnly && participants.length > 0) {
-      // Use filtered count based on selected participants (or all if none selected)
-      const activeCount = selectedParticipants.length === 0 ? participants.length : selectedParticipants.length;
-      const count = getFilteredAvailability(date);
-      const ratio = count / activeCount;
-      
-      if (ratio === 0) return 'none';
-      if (ratio < 0.5) return 'low';
-      if (ratio < 1) return 'medium';
-      return 'high';
+  const dates = useMemo(() => getDatesBetween(startDate, endDate), [startDate, endDate]);
+  const selectedSet = useMemo(() => new Set(selectedDates), [selectedDates]);
+
+  /**
+   * Each day's labels, formatted once per range. date-fns `format` ran twice per cell on
+   * every render, and on a full-year trip that was most of what a drag step cost.
+   */
+  const dayLabels = useMemo(() => {
+    const labels = new Map<string, { full: string; day: string }>();
+    for (const date of dates) {
+      const dateObj = parseISO(date);
+      labels.set(date, { full: format(dateObj, 'EEEE d MMMM yyyy'), day: format(dateObj, 'd') });
     }
-    
-    // Fallback to original logic
-    if (!availability || totalParticipants === 0) return 'none';
-    const count = availability[date]?.length || 0;
-    const ratio = count / totalParticipants;
-    
+    return labels;
+  }, [dates]);
+
+  const usesFilter = readOnly && participants.length > 0;
+
+  /**
+   * How many people count as "everyone" for the heat map: the filtered subset in the
+   * read-only view (all participants when no filter is set), else the whole trip.
+   */
+  const activeCount = usesFilter
+    ? selectedParticipants.length === 0
+      ? participants.length
+      : selectedParticipants.length
+    : totalParticipants;
+
+  /**
+   * People free on each date, computed once per change of inputs. It used to be a
+   * `participants.find` plus an `includes` for every active name, three times per cell
+   * per render - about 20-40 ms a render on a 365-day trip with 30-50 people.
+   */
+  const countByDate = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (usesFilter) {
+      const active =
+        selectedParticipants.length === 0
+          ? participants
+          : participants.filter((p) => selectedParticipants.includes(p.name));
+      for (const participant of active) {
+        for (const date of participant.availableDates) {
+          counts.set(date, (counts.get(date) ?? 0) + 1);
+        }
+      }
+    } else if (availability) {
+      for (const [date, names] of Object.entries(availability)) {
+        counts.set(date, names.length);
+      }
+    }
+    return counts;
+  }, [usesFilter, participants, selectedParticipants, availability]);
+
+  const countOn = (date: string) => countByDate.get(date) ?? 0;
+
+  const getHeatLevel = (count: number): 'none' | 'low' | 'medium' | 'high' => {
+    if (activeCount === 0) return 'none';
+    const ratio = count / activeCount;
+
     if (ratio === 0) return 'none';
     if (ratio < 0.5) return 'low';
     if (ratio < 1) return 'medium';
@@ -86,11 +122,11 @@ export function AvailabilityCalendar({
     if (readOnly) return;
 
     setIsDragging(true);
-    const isCurrentlySelected = selectedDates.includes(date);
+    const isCurrentlySelected = selectedSet.has(date);
     setDragStartValue(!isCurrentlySelected);
     draggedDatesRef.current = new Set([date]);
     onToggleDate(date);
-  }, [readOnly, selectedDates, onToggleDate]);
+  }, [readOnly, selectedSet, onToggleDate]);
 
   /** Extends an in-progress drag onto another date, once. */
   const extendDrag = useCallback((date: string) => {
@@ -98,13 +134,13 @@ export function AvailabilityCalendar({
 
     if (!draggedDatesRef.current.has(date)) {
       draggedDatesRef.current.add(date);
-      const isCurrentlySelected = selectedDates.includes(date);
+      const isCurrentlySelected = selectedSet.has(date);
 
       if (dragStartValue !== null && isCurrentlySelected !== dragStartValue) {
         onToggleDate(date);
       }
     }
-  }, [isDragging, readOnly, selectedDates, dragStartValue, onToggleDate]);
+  }, [isDragging, readOnly, selectedSet, dragStartValue, onToggleDate]);
 
   /**
    * When the last touch happened, so the mouse events a touch synthesises can be ignored.
@@ -180,17 +216,21 @@ export function AvailabilityCalendar({
     [participants, selectedParticipants],
   );
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
-  // Group dates by month
-  const datesByMonth = dates.reduce((acc, date) => {
-    const monthKey = format(parseISO(date), 'yyyy-MM');
-    if (!acc[monthKey]) {
-      acc[monthKey] = [];
+  const weekDays = WEEK_DAYS;
+
+  // Group dates by month. The key is the string's own `YYYY-MM` prefix: no parsing, and
+  // no timezone to get wrong.
+  const datesByMonth = useMemo(() => {
+    const byMonth: Record<string, string[]> = {};
+    for (const date of dates) {
+      (byMonth[date.slice(0, 7)] ??= []).push(date);
     }
-    acc[monthKey].push(date);
-    return acc;
-  }, {} as Record<string, string[]>);
+    return byMonth;
+  }, [dates]);
+
+  // Read once per render rather than once per cell.
+  const isDark =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   const months = Object.keys(datesByMonth);
   const spanMultipleMonths = months.length > 1;
@@ -240,12 +280,10 @@ export function AvailabilityCalendar({
               ) : null}
               
               {monthDates.map(date => {
-                const isSelected = selectedDates.includes(date);
-                const heatLevel = getHeatLevel(date);
-                const availableCount = readOnly && participants.length > 0
-                  ? getFilteredAvailability(date)
-                  : (availability?.[date]?.length || 0);
-                const dateObj = parseISO(date);
+                const isSelected = selectedSet.has(date);
+                const availableCount = countOn(date);
+                const heatLevel = getHeatLevel(availableCount);
+                const labels = dayLabels.get(date)!;
                 
                 return (
                   <button
@@ -256,8 +294,8 @@ export function AvailabilityCalendar({
                     aria-expanded={readOnly ? revealedDate === date : undefined}
                     aria-label={
                       readOnly
-                        ? `${format(dateObj, 'EEEE d MMMM yyyy')}, ${availableCount} available`
-                        : format(dateObj, 'EEEE d MMMM yyyy')
+                        ? `${labels.full}, ${availableCount} available`
+                        : labels.full
                     }
                     onMouseDown={() => {
                       if (isTouchEcho()) return;
@@ -303,12 +341,9 @@ export function AvailabilityCalendar({
                     style={readOnly && !isSelected ? {
                       backgroundColor: (() => {
                         if (heatLevel === 'none') return 'hsl(var(--muted))';
-                        const activeCount = selectedParticipants.length === 0 ? participants.length : selectedParticipants.length;
-                        const count = readOnly && participants.length > 0 ? getFilteredAvailability(date) : (availability?.[date]?.length || 0);
-                        const ratio = count / activeCount;
-                        
+                        const ratio = availableCount / activeCount;
+
                         // Interpolate from muted to primary (orange) based on ratio
-                        const isDark = document.documentElement.classList.contains('dark');
                         if (isDark) {
                           // Dark mode: muted (25,15%,20%) to primary (16,65%,55%)
                           const h = 25 + (16 - 25) * ratio;
@@ -331,7 +366,7 @@ export function AvailabilityCalendar({
                     <span className={cn(
                       "font-medium",
                       readOnly && heatLevel === 'high' && "text-primary-foreground"
-                    )}>{format(dateObj, 'd')}</span>
+                    )}>{labels.day}</span>
                     {availableCount > 0 && (
                       <span
                         className={cn(
@@ -382,4 +417,4 @@ export function AvailabilityCalendar({
       )}
     </div>
   );
-}
+});

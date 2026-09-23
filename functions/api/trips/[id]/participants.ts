@@ -9,6 +9,7 @@ import {
   newId,
   nowIso,
   readTrip,
+  Trip,
 } from '../../../_lib/trips';
 
 const tripIdFrom = (params: Record<string, string | string[]>): string | null => {
@@ -16,21 +17,24 @@ const tripIdFrom = (params: Record<string, string | string[]>): string | null =>
   return isTripId(id) ? id : null;
 };
 
-const tripExists = async (env: Env, tripId: string): Promise<boolean> => {
-  const row = await env.DB.prepare('SELECT 1 AS present FROM trips WHERE id = ?')
-    .bind(tripId)
-    .first<{ present: number }>();
-  return row !== null;
-};
-
 const respondWithTrip = async (env: Env, tripId: string): Promise<Response> => {
   const trip = await readTrip(env.DB, tripId);
   return trip ? json(trip) : json({ error: 'Not found.' }, 404);
 };
 
+/**
+ * 409 carrying the trip as it now stands, so the client can show the newer answer
+ * without a second request.
+ */
+const conflict = (trip: Trip, error: string): Response => json({ error, trip }, 409);
+
+const STALE_SAVE =
+  'Someone else changed these dates since you opened them. Their latest answer is shown; save again to replace it.';
+
 interface UpsertBody {
   name?: unknown;
   availableDates?: unknown;
+  expectedUpdatedAt?: unknown;
 }
 
 /**
@@ -39,7 +43,20 @@ interface UpsertBody {
  *
  * Matching is case-insensitive and the unique index enforces the same rule, so two
  * people saving "Anna" and "anna" at the same moment end up as one participant rather
- * than two rows that the UI would then show twice.
+ * than two rows that the UI would then show twice. A save never changes the stored
+ * spelling of a name; renaming is PATCH's job, and "anna" saving over "Anna" used to
+ * rename her as a side effect.
+ *
+ * `expectedUpdatedAt` is optimistic concurrency. The replace is whole-list, so a phone
+ * that loaded Bob's days, then saved after Bob had changed them from his own phone,
+ * erased Bob's change without a word. With the field:
+ *
+ * - a string: the save applies only if the row still carries that `updated_at`;
+ * - `null`: the client believes nobody has this name yet, and the save refuses to
+ *   overwrite a row that appeared meanwhile;
+ * - absent: no check. Kept for bundles cached from before the field existed.
+ *
+ * A refused save is a 409 carrying the current trip.
  */
 export const onRequestPut: PagesFunction<Env> = async ({ request, params, env }) => {
   const tripId = tripIdFrom(params);
@@ -52,7 +69,7 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, params, env })
     return badRequest('Body must be JSON.');
   }
 
-  const { name, availableDates } = body;
+  const { name, availableDates, expectedUpdatedAt } = body;
 
   if (!isName(name)) {
     return badRequest(`name must be 1-${LIMITS.name} characters.`);
@@ -66,9 +83,12 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, params, env })
   if (!availableDates.every(isCalendarDate)) {
     return badRequest('availableDates must hold real calendar dates as YYYY-MM-DD.');
   }
-
-  if (!(await tripExists(env, tripId))) {
-    return json({ error: 'Not found.' }, 404);
+  if (
+    expectedUpdatedAt !== undefined &&
+    expectedUpdatedAt !== null &&
+    typeof expectedUpdatedAt !== 'string'
+  ) {
+    return badRequest('expectedUpdatedAt must be a string, null, or absent.');
   }
 
   const trimmed = name.trim();
@@ -78,17 +98,27 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, params, env })
 
   // Update first. Someone already on the trip is not subject to the participant cap -
   // locking out the people who are already there would be a worse bug than the one the
-  // cap prevents - so this path never consults it.
-  const updated = await env.DB.prepare(
-    `UPDATE participants
-        SET name = ?, available_dates = ?, updated_at = ?
-      WHERE trip_id = ? AND lower(name) = lower(?)`,
-  )
-    .bind(trimmed, dates, timestamp, tripId, trimmed)
-    .run();
+  // cap prevents - so this path never consults it. No separate "does the trip exist"
+  // read: a participant row cannot outlive its trip, so a hit here proves it.
+  if (expectedUpdatedAt !== null) {
+    const updated = await env.DB.prepare(
+      `UPDATE participants
+          SET available_dates = ?, updated_at = ?
+        WHERE trip_id = ? AND lower(name) = lower(?)
+          AND (? IS NULL OR updated_at = ?)`,
+    )
+      .bind(dates, timestamp, tripId, trimmed, expectedUpdatedAt ?? null, expectedUpdatedAt ?? null)
+      .run();
 
-  if ((updated.meta.changes ?? 0) > 0) {
-    return respondWithTrip(env, tripId);
+    if ((updated.meta.changes ?? 0) > 0) {
+      return respondWithTrip(env, tripId);
+    }
+
+    if (typeof expectedUpdatedAt === 'string') {
+      // The row changed or was withdrawn since the client read it.
+      const trip = await readTrip(env.DB, tripId);
+      return trip ? conflict(trip, STALE_SAVE) : json({ error: 'Not found.' }, 404);
+    }
   }
 
   // Nobody by that name yet, so this is an insert and the cap applies. The count lives
@@ -96,24 +126,34 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, params, env })
   // simultaneous requests at 199 both pass the check and land a 201st participant.
   //
   // ON CONFLICT absorbs the other race - two requests inserting the same name at once -
-  // which the unique index would otherwise turn into a constraint error and a 500.
+  // which the unique index would otherwise turn into a constraint error and a 500. A
+  // client that said `null` asked not to overwrite, so for it the conflict does nothing.
+  const onConflict =
+    expectedUpdatedAt === null
+      ? 'DO NOTHING'
+      : `DO UPDATE SET available_dates = excluded.available_dates,
+                       updated_at = excluded.updated_at`;
   const inserted = await env.DB.prepare(
     `INSERT INTO participants (id, trip_id, name, available_dates, updated_at)
      SELECT ?, ?, ?, ?, ?
-      WHERE (SELECT COUNT(*) FROM participants WHERE trip_id = ?) < ?
-     ON CONFLICT (trip_id, lower(name)) DO UPDATE
-        SET name = excluded.name,
-            available_dates = excluded.available_dates,
-            updated_at = excluded.updated_at`,
+      WHERE EXISTS (SELECT 1 FROM trips WHERE id = ?)
+        AND (SELECT COUNT(*) FROM participants WHERE trip_id = ?) < ?
+     ON CONFLICT (trip_id, lower(name)) ${onConflict}`,
   )
-    .bind(newId(), tripId, trimmed, dates, timestamp, tripId, LIMITS.participants)
+    .bind(newId(), tripId, trimmed, dates, timestamp, tripId, tripId, LIMITS.participants)
     .run();
 
+  const trip = await readTrip(env.DB, tripId);
+  if (!trip) return json({ error: 'Not found.' }, 404);
+
   if ((inserted.meta.changes ?? 0) === 0) {
-    return badRequest(`A trip can hold at most ${LIMITS.participants} participants.`);
+    const taken = trip.participants.some((p) => p.name.toLowerCase() === trimmed.toLowerCase());
+    return taken
+      ? conflict(trip, STALE_SAVE)
+      : badRequest(`A trip can hold at most ${LIMITS.participants} participants.`);
   }
 
-  return respondWithTrip(env, tripId);
+  return json(trip);
 };
 
 interface RenameBody {
@@ -163,9 +203,18 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, params, env 
     return json({ error: 'Someone on this trip already uses that name.' }, 409);
   }
 
-  await env.DB.prepare('UPDATE participants SET name = ?, updated_at = ? WHERE id = ?')
-    .bind(trimmed, nowIso(), existing.id)
-    .run();
+  try {
+    await env.DB.prepare('UPDATE participants SET name = ?, updated_at = ? WHERE id = ?')
+      .bind(trimmed, nowIso(), existing.id)
+      .run();
+  } catch (error) {
+    // Someone took the name between the check above and this write; the unique index
+    // caught it. Say so, rather than letting the runtime answer with a bare 500.
+    if (String(error).includes('UNIQUE')) {
+      return json({ error: 'Someone on this trip already uses that name.' }, 409);
+    }
+    throw error;
+  }
 
   return respondWithTrip(env, tripId);
 };

@@ -2,6 +2,7 @@ import {
   Env,
   LIMITS,
   badRequest,
+  daysInclusive,
   isCalendarDate,
   isName,
   isTripId,
@@ -44,6 +45,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
   if (startDate > endDate) {
     return badRequest('startDate must not be after endDate.');
+  }
+  if (daysInclusive(startDate, endDate) > LIMITS.tripDays) {
+    return badRequest(`A trip can span at most ${LIMITS.tripDays} days.`);
   }
 
   const updatedAt = nowIso();

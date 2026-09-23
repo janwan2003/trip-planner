@@ -109,7 +109,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/faq',
-    contentUpdated: '2026-09-13',
+    contentUpdated: '2026-09-23',
     contentSources: [
       'src/pages/Faq.tsx',
       'src/components/MarketingPage.tsx',

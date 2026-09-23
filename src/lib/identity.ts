@@ -24,8 +24,13 @@ const LAST_NAME_KEY = 'wegowhen.lastName.v1';
 /** Keeps the map bounded. Oldest-written entries fall off once this is exceeded. */
 const MAX_ENTRIES = 50;
 
-/** Matches the API's own limit, so nothing is stored that could not be sent back. */
-const MAX_NAME_LENGTH = 64;
+/**
+ * Matches the API's own limit (`LIMITS.name` in `functions/_lib/trips.ts`), so nothing
+ * is stored that could not be sent back. It read 64 while the API took 120, so a name of
+ * 65-120 characters saved fine and then silently failed to auto-rejoin on reload. The
+ * name inputs carry it as `maxLength` too.
+ */
+export const MAX_NAME_LENGTH = 120;
 
 type NameMap = Record<string, string>;
 

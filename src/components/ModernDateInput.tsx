@@ -1,20 +1,27 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 
+// react-day-picker is the largest thing on the home page, and nobody sees it until a
+// popover opens. Loading it then - or on hover/focus of the trigger, which usually
+// wins the race - keeps it off the critical path of the landing form.
+const loadCalendar = () => import('@/components/ui/calendar');
+const Calendar = lazy(() => loadCalendar().then((m) => ({ default: m.Calendar })));
+
 interface ModernDateInputProps {
   label: string;
   value?: string;
   onChange: (date: string) => void;
   minDate?: string;
+  /** Last selectable day, `YYYY-MM-DD`. Later days are disabled. */
+  maxDate?: string;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -24,23 +31,17 @@ export function ModernDateInput({
   value,
   onChange,
   minDate,
+  maxDate,
   disabled,
   placeholder = 'Select date',
 }: ModernDateInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    value ? parseISO(value) : undefined
-  );
-
-  useEffect(() => {
-    if (value) {
-      setSelectedDate(parseISO(value));
-    }
-  }, [value]);
+  // Derived from `value` rather than mirrored into state, so clearing the value from
+  // the parent clears the button too; the mirrored copy only ever followed a truthy one.
+  const selectedDate = value ? parseISO(value) : undefined;
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
-      setSelectedDate(date);
       onChange(format(date, 'yyyy-MM-dd'));
       setIsOpen(false);
     }
@@ -57,6 +58,7 @@ export function ModernDateInput({
   };
 
   const minDateObj = minDate ? parseISO(minDate) : new Date(new Date().setHours(0, 0, 0, 0));
+  const maxDateObj = maxDate ? parseISO(maxDate) : undefined;
 
   return (
     <div className="space-y-2">
@@ -66,6 +68,8 @@ export function ModernDateInput({
           <Button
             variant="outline"
             disabled={disabled}
+            onPointerEnter={loadCalendar}
+            onFocus={loadCalendar}
             className={cn(
               'w-full h-11 justify-start text-left font-normal',
               !selectedDate && 'text-muted-foreground'
@@ -76,14 +80,16 @@ export function ModernDateInput({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleSelect}
-            defaultMonth={getDefaultMonth()}
-            disabled={(day) => day < minDateObj}
-            autoFocus
-          />
+          <Suspense fallback={<div className="h-[300px] w-[280px]" aria-busy="true" />}>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleSelect}
+              defaultMonth={getDefaultMonth()}
+              disabled={(day) => day < minDateObj || (maxDateObj !== undefined && day > maxDateObj)}
+              autoFocus
+            />
+          </Suspense>
         </PopoverContent>
       </Popover>
     </div>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { CalendarRange, Loader2 } from 'lucide-react';
-import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
+import { addDays, generateTripId, MAX_TRIP_DAYS, saveTrip, Trip } from '@/lib/tripStore';
 import { rememberTrip } from '@/lib/recentTrips';
 import { useToast } from '@/hooks/use-toast';
 import { ModernDateInput } from '@/components/ModernDateInput';
@@ -21,7 +21,10 @@ export function CreateTripForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !startDate || !endDate) return;
+    // Trimmed: a name of only spaces passed this check, the API refused it, and the
+    // visitor saw "Something went wrong" instead of a field that needs filling.
+    const tripName = name.trim();
+    if (!tripName || !startDate || !endDate) return;
 
     // Both are YYYY-MM-DD, which sorts correctly as text; parsing them into Dates only
     // reintroduces the timezone question this format exists to avoid.
@@ -33,13 +36,23 @@ export function CreateTripForm() {
       });
       return;
     }
-    
+
+    const lastAllowed = addDays(startDate, MAX_TRIP_DAYS - 1);
+    if (lastAllowed && endDate > lastAllowed) {
+      toast({
+        title: "Trip too long",
+        description: `A trip can span at most ${MAX_TRIP_DAYS} days.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
 
     try {
       const trip: Trip = {
         id: generateTripId(),
-        name,
+        name: tripName,
         startDate,
         endDate,
         participants: [],
@@ -105,6 +118,7 @@ export function CreateTripForm() {
               value={endDate}
               onChange={setEndDate}
               minDate={startDate}
+              maxDate={startDate ? addDays(startDate, MAX_TRIP_DAYS - 1) ?? undefined : undefined}
               disabled={isCreating || !startDate}
               placeholder="End date"
             />

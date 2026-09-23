@@ -13,10 +13,11 @@ const jsonError = (message: string, status: number): Response =>
  * Two jobs. First, apply the schema, so a new database — a preview deployment, a fresh
  * local `wrangler pages dev` — works on its first request with no setup step.
  *
- * Second, stop unmatched /api requests falling through to the SPA. `public/_redirects`
- * serves index.html for anything unmatched, which is right for app routes and wrong
- * for the API: `GET /api/trips`, which has no handler, answered 200 with HTML. A client
- * asking for JSON deserves a status that says what happened.
+ * Second, make sure an unmatched /api request answers JSON. When `public/_redirects`
+ * carried a `/* /index.html 200` catch-all, `GET /api/trips` - which has no handler -
+ * answered 200 with HTML. The catch-all is gone and Pages now answers such paths with
+ * `404.html`, which is still HTML; a client asking for JSON deserves a JSON status that
+ * says what happened.
  */
 export const onRequest: PagesFunction<Env> = async (context) => {
   try {

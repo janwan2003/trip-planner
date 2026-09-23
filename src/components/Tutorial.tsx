@@ -14,24 +14,49 @@ interface TutorialProps {
   audience?: 'organiser' | 'participant';
 }
 
+const HIDDEN_KEY = 'tutorialHidden';
+
+/**
+ * Storage access, guarded. Chrome's "block all site data" throws a SecurityError from the
+ * `localStorage` getter itself, and an unguarded read here - inside an effect, with no
+ * error boundary above it - unmounted the whole trip page. The preference is a nicety;
+ * losing it must never cost the page.
+ */
+const storage = {
+  get: (): string | null => {
+    try {
+      return localStorage.getItem(HIDDEN_KEY);
+    } catch {
+      return null;
+    }
+  },
+  set: (hidden: boolean): void => {
+    try {
+      if (hidden) localStorage.setItem(HIDDEN_KEY, 'true');
+      else localStorage.removeItem(HIDDEN_KEY);
+    } catch {
+      // Not persisted; the in-memory state still applies for this visit.
+    }
+  },
+};
+
 export function Tutorial({ completedSteps = [], audience = 'organiser' }: TutorialProps) {
   const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
-    const hidden = localStorage.getItem('tutorialHidden');
-    if (hidden === 'true') {
+    if (storage.get() === 'true') {
       setIsHidden(true);
     }
   }, []);
 
   const handleHide = () => {
     setIsHidden(true);
-    localStorage.setItem('tutorialHidden', 'true');
+    storage.set(true);
   };
 
   const handleShow = () => {
     setIsHidden(false);
-    localStorage.removeItem('tutorialHidden');
+    storage.set(false);
   };
 
   if (isHidden) {

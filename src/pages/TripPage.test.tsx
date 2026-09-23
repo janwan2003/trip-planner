@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TripPage from './TripPage';
+import { Toaster } from '@/components/ui/toaster';
 import { Trip, TripApiError } from '@/lib/tripStore';
 import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 import { recalledName, rememberName } from '@/lib/identity';
@@ -35,6 +36,8 @@ const trip = (over: Partial<Trip> = {}): Trip => ({
 const renderTripPage = () =>
   render(
     <MemoryRouter initialEntries={['/trip/abc123']}>
+      {/* Mounted as AppShell mounts it, so a test can read what a toast told the user. */}
+      <Toaster />
       <Routes>
         <Route path="/trip/:tripId" element={<TripPage />} />
       </Routes>
@@ -332,11 +335,75 @@ describe('TripPage', () => {
     await user.click(save);
 
     await waitFor(() =>
-      expect(addParticipant).toHaveBeenCalledWith('abc123', {
-        name: 'Ada',
-        availableDates: ['2026-09-03'],
-      }),
+      expect(addParticipant).toHaveBeenCalledWith(
+        'abc123',
+        { name: 'Ada', availableDates: ['2026-09-03'] },
+        // A new name: the save must not overwrite a row that appeared meanwhile.
+        null,
+      ),
     );
+  });
+
+  it('matches a join name with a trailing space to the saved participant', async () => {
+    // Phone autocomplete leaves "Ada " - which used to miss "Ada", show an empty
+    // calendar, and then save over her real answer.
+    getTrip.mockResolvedValue(
+      trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02'], updated_at: 't1' }] }),
+    );
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'ada ');
+
+    // Her saved day is loaded, so there is nothing to save yet.
+    expect(screen.getByRole('button', { name: /no changes to save/i })).toBeDisabled();
+    expect(editableDayCell('2')).toHaveAttribute('aria-pressed', 'true');
+    // And she is greeted by her stored spelling, without the space.
+    expect(recalledName('abc123')).toBe('Ada');
+  });
+
+  it('keeps the marks and shows the newer answer when a save was made from a stale read', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    getTrip.mockResolvedValue(
+      trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02'], updated_at: 't1' }] }),
+    );
+    addParticipant.mockRejectedValueOnce(
+      new TripApiError(
+        'changed',
+        409,
+        trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-05'], updated_at: 't2' }] }),
+      ),
+    );
+    addParticipant.mockResolvedValueOnce(
+      trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'], updated_at: 't3' }] }),
+    );
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    await user.click(editableDayCell('3'));
+    await user.click(screen.getByRole('button', { name: /save availability/i }));
+
+    await waitFor(() =>
+      expect(addParticipant).toHaveBeenCalledWith(
+        'abc123',
+        { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
+        't1',
+      ),
+    );
+    expect((await screen.findAllByText(/these dates changed meanwhile/i)).length).toBeGreaterThan(0);
+    // The marks survive, and a second save knowingly replaces the newer answer.
+    expect(editableDayCell('3')).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: /save availability/i }));
+    await waitFor(() =>
+      expect(addParticipant).toHaveBeenLastCalledWith(
+        'abc123',
+        { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
+        't2',
+      ),
+    );
+    errorSpy.mockRestore();
   });
 
   it('keeps the page usable when saving availability fails', async () => {
@@ -427,6 +494,53 @@ describe('TripPage', () => {
     await waitFor(() =>
       expect(updateParticipantName).toHaveBeenCalledWith('abc123', 'Ada', 'Bea'),
     );
+  });
+
+  it('renames locally before the first save, when there is no row to rename', async () => {
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+
+    const card = screen.getAllByText(/Mark Your Availability/i)[0].closest('div[class*="rounded"]')!;
+    await user.click(within(card as HTMLElement).getByRole('button', { name: /Ada/ }));
+    const field = screen.getByDisplayValue('Ada');
+    await user.clear(field);
+    await user.type(field, 'Bea');
+    await user.click(field.parentElement!.querySelector('button')!);
+
+    expect(updateParticipantName).not.toHaveBeenCalled();
+    expect(within(card as HTMLElement).getByRole('button', { name: /Bea/ })).toBeInTheDocument();
+    expect(recalledName('abc123')).toBe('Bea');
+  });
+
+  it('says so when the link cannot be copied', async () => {
+    navigator.clipboard.writeText = vi.fn().mockRejectedValue(new Error('denied'));
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+
+    await user.click(screen.getByRole('button', { name: /share link/i }));
+
+    expect((await screen.findAllByText(/couldn't copy the link/i)).length).toBeGreaterThan(0);
+  });
+
+  it('asks before "Back to trip view" discards unsaved days', async () => {
+    const user = userEvent.setup();
+    renderTripPage();
+    await screen.findByText('Alps trip');
+    await join(user, 'Ada');
+    await user.click(editableDayCell('3'));
+
+    await user.click(screen.getByRole('button', { name: /back to trip view/i }));
+    expect(await screen.findByText(/discard your unsaved days/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /keep editing as ada/i }));
+    expect(editableDayCell('3')).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: /back to trip view/i }));
+    await user.click(await screen.findByRole('button', { name: /discard and go back/i }));
+    expect(await screen.findByRole('button', { name: /mark my dates/i })).toBeInTheDocument();
   });
 
   it('names the withdraw control for assistive technology', async () => {
@@ -583,7 +697,7 @@ describe('TripPage', () => {
       trip({
         participants: [
           { name: 'Ada', availableDates: ['2026-09-02', '2026-09-03'] },
-          { name: 'Bo', availableDates: ['2026-09-05'] },
+          { name: 'Bo', availableDates: ['2026-09-05'], updated_at: 'bo-v1' },
         ],
       });
 
@@ -616,10 +730,12 @@ describe('TripPage', () => {
       await user.click(screen.getByRole('button', { name: /save availability/i }));
 
       await waitFor(() =>
-        expect(addParticipant).toHaveBeenCalledWith('abc123', {
-          name: 'Bo',
-          availableDates: ['2026-09-05', '2026-09-06'],
-        }),
+        expect(addParticipant).toHaveBeenCalledWith(
+          'abc123',
+          { name: 'Bo', availableDates: ['2026-09-05', '2026-09-06'] },
+          // Bo's row as this page read it, so a change Bo made meanwhile is not erased.
+          'bo-v1',
+        ),
       );
     });
 

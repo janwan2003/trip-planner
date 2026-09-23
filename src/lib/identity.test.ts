@@ -54,11 +54,18 @@ describe('identity', () => {
   });
 
   it('ignores a name longer than the API accepts', () => {
-    // The participants endpoint caps names at 64 characters, so storing a longer one
+    // The participants endpoint caps names at 120 characters, so storing a longer one
     // would recall something that cannot be sent back.
-    rememberName('t1', 'x'.repeat(65));
+    rememberName('t1', 'x'.repeat(121));
     expect(recalledName('t1')).toBeNull();
     expect(lastUsedName()).toBeNull();
+  });
+
+  it('keeps a name the API accepts, up to its full 120 characters', () => {
+    // This limit once read 64, so a 65-120 character name saved fine and then never
+    // auto-rejoined on reload.
+    rememberName('t1', 'x'.repeat(120));
+    expect(recalledName('t1')).toBe('x'.repeat(120));
   });
 
   it('forgets one trip without forgetting the browser had a name', () => {

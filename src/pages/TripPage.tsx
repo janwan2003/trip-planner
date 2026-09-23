@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
-import { forgetName, lastUsedName, recalledName, rememberName } from '@/lib/identity';
-import { Trip, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
+import { forgetName, lastUsedName, MAX_NAME_LENGTH, recalledName, rememberName } from '@/lib/identity';
+import { Trip, TripApiError, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,22 @@ import { Copy, Check, ArrowLeft, Calendar, Users, Loader2, Pencil, LogOut } from
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { usePageMeta } from '@/lib/usePageMeta';
+
+/** Stable props for the read-only group calendar, so its memo holds during a drag. */
+const NO_DATES: string[] = [];
+const noop = () => {};
+
+const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+/** Whether two date lists hold the same days, whatever their order. */
+const sameDays = (a: string[], b: string[]) => {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((date) => set.has(date));
+};
+
+/** What a confirmation about discarding unsaved marks is for. */
+type PendingLeave = { kind: 'switch'; name: string } | { kind: 'back' };
 
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -52,7 +68,15 @@ export default function TripPage() {
    * unsaved marks. Held here rather than switched straight away, so the confirmation
    * below decides whether those marks are discarded.
    */
-  const [pendingSwitch, setPendingSwitch] = useState<string | null>(null);
+  const [pendingLeave, setPendingLeave] = useState<PendingLeave | null>(null);
+  /**
+   * The `updated_at` of the answer being edited, as this page read it: a string for a
+   * row on the server, `null` for a name nobody has saved yet, `undefined` when unknown.
+   * Sent with every save so a save made from a stale read is refused rather than
+   * overwriting a newer answer - for instance when this phone opened Bob's dates with
+   * the pencil and Bob then changed them from his own.
+   */
+  const [baseUpdatedAt, setBaseUpdatedAt] = useState<string | null | undefined>(undefined);
   const editorRef = useRef<HTMLDivElement>(null);
   /**
    * Whether this browser created the trip. Read once on mount rather than on every
@@ -80,6 +104,7 @@ export default function TripPage() {
 
     if (mine) {
       setUserName(mine.name);
+      setBaseUpdatedAt(mine.updated_at);
       setSelectedDates(mine.availableDates);
       setSavedDates(mine.availableDates);
       setHasSavedAvailability(mine.availableDates.length > 0);
@@ -125,45 +150,57 @@ export default function TripPage() {
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userName.trim()) return;
-    
-    // Check if user already exists
-    const existingParticipant = trip?.participants.find(
-      p => p.name.toLowerCase() === userName.toLowerCase()
-    );
-    
+    // Trimmed before matching: a phone keyboard's autocomplete leaves a trailing space,
+    // and "Anna " used to miss "Anna", load an empty calendar, and then - because the
+    // API trims - save straight over her real answer.
+    const name = userName.trim();
+    if (!name) return;
+
+    const existingParticipant = trip?.participants.find((p) => sameName(p.name, name));
+
     if (existingParticipant) {
+      // Adopt the stored spelling, so the greeting, the list highlight and the filter
+      // all agree on who this is.
+      setUserName(existingParticipant.name);
+      setBaseUpdatedAt(existingParticipant.updated_at);
       setSelectedDates(existingParticipant.availableDates);
       setSavedDates(existingParticipant.availableDates);
       setHasSavedAvailability(existingParticipant.availableDates.length > 0);
+    } else {
+      setUserName(name);
+      setBaseUpdatedAt(null);
     }
-    
-    if (tripId) rememberName(tripId, userName.trim());
+
+    if (tripId) rememberName(tripId, existingParticipant?.name ?? name);
     setHasJoined(true);
   };
 
-  const handleToggleDate = (date: string) => {
-    setSelectedDates(prev => 
+  const handleToggleDate = useCallback((date: string) => {
+    setSelectedDates(prev =>
       prev.includes(date)
         ? prev.filter(d => d !== date)
         : [...prev, date]
     );
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!trip || !userName) return;
-    
+
     setIsSaving(true);
 
     try {
-      const updatedTrip = await addParticipant(trip.id, {
-        name: userName,
-        availableDates: selectedDates,
-      });
-      
+      const updatedTrip = await addParticipant(
+        trip.id,
+        { name: userName, availableDates: selectedDates },
+        baseUpdatedAt,
+      );
+
       if (updatedTrip) {
         setTrip(updatedTrip);
         setSavedDates(selectedDates);
+        setBaseUpdatedAt(
+          updatedTrip.participants.find((p) => sameName(p.name, userName))?.updated_at,
+        );
         setHasSavedAvailability(true);
         toast({
           title: "Availability saved!",
@@ -171,6 +208,20 @@ export default function TripPage() {
         });
       }
     } catch (error) {
+      if (error instanceof TripApiError && error.status === 409 && error.trip) {
+        // Someone changed this answer since it was loaded. Show what is saved now, keep
+        // the marks on screen, and let a second save replace it knowingly.
+        const current = error.trip.participants.find((p) => sameName(p.name, userName));
+        setTrip(error.trip);
+        setSavedDates(current?.availableDates ?? []);
+        setBaseUpdatedAt(current ? current.updated_at : null);
+        toast({
+          title: "These dates changed meanwhile",
+          description: `${userName}'s answer was updated from another device. Your marks are still here; save again to replace it, or check the group view first.`,
+          variant: "destructive",
+        });
+        return;
+      }
       console.error('Error saving availability:', error);
       toast({
         title: "Error saving",
@@ -183,7 +234,29 @@ export default function TripPage() {
   };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // In-app browsers (Instagram, Messenger) and denied permissions reject the
+      // clipboard. The share sheet is the next best thing; failing that, say so rather
+      // than leaving an unhandled rejection and a button that seems to do nothing.
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ url });
+          setHasSharedLink(true);
+        } catch {
+          // Dismissed the sheet: nothing to report.
+        }
+        return;
+      }
+      toast({
+        title: "Couldn't copy the link",
+        description: "Copy it from your browser's address bar instead.",
+        variant: "destructive",
+      });
+      return;
+    }
     setCopied(true);
     setHasSharedLink(true);
     setTimeout(() => setCopied(false), 2000);
@@ -204,6 +277,8 @@ export default function TripPage() {
       return;
     }
 
+    const newName = editedName.trim();
+
     // Check if name already exists
     const nameExists = trip.participants.some(
       p => p.name.toLowerCase() === editedName.trim().toLowerCase() && 
@@ -219,17 +294,29 @@ export default function TripPage() {
       return;
     }
 
+    // Joining writes nothing to the server - the first save does - so before that there
+    // is no row to rename, and the PATCH answered 404 "Error updating name" every time.
+    if (!trip.participants.some((p) => sameName(p.name, userName))) {
+      setUserName(newName);
+      rememberName(trip.id, newName);
+      setIsEditingName(false);
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const updatedTrip = await updateParticipantName(trip.id, userName, editedName.trim());
+      const updatedTrip = await updateParticipantName(trip.id, userName, newName);
       // Recall the name that now exists on the trip; the old one no longer matches.
-      rememberName(trip.id, editedName.trim());
+      rememberName(trip.id, newName);
       if (updatedTrip) {
         setTrip(updatedTrip);
-        setUserName(editedName.trim());
+        // A filter that named the old spelling follows the person to the new one.
+        setSelectedParticipants((prev) => prev.map((n) => (sameName(n, userName) ? newName : n)));
+        setBaseUpdatedAt(updatedTrip.participants.find((p) => sameName(p.name, newName))?.updated_at);
+        setUserName(newName);
         toast({
           title: "Name updated!",
-          description: `You are now known as ${editedName.trim()}.`,
+          description: `You are now known as ${newName}.`,
         });
       }
     } catch (error) {
@@ -299,6 +386,7 @@ export default function TripPage() {
     if (!participant) return;
 
     setUserName(participant.name);
+    setBaseUpdatedAt(participant.updated_at);
     setSelectedDates(participant.availableDates);
     setSavedDates(participant.availableDates);
     setHasSavedAvailability(participant.availableDates.length > 0);
@@ -316,37 +404,75 @@ export default function TripPage() {
   };
 
   const handleEditParticipant = (participantName: string) => {
-    if (hasJoined && userName.toLowerCase() === participantName.toLowerCase()) {
+    // A save or withdrawal in flight belongs to the current identity; switching now
+    // would let its response land on the next person's editor.
+    if (isSaving) return;
+
+    if (hasJoined && sameName(userName, participantName)) {
       // Already answering as them; reloading their saved days would throw away marks
       // they have not saved yet.
       scrollToEditor();
       return;
     }
 
-    if (hasJoined && hasUnsavedChanges()) {
-      setPendingSwitch(participantName);
+    if (hasJoined && hasUnsavedChanges) {
+      setPendingLeave({ kind: 'switch', name: participantName });
       return;
     }
 
     switchToParticipant(participantName);
   };
 
-  // Check if current selection differs from saved state
-  const hasUnsavedChanges = () => {
-    if (selectedDates.length !== savedDates.length) return true;
-    const sortedSelected = [...selectedDates].sort();
-    const sortedSaved = [...savedDates].sort();
-    return sortedSelected.some((date, index) => date !== sortedSaved[index]);
+  /** Leaves the editor for the read-only trip view. */
+  const leaveEditor = () => {
+    setHasJoined(false);
+    setUserName('');
+    setBaseUpdatedAt(undefined);
+    setSelectedDates([]);
+    setSavedDates([]);
+    setHasSavedAvailability(false);
   };
 
-  const isSaveDisabled = isSaving || !hasUnsavedChanges();
+  const handleBack = () => {
+    // Same rule as switching and closing the tab: unsaved marks are not lost silently.
+    if (hasUnsavedChanges) {
+      setPendingLeave({ kind: 'back' });
+      return;
+    }
+    leaveEditor();
+  };
+
+  // Computed once per render rather than by five separate calls that each sorted both lists.
+  const hasUnsavedChanges = useMemo(
+    () => !sameDays(selectedDates, savedDates),
+    [selectedDates, savedDates],
+  );
+
+  const isSaveDisabled = isSaving || !hasUnsavedChanges;
+
+  /**
+   * The participant filter holds names, and a rename or a withdrawal can leave one behind
+   * that no longer exists; it then counted toward every ratio and could never be
+   * satisfied. Only names still on the trip take part.
+   */
+  const activeFilter = useMemo(
+    () =>
+      trip
+        ? selectedParticipants.filter((n) => trip.participants.some((p) => p.name === n))
+        : [],
+    [trip, selectedParticipants],
+  );
+
+  // Memoised on the trip, so a drag - which changes only the selection - does not
+  // recount the whole heat map on every cell it crosses.
+  const availability = useMemo(() => (trip ? getAvailabilityCount(trip) : {}), [trip]);
 
   /**
    * A refresh or a closed tab used to discard marked-but-unsaved days silently. The
    * participant's whole interaction is a minute of tapping, so losing it without a word
    * is the worst possible outcome for the persona the product is built around.
    */
-  const unsavedDays = hasJoined && hasUnsavedChanges();
+  const unsavedDays = hasJoined && hasUnsavedChanges;
 
   useEffect(() => {
     if (!unsavedDays) return;
@@ -406,8 +532,6 @@ export default function TripPage() {
     );
   }
 
-  const availability = getAvailabilityCount(trip);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -448,12 +572,7 @@ export default function TripPage() {
         <div className="mb-8 animate-fade-in">
           {hasJoined && (
             <button
-              onClick={() => {
-                setHasJoined(false);
-                setUserName('');
-                setSelectedDates([]);
-                setSavedDates([]);
-              }}
+              onClick={handleBack}
               className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -512,6 +631,7 @@ export default function TripPage() {
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
                         className="h-11"
+                        maxLength={MAX_NAME_LENGTH}
                         required
                       />
                     </div>
@@ -534,6 +654,7 @@ export default function TripPage() {
                           <Input
                             value={editedName}
                             onChange={(e) => setEditedName(e.target.value)}
+                            maxLength={MAX_NAME_LENGTH}
                             className="h-8 text-sm w-40"
                             autoFocus
                             onKeyDown={(e) => {
@@ -637,9 +758,9 @@ export default function TripPage() {
                       onClick={handleSave} 
                       disabled={isSaveDisabled}
                       size="lg"
-                      variant={hasUnsavedChanges() ? "default" : "secondary"}
+                      variant={hasUnsavedChanges ? "default" : "secondary"}
                       className={`w-full px-8 font-semibold transition-all ${
-                        hasUnsavedChanges() 
+                        hasUnsavedChanges 
                           ? 'shadow-2xl hover:shadow-xl' 
                           : 'opacity-60 cursor-not-allowed'
                       }`}
@@ -649,7 +770,7 @@ export default function TripPage() {
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                           Saving...
                         </>
-                      ) : hasUnsavedChanges() ? (
+                      ) : hasUnsavedChanges ? (
                         'Save Availability'
                       ) : (
                         'No Changes to Save'
@@ -664,7 +785,7 @@ export default function TripPage() {
             {/* Best Dates: the answer, above the heat map that explains it */}
             <Card className="shadow-soft animate-fade-in">
               <CardContent className="pt-6">
-                <BestDates trip={trip} selectedParticipants={selectedParticipants} />
+                <BestDates trip={trip} selectedParticipants={activeFilter} />
               </CardContent>
             </Card>
 
@@ -674,21 +795,21 @@ export default function TripPage() {
                 <CardHeader>
                   <CardTitle className="font-display">Group Availability</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {selectedParticipants.length === 0
+                    {activeFilter.length === 0
                       ? 'Showing all participants'
-                      : `Filtered to: ${selectedParticipants.join(', ')}`}
+                      : `Filtered to: ${activeFilter.join(', ')}`}
                   </p>
                 </CardHeader>
                 <CardContent>
                   <AvailabilityCalendar
                     startDate={trip.startDate}
                     endDate={trip.endDate}
-                    selectedDates={[]}
-                    onToggleDate={() => {}}
+                    selectedDates={NO_DATES}
+                    onToggleDate={noop}
                     readOnly
                     availability={availability}
                     totalParticipants={trip.participants.length}
-                    selectedParticipants={selectedParticipants}
+                    selectedParticipants={activeFilter}
                     participants={trip.participants}
                   />
                   
@@ -721,7 +842,7 @@ export default function TripPage() {
                 <ParticipantsList
                   participants={trip.participants}
                   currentUser={hasJoined ? userName : undefined}
-                  selectedParticipants={selectedParticipants}
+                  selectedParticipants={activeFilter}
                   onToggleParticipant={handleToggleParticipant}
                   onEditParticipant={handleEditParticipant}
                 />
@@ -754,29 +875,41 @@ export default function TripPage() {
         handler above); this path has to as well.
       */}
       <AlertDialog
-        open={pendingSwitch !== null}
+        open={pendingLeave !== null}
         onOpenChange={(open) => {
-          if (!open) setPendingSwitch(null);
+          if (!open) setPendingLeave(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Discard your unsaved days?</AlertDialogTitle>
             <AlertDialogDescription>
-              You have days marked as {userName} that are not saved. Editing{' '}
-              {pendingSwitch}'s dates loads their answer instead, and your unsaved marks
-              are lost.
+              {pendingLeave?.kind === 'switch' ? (
+                <>
+                  You have days marked as {userName} that are not saved. Editing{' '}
+                  {pendingLeave.name}'s dates loads their answer instead, and your unsaved
+                  marks are lost.
+                </>
+              ) : (
+                <>
+                  You have days marked as {userName} that are not saved. Going back to the
+                  trip view loses them.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing as {userName}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (pendingSwitch) switchToParticipant(pendingSwitch);
-                setPendingSwitch(null);
+                if (pendingLeave?.kind === 'switch') switchToParticipant(pendingLeave.name);
+                else if (pendingLeave?.kind === 'back') leaveEditor();
+                setPendingLeave(null);
               }}
             >
-              Edit {pendingSwitch}'s dates
+              {pendingLeave?.kind === 'switch'
+                ? `Edit ${pendingLeave.name}'s dates`
+                : 'Discard and go back'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
