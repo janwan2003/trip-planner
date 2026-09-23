@@ -644,8 +644,9 @@ language. So every non-English language has **its own URLs, prerendered in that 
   participant cap per its help centre; Framadate: free, no account, Framasoft, old version
   closed; Nuudel: Digitalcourage, Framadate-based; Datumprikker: Plus €29/yr or €3/mo excl.
   VAT; Doodle: "Everyone can vote for the time they prefer"). Re-check before editing a
-  table; the French page's Framadate-shutdown wording is time-sensitive and goes stale after
-  September 2026.
+  table. The French page's Framadate-shutdown lines are written as reported speech
+  ("Framasoft a annoncé que les anciens sondages resteraient consultables… jusqu'en
+  septembre 2026") so they stay true after that month passes.
 - **CJK typography:** DM Sans and Fraunces have no CJK glyphs, so `index.css` gives
   `:lang(ja)` and `:lang(ko)` the system Gothic stacks (nothing downloaded) and drops the
   display serif; Korean gets `word-break: keep-all` so it wraps between words.
@@ -699,6 +700,15 @@ English browser; the switcher on `/ja` lands on `/ko`, the footer link on `/ko` 
 `/fr`; a French browser on `/` gets French; visiting `/ja` does not change the language of
 a later trip link; and all eight languages hold 320px on the home, landing and trip pages
 before and after joining.
+
+**Live 2026-09-23** as `6f7e195` (production bundle hash matched the local build): all 15
+localised URLs 200 on wegowhen.com, `/ko` carries the hreflang cluster, the sitemap lists
+22 URLs, `www.wegowhen.com/ja` 301s to the apex, and in Chromium at 320px every localised
+page loads with the right `lang`, no console errors and no horizontal scroll. The 14 new
+URLs plus `sitemap.xml` and `llms.txt` were submitted through IndexNow the same day:
+`api.indexnow.org` 200, `bing.com` 200, `searchadvisor.naver.com` 200 (Naver matters for
+Korea), `yandex.com` 202. Google still needs the sitemap resubmitted by hand in Search
+Console to pick them up quickly; nothing else can do that from a script.
 
 ## Dates: never parse `YYYY-MM-DD` with `new Date()`
 

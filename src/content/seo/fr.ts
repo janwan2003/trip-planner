@@ -21,7 +21,7 @@ const fr: LocaleSeo = {
       {
         heading: 'Tu cherches où créer ton sondage de dates ?',
         paragraphs: [
-          'L’ancienne version de Framadate n’accepte plus de nouveaux sondages depuis avril 2026, et ses anciens sondages ne restent consultables que jusqu’en septembre 2026. Une nouvelle version est en ligne sur framadate.org : pour caler une réunion, c’est la suite logique.',
+          'L’ancienne version de Framadate n’accepte plus de nouveaux sondages depuis avril 2026, et Framasoft a annoncé que les anciens sondages resteraient consultables six mois, jusqu’en septembre 2026. Une nouvelle version est en ligne sur framadate.org : pour caler une réunion, c’est la suite logique.',
           'Mais si ton sondage servait à choisir les dates d’un week-end ou de vacances entre amis, c’est peut-être le moment d’essayer un outil conçu pour ça.',
         ],
       },
@@ -94,7 +94,7 @@ const fr: LocaleSeo = {
       {
         question: 'Framadate fonctionne-t-il encore ?',
         answer:
-          'Oui, une nouvelle version de Framadate est en ligne sur framadate.org. L’ancienne version n’accepte plus de nouveaux sondages depuis avril 2026, et ses anciens sondages ne restent accessibles que jusqu’en septembre 2026.',
+          'Oui, une nouvelle version de Framadate est en ligne sur framadate.org. L’ancienne version n’accepte plus de nouveaux sondages depuis avril 2026, et Framasoft a annoncé que les anciens sondages resteraient accessibles six mois, jusqu’en septembre 2026.',
       },
       {
         question: 'Comment trouver une date qui convient à tout le monde ?',
