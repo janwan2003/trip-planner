@@ -33,7 +33,7 @@ describe('route metadata', () => {
     expect(route.title.length).toBeGreaterThan(10);
     expect(route.title.length).toBeLessThanOrEqual(65);
     expect(route.description.length).toBeGreaterThanOrEqual(70);
-    expect(route.description.length).toBeLessThanOrEqual(170);
+    expect(route.description.length).toBeLessThanOrEqual(160);
   });
 
   it('agrees with the title and description in index.html for the home page', () => {

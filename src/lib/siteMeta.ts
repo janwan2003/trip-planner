@@ -69,7 +69,7 @@ export { FAQ };
 export const ROUTES: RouteMeta[] = [
   {
     path: '/',
-    contentUpdated: '2026-08-31',
+    contentUpdated: '2026-09-23',
     contentSources: [
       'src/pages/Index.tsx',
       'src/components/CreateTripForm.tsx',
@@ -91,7 +91,7 @@ export const ROUTES: RouteMeta[] = [
     ],
     title: 'A When2meet alternative for whole days, not hours',
     description:
-      'When2meet is built around a time-of-day grid. WeGoWhen is built around days: mark the days you are free, get the ranked date ranges that work. Free, and no account.',
+      'When2meet is built around a time-of-day grid. WeGoWhen is built around days: mark the days you are free, get the ranked date ranges that work. Free, no account.',
     priority: '0.9',
   },
   {
@@ -104,7 +104,7 @@ export const ROUTES: RouteMeta[] = [
     ],
     title: 'A Doodle alternative for group trip dates',
     description:
-      'Doodle polls options and shows a tally. WeGoWhen computes the answer — the consecutive date ranges the most people can make — free, with no plan limits and no accounts.',
+      'Doodle polls options and shows a tally. WeGoWhen computes the answer: the run of consecutive days the most people can make. Free, no plan limits, no accounts.',
     priority: '0.9',
   },
   {
@@ -123,16 +123,16 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/about',
-    contentUpdated: '2026-08-31',
+    contentUpdated: '2026-09-23',
     contentSources: ['src/pages/About.tsx'],
-    title: 'About WeGoWhen',
+    title: 'About WeGoWhen, the group trip date finder',
     description:
       'What WeGoWhen is for, how a trip works from creating it to picking the dates, and what it is built on.',
     priority: '0.5',
   },
   {
     path: '/contact',
-    contentUpdated: '2026-08-31',
+    contentUpdated: '2026-09-23',
     contentSources: ['src/pages/Contact.tsx'],
     title: 'Contact WeGoWhen',
     description:
@@ -141,7 +141,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/terms',
-    contentUpdated: '2026-08-28',
+    contentUpdated: '2026-09-23',
     contentSources: ['src/pages/TermsOfService.tsx'],
     title: 'Terms of Service | WeGoWhen',
     description:
@@ -150,7 +150,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/privacy',
-    contentUpdated: '2026-09-13',
+    contentUpdated: '2026-09-23',
     contentSources: ['src/pages/PrivacyPolicy.tsx'],
     title: 'Privacy Policy | WeGoWhen',
     description:

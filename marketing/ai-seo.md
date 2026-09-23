@@ -259,7 +259,63 @@ with the rest of the go-to-market baseline on 2026-09-28.
 | Date | `when2meet alternative` cited | `when2meet but for multiple days` cited | Notes |
 | --- | --- | --- | --- |
 | 2026-08-31 | No | No | Baseline. Bodies were still empty at measurement time |
+| 2026-09-23 | No (not in top 30) | No (not on page 1; page 2 did not return) | All 8 URLs now indexed. AIO sources unchanged in kind: Rallly, Timeful, Reddit r/opensource, Doodle, listicles; the multi-day AIO still leads with Set The Date via softwarerecs 82438 |
 
 There is no Search Console report for AI Overviews — Google publishes none — so this manual
 pull is the measurement. ChatGPT and Perplexity have no API for their citation sets either;
 check those by hand, with the same queries, and record the answer here.
+
+## Audit, 2026-09-23
+
+A combined technical-SEO and AI-search pass. Everything below was measured, and the fixes
+were ones that need no account.
+
+**Already clean, re-verified on the live site:** all eight pages 200 with self-canonicals,
+titles, Open Graph and prerendered bodies (141-926 visible words); `http`, `www`, trailing
+slash and `.html` variants each redirect to the canonical in one hop; unknown paths 404;
+`/trip/:id` stays `noindex` and out of `robots.txt`; GPTBot, OAI-SearchBot, ChatGPT-User,
+ClaudeBot, Claude-User, PerplexityBot, Perplexity-User, bingbot, Googlebot,
+Google-Extended and Applebot all get 200 with identical bytes; `llms.txt`,
+`llms-full.txt`, `pricing.md` and `sitemap.xml` serve with correct types. JSON-LD parses
+on every page. Lighthouse SEO category 100 on every page tested.
+
+**Fixed.** Lighthouse mobile, local `wrangler pages dev`, median of 3 runs, `main` at
+`057e601` against this change:
+
+| Page | Perf | A11y | LCP | What changed |
+| --- | --- | --- | --- | --- |
+| `/` | 85 → 99 | 94 → 100 | 3.99 s → 1.68 s | h1 fade removed; h1 now first heading in source |
+| `/when2meet-alternative` | 97 → 99 | 92 → 100 | 2.05 s → 1.68 s | fonts; underlined in-prose links |
+| `/about` | 98 → 100 | 100 | 1.97 s → 1.52 s | fonts; site footer and `<main>` |
+
+- Google Fonts `@import` replaced with self-hosted, content-hashed woff2 (render-blocking
+  829 ms on production).
+- `favicon.png`, also the header logo, 46 KB → 7.4 KB, same 256×256 with alpha.
+- `/apple-touch-icon.png` shipped (was a steady eyeball 404).
+- `--muted-foreground` 45% → 42% lightness: 4.40:1 → 4.92:1 on the footer background.
+- Meta descriptions for both comparison pages cut to 158-160 characters; the test ceiling
+  is now 160, matching its own doc comment, rather than 170.
+- About, Contact, Terms and Privacy had one internal link each ("Back to Home"); they now
+  carry the site footer, so the comparison pages and FAQ are one click from every page.
+- `WebSite` JSON-LD added, the input Google uses for the site name above a result.
+- `llms.txt`'s claim that the product "has none" of any usage was no longer true; reworded.
+
+**Not done, and why.** Each needs a person or a decision:
+
+1. The softwarerecs 82438 answer (item 3 above) — still the one action that feeds the AI
+   Overview for the multi-day query. Needs a Stack Exchange account.
+2. A published contact address. Needs the owner's choice of address.
+3. Named authorship on the comparison pages (an E-E-A-T signal, i.e. Google's experience,
+   expertise, authoritativeness and trust criteria). Putting a real name on the site is
+   the owner's call.
+4. Search Console: submit the sitemap, read Core Web Vitals field data once there is
+   enough traffic. Needs the login.
+5. New PAA (People Also Ask) questions seen today, "How far in advance can you do
+   When2Meet?" and "What is a better version of When2Meet?", are already answered in
+   substance on `/when2meet-alternative`; not worth a new page.
+
+Sweep boundary: eight indexable URLs and `/trip/:id`, crawled as served HTML; Lighthouse
+on three of them. Not covered: real-user Core Web Vitals (no CrUX data for a site this
+small), the trip page's own performance, and ChatGPT or Perplexity answers, which have no
+API and still need checking by hand.
+

@@ -226,13 +226,12 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
   the SQL, the unique index and the middleware together.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
-- **The site is in Google's index, seven of eight URLs**: `site:wegowhen.com` returned
-  nothing on 2026-08-28 and returns `/`, `/faq`, `/about`, `/contact`, `/terms`,
-  `/privacy` and `/doodle-alternative` on 2026-08-31. The one missing page is
-  **`/when2meet-alternative`** — the highest-priority page in the sitemap and the one
-  aimed at the highest-volume query; `site:wegowhen.com/when2meet-alternative` is empty.
-  It needs Request Indexing in Search Console and a coverage reason read off the URL
-  Inspection tool. It has **four public,
+- **The site is in Google's index, all eight URLs.** `site:wegowhen.com` returned nothing
+  on 2026-08-28, seven pages on 2026-08-31 (all but `/when2meet-alternative`), and all
+  eight on 2026-09-23 (DataForSEO `serp/google/organic/live/advanced`, US desktop). Being
+  indexed is not ranking: neither `when2meet alternative` nor `when2meet but for multiple
+  days` shows the site in its first 30 results, and neither AI Overview cites it — see
+  `marketing/ai-seo.md`. It has **four public,
   indexable pages linking to it** — dev.to, Startup Fame, GitHub and YouTube, of which
   only dev.to is dofollow. SaaSHub and PeerPush are public but `noindex` while queued, and
   the AlternativeTo listing is still submitter-only. All eight URLs were pushed to
@@ -277,6 +276,12 @@ Things in this repo that marketing depends on, so do not break them silently:
 - `src/test/siteMetadata.test.ts` guards both — the absolute image URL, the declared
   dimensions matching the actual PNG, title and description lengths, and the absence of
   invented ratings.
+- **Fonts are self-hosted, and the home h1 does not animate.** Both were the largest
+  measured costs to page speed (Lighthouse mobile, 2026-09-23, median of 3 runs against
+  `wrangler pages dev`): the Google Fonts `@import` was a render-blocking two-origin chain,
+  and the `animate-fade-in` on the headline held LCP back until it finished. Home LCP went
+  3.99 s to 1.68 s. Do not reintroduce a third-party font `@import` or an entrance
+  animation on an LCP element.
 - **The home page carries no marketing prose.** It had a "a trip is not an hour" section
   with links to the comparison pages; the product owner removed it on 2026-08-28 because
   it cluttered a UI whose job is the trip form. The comparison and FAQ pages are reached
@@ -432,7 +437,7 @@ Two findings from the same data, both still open:
   only value that means a person; `earlyHintsCache` and `edgeWorkerFetch` are Cloudflare
   talking to itself. Judged on eyeball traffic alone the site has no error problem: the
   115 eyeball 404s are the WordPress scanners plus `/trip` (deliberate) and
-  `/apple-touch-icon.png`, which the site genuinely does not ship.
+  `/apple-touch-icon.png`, which the site did not ship until 2026-09-23 and now does.
 - ~~**`www.wegowhen.com` served 113 requests with status 200** in that window.~~ **Fixed**
   2026-09-01 with a zone Single Redirect; see the `www` paragraph above.
 

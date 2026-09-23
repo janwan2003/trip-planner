@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { SiteFooter } from '@/components/SiteFooter';
 
 export default function About() {
   usePageMeta('/about');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -102,11 +103,12 @@ export default function About() {
               improving and adding features based on user feedback.
             </p>
             <p className="mb-4">
-              Ready to plan your next adventure? <Link to="/" className="text-primary hover:underline font-semibold">Create a trip now</Link>
+              Ready to plan your next adventure? <Link to="/" className="text-primary underline underline-offset-2 font-semibold">Create a trip now</Link>
             </p>
           </section>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { CalendarRange, Loader2 } from 'lucide-react';
 import { generateTripId, saveTrip, Trip } from '@/lib/tripStore';
 import { rememberTrip } from '@/lib/recentTrips';
@@ -69,7 +69,10 @@ export function CreateTripForm() {
               you go; the whole thesis is when. */}
             <CalendarRange className="w-6 h-6 text-primary" />
         </div>
-        <CardTitle className="text-2xl font-display">Plan Your Trip</CardTitle>
+        {/* An h2, not the vendored CardTitle's h3: this sits straight under the page's h1. */}
+        <h2 className="text-2xl font-semibold leading-none tracking-tight font-display">
+          Plan Your Trip
+        </h2>
         <CardDescription className="text-muted-foreground">
           Create a trip and share the link with friends to find the best dates
         </CardDescription>

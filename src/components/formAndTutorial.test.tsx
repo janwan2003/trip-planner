@@ -79,14 +79,18 @@ describe('ModernDateInput', () => {
   it('reports the chosen date as YYYY-MM-DD', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
-    render(<ModernDateInput label="Start Date" value="2026-09-03" onChange={onChange} />);
+    // A year far ahead: days before today are disabled, so a fixed 2026 date turned
+    // this test red the day the calendar passed it.
+    render(<ModernDateInput label="Start Date" value="2099-09-03" onChange={onChange} />);
 
     await user.click(screen.getByRole('button'));
 
-    const day = await screen.findByText('15');
+    // The calendar is a lazy chunk; its first import under vitest includes a cold
+    // transform, which can outlast findBy's 1s default.
+    const day = await screen.findByText('15', {}, { timeout: 5000 });
     await user.click(day);
 
-    expect(onChange).toHaveBeenCalledWith('2026-09-15');
+    expect(onChange).toHaveBeenCalledWith('2099-09-15');
   });
 
   it('cannot be opened when disabled', async () => {

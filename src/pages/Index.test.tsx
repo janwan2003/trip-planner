@@ -41,17 +41,27 @@ describe('Index', () => {
 
   it('puts the pitch before the teaching on a phone', () => {
     // Single-column order used to be tutorial-first, which pushed the headline, the form
-    // and the only CTA below an 812px fold. Asserted through the order utilities, since
-    // jsdom does not lay out.
+    // and the only CTA below an 812px fold. The source order is now the phone order, and
+    // the order utilities move the tutorial back to the left on desktop. Asserted through
+    // the classes, since jsdom does not lay out.
     const { container } = renderWithRouter(<Index />);
 
     const grid = container.querySelector('.grid.grid-cols-1')!;
-    const [first, second] = Array.from(grid.children) as HTMLElement[];
+    const [pitch, tutorial] = Array.from(grid.children) as HTMLElement[];
 
-    expect(first.className).toContain('order-2');
-    expect(first.className).toContain('lg:order-1');
-    expect(second.className).toContain('order-1');
-    expect(second.className).toContain('lg:order-2');
+    expect(pitch.className).toContain('order-1');
+    expect(pitch.className).toContain('lg:order-2');
+    expect(tutorial.className).toContain('order-2');
+    expect(tutorial.className).toContain('lg:order-1');
+  });
+
+  it('makes the h1 the first heading in the document', () => {
+    // Lighthouse heading-order, 2026-09-23: the tutorial's "How it works" came before the
+    // h1 in source, so it was the first heading a crawler or a screen reader met.
+    const { container } = renderWithRouter(<Index />);
+
+    const first = container.querySelector('h1, h2, h3, h4, h5, h6')!;
+    expect(first.tagName).toBe('H1');
   });
 
   it('gives every footer link a 44px tap target', () => {

@@ -36,7 +36,12 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <!--
+      A real 180x180 file at the root, on an opaque background. iOS paints a transparent
+      touch icon black, and Safari asks for /apple-touch-icon.png by name whatever this
+      tag says - that path was a steady source of eyeball 404s in the zone analytics.
+    -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!--
       Structured data. Kept in the static HTML rather than injected by React so a
@@ -82,6 +87,20 @@
           "Filter participants to test smaller groups"
         ],
         "screenshot": "https://wegowhen.com/og-image.png"
+      }
+    </script>
+    <!--
+      WebSite is what Google reads for the site name shown above a result. Without it
+      the name is guessed from the title, and every title here leads with the page's
+      own subject rather than the brand.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WeGoWhen",
+        "alternateName": "We Go When",
+        "url": "https://wegowhen.com/"
       }
     </script>
   </head>

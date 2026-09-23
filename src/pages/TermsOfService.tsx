@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { SiteFooter } from '@/components/SiteFooter';
 
 export default function TermsOfService() {
   usePageMeta('/terms');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -52,7 +53,7 @@ export default function TermsOfService() {
             <p className="mb-4">
               We collect and store trip information, participant names, and availability data as necessary to 
               provide the Service. All data is stored on Cloudflare infrastructure. For detailed 
-              information about data handling, please see our <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+              information about data handling, please see our <Link to="/privacy" className="text-primary underline underline-offset-2">Privacy Policy</Link>.
             </p>
           </section>
 
@@ -113,7 +114,8 @@ export default function TermsOfService() {
             </p>
           </section>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

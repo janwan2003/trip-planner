@@ -33,14 +33,15 @@ const Index = () => {
               only CTA below the fold - four steps of instruction shown to someone who has
               not yet decided they want the product. Selling comes first there; the
               three-column desktop layout keeps the tutorial on the left.
-            */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <Tutorial />
-            </div>
 
+              The DOM order is the phone order, so the h1 is the first heading in the
+              document on every width. With the tutorial first in source, its "How it
+              works" heading came before the h1, which Lighthouse flags as heading-order
+              and which is what a crawler or a screen reader reads first.
+            */}
             <div className="lg:col-span-2 order-1 lg:order-2">
               <div className="max-w-md mx-auto lg:mx-0">
-                <div className="text-center lg:text-left mb-8 animate-fade-in">
+                <div className="text-center lg:text-left mb-8">
                   <h1 className="text-4xl font-display font-bold text-foreground mb-3">
                     Find the days your group can actually go
                   </h1>
@@ -60,6 +61,10 @@ const Index = () => {
                   <RecentTrips />
                 </div>
               </div>
+            </div>
+
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <Tutorial />
             </div>
           </div>
         </div>

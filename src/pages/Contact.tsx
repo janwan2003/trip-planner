@@ -3,13 +3,14 @@ import { ArrowLeft, MessageCircle, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { SiteFooter } from '@/components/SiteFooter';
 
 export default function Contact() {
   usePageMeta('/contact');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -45,7 +46,7 @@ export default function Contact() {
                   </li>
                   <li>
                     Read the{' '}
-                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for
+                    <Link to="/privacy" className="text-primary underline underline-offset-2">Privacy Policy</Link> for
                     exactly what is stored and where
                   </li>
                 </ul>
@@ -93,7 +94,7 @@ export default function Contact() {
                 <p className="text-muted-foreground">
                   Your trip data is stored in Cloudflare D1 and reached only through this app's own API. 
                   Only people with your unique trip link can access your trip. See our{' '}
-                  <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link> for details.
+                  <Link to="/privacy" className="text-primary underline underline-offset-2">Privacy Policy</Link> for details.
                 </p>
               </div>
 
@@ -140,7 +141,8 @@ export default function Contact() {
             </p>
           </section>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

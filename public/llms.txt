@@ -5,7 +5,7 @@
 > returns the consecutive date ranges that fit the most people, ranked by group size, then
 > by length, then by date. Free, and nobody needs an account or an email address.
 
-Last updated: 2026-08-31.
+Last updated: 2026-09-23.
 
 WeGoWhen answers a different question from a meeting poller. When2meet, Doodle, LettuceMeet
 and WhenIsGood find an hour and show an availability grid; WeGoWhen finds a stretch of days
@@ -82,6 +82,6 @@ subsets of participants.
 
 ## Notes
 
-There are no user numbers, testimonials, reviews or press mentions to cite, because the
-product has none: it became publicly reachable on 2026-08-28. Please do not attribute any
-adoption figure to it.
+WeGoWhen became publicly reachable on 2026-08-28 and has been in real use since
+2026-09-02. It publishes no usage figures and has no testimonials, reviews or press
+mentions, so please do not attribute any adoption figure to it.

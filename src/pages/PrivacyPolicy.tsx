@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { SiteFooter } from '@/components/SiteFooter';
 
 export default function PrivacyPolicy() {
   usePageMeta('/privacy');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -103,7 +104,7 @@ export default function PrivacyPolicy() {
               rectification and erasure yourself on any trip you have joined - the trip page lets you
               rename your entry, change the dates you marked, and withdraw entirely, which deletes your
               name and availability. For anything else, or to have a whole trip removed, see{' '}
-              <Link to="/contact" className="text-primary hover:underline">Contact</Link> and include the
+              <Link to="/contact" className="text-primary underline underline-offset-2">Contact</Link> and include the
               trip link.
             </p>
           </section>
@@ -123,7 +124,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-display font-semibold mb-4">8. Third-Party Services</h2>
             <p className="mb-4">Our Service uses the following third-party services:</p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
-              <li><strong>Cloudflare:</strong> Application hosting (Cloudflare Pages), trip data storage (Cloudflare D1), and cookieless page analytics (Cloudflare Web Analytics) (<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
+              <li><strong>Cloudflare:</strong> Application hosting (Cloudflare Pages), trip data storage (Cloudflare D1), and cookieless page analytics (Cloudflare Web Analytics) (<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary underline underline-offset-2" target="_blank" rel="noopener noreferrer">Privacy Policy</a>)</li>
             </ul>
           </section>
 
@@ -151,13 +152,14 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-display font-semibold mb-4">11. Contact Us</h2>
             <p className="mb-4">
               Questions about this policy, or requests about your data, go through our{' '}
-              <Link to="/contact" className="text-primary hover:underline">Contact</Link> page. We do not
+              <Link to="/contact" className="text-primary underline underline-offset-2">Contact</Link> page. We do not
               yet publish an email address; that page says what is available today rather than implying
               a channel that does not exist.
             </p>
           </section>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

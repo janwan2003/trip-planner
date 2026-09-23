@@ -106,9 +106,9 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
     <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-display font-semibold text-foreground">
+          <h2 className="text-lg font-display font-semibold text-foreground">
             {audience === 'participant' ? 'What to do' : 'How it works'}
-          </h3>
+          </h2>
           <Button
             variant="ghost"
             size="sm"
@@ -144,12 +144,12 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
                       "w-4 h-4 flex-shrink-0 transition-colors",
                       isCompleted ? "text-muted-foreground" : "text-primary"
                     )} />
-                    <h4 className={cn(
-                      "font-medium text-sm transition-colors",
+                    <h3 className={cn(
+                      "font-sans font-medium text-sm transition-colors",
                       isCompleted ? "text-muted-foreground line-through" : "text-foreground"
                     )}>
                       {step.title}
-                    </h4>
+                    </h3>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {step.description}
