@@ -106,8 +106,36 @@ export const getTrip = async (id: string): Promise<Trip | null> => {
   return expectTrip(response);
 };
 
-/** Creates a trip, or updates the name and date range of one that already exists. */
-export const saveTrip = async (trip: Trip): Promise<Trip> => {
+/**
+ * How the browser that created a trip got to the create form. Mirrors `TRIP_ORIGINS` in
+ * the API, which stores it once, when the trip is first created, and never returns it.
+ *
+ * - `trip-page`: through "Start your own trip" on someone else's trip page.
+ * - `invitee`: this browser had opened someone else's trip before, but came another way.
+ * - `direct`: neither.
+ *
+ * Exists to answer one question the data could not: whether the people invited to trips
+ * go on to create their own. It is derived from this browser's own recent-trips list and
+ * the link that was followed, and holds nothing about who the creator is.
+ */
+export const TRIP_ORIGINS = ['trip-page', 'invitee', 'direct'] as const;
+export type TripOrigin = (typeof TRIP_ORIGINS)[number];
+
+/**
+ * Where "Start your own trip" on a trip page links. The query string is what marks the
+ * new trip's origin as `trip-page`; the create form reads it only when submitted, so it
+ * changes nothing that renders and the prerendered home page still hydrates.
+ */
+export const START_OWN_TRIP_PATH = '/?from=trip';
+
+export const cameFromTripPage = (params: URLSearchParams): boolean =>
+  params.get('from') === 'trip';
+
+/**
+ * Creates a trip, or updates the name and date range of one that already exists.
+ * `origin` is recorded only on creation; the server ignores it for a trip that exists.
+ */
+export const saveTrip = async (trip: Trip, origin?: TripOrigin): Promise<Trip> => {
   const response = await request(API, {
     method: 'POST',
     body: JSON.stringify({
@@ -115,6 +143,7 @@ export const saveTrip = async (trip: Trip): Promise<Trip> => {
       name: trip.name,
       startDate: trip.startDate,
       endDate: trip.endDate,
+      ...(origin ? { origin } : {}),
     }),
   });
   return expectTrip(response);

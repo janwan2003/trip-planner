@@ -90,7 +90,15 @@ Three mechanics here are not obvious and each one cost a build to find:
   working spelling is `/trip/* /trip-shell 200`. Same reason the routes are emitted as
   `faq.html` and not `faq/index.html` — the latter makes Pages 308 `/faq` to `/faq/`.
 
-`public/_redirects` carries one rule and no catch-all: the `/trip/*` rewrite above. The
+`public/_redirects` carries one rule and no catch-all: the `/trip/*` rewrite above. Since
+2026-09-23 `/trip/:id` itself no longer reaches it — **`functions/trip/[id].ts` answers
+that path**, serves the same `trip-shell.html` through `env.ASSETS`, and rewrites only
+its title, description, `og:url` and canonical so an invitation link unfurls with the
+trip's date window (see "Trip origin and invitation previews" below). Pages does not
+apply `_redirects` to a path a Function handles; the rule still serves deeper paths
+such as `/trip/a/b`. Nor does it apply **`_headers`** to a Function's response, so the
+Function repeats HSTS, `nosniff` and `Referrer-Policy` itself, and an integration test
+compares them with a static page's. The
 catch-all `/* /index.html 200` is gone — it answered every unknown path with a 200 and
 the home page's head, an unbounded supply of soft 404s — so Pages falls through to
 `dist/404.html`, a real 404. Both
@@ -154,8 +162,12 @@ every `/api` request answers 503.
 The schema is applied idempotently on the first request by `functions/_lib/schema.ts`
 rather than by `wrangler d1 migrations apply`. The reason is written at the top of that
 file: applying migrations out of band needs a Cloudflare credential, and the OAuth grant
-wrangler asks for covers the whole account. Anything destructive — dropping or altering a
-column — cannot be expressed idempotently and does need real migrations.
+wrangler asks for covers the whole account. Adding a nullable column works, through
+`ADDED_COLUMNS` in that file: SQLite has no `ADD COLUMN IF NOT EXISTS`, so each is added
+only when `PRAGMA table_info` lacks it, outside the batch — a failed ADD inside the batch
+would fail every API request. `trips.origin` (2026-09-23) was the first. Anything
+destructive — dropping or altering a column — cannot be expressed idempotently and does
+need real migrations.
 
 Local development with the real API:
 
@@ -236,19 +248,23 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
 - `pnpm lint` exits 0 with no warnings (measured 2026-09-23); the
   `react-refresh/only-export-components` warnings in vendored shadcn files are switched
   off for `src/components/ui/**` in `eslint.config.js`.
-- **Coverage is 99.03% of lines, 93.22% of branches** across `src/lib`,
-  `src/components`, `src/pages` and `src/i18n`, from 525 unit tests (measured
-  2026-09-23 with `pnpm run test:coverage`, after the localised pages landed; earlier
-  snapshots: 430 / 98.73% and 402 / 98.34% earlier the same day, 390 / 98.51% on
-  2026-09-13, 243 / 97.70% on 2026-08-28). Thresholds in
+- **Coverage is 99.05% of lines, 93.52% of branches** across `src/lib`,
+  `src/components`, `src/pages` and `src/i18n`, from 561 unit tests (measured
+  2026-09-23 with `pnpm run test:coverage`, after trip origin and invitation previews;
+  earlier snapshots: 525 / 99.03% after the localised pages landed, 430 / 98.73% and
+  402 / 98.34% earlier the same day, 390 / 98.51% on 2026-09-13, 243 / 97.70% on
+  2026-08-28). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
   Re-measure with `pnpm run test:coverage` rather than trusting this line; it is a
   snapshot and goes stale the moment a test lands.
-- **38 integration tests** in `test/api.integration.test.ts` run the API against a real
-  `wrangler pages dev` with a local D1 (counted 2026-09-23). Nothing is mocked, so they
-  cover the Functions, the SQL, the unique index and the middleware together.
+- **55 integration tests** in `test/api.integration.test.ts` run the API against a real
+  `wrangler pages dev` with a local D1 (counted 2026-09-23; 38 earlier that day). Nothing
+  is mocked, so they cover the Functions, the SQL, the unique index and the middleware
+  together. Each run starts from its own temporary D1 **seeded with the pre-`origin`
+  `trips` table and one row**, so every run exercises the column-adding upgrade path
+  production took, not only a fresh database.
 - `src/components/ui/` holds ~48 vendored shadcn components; only 15 are imported by app
   code. The rest are dead but still typechecked and linted.
 - **The site is in Google's index, all eight URLs.** `site:wegowhen.com` returned nothing
@@ -466,6 +482,41 @@ Two findings from the same data, both still open:
   `/apple-touch-icon.png`, which the site did not ship until 2026-09-23 and now does.
 - ~~**`www.wegowhen.com` served 113 requests with status 200** in that window.~~ **Fixed**
   2026-09-01 with a zone Single Redirect; see the `www` paragraph above.
+
+## Trip origin and invitation previews — added 2026-09-23
+
+Both come from one reading of the Web Analytics referrer data above: nearly every
+arrival is an invitation link, so the invitee is the likeliest next organiser and the
+preview card is the first thing each of them sees.
+
+- **"Start your own trip".** Once someone has saved their dates on a trip they did not
+  create, the trip page's sidebar offers a card linking to `/?from=trip`. Never before
+  they save, never to the organiser (`isOrganiser`, from the recent-trips list).
+- **`trips.origin`** records how each trip's creator reached the form: `trip-page`
+  (followed that card), `invitee` (their browser had opened someone else's trip, but
+  they came another way), `direct` (neither). Worked out in the browser at submit, stored
+  on INSERT only — a re-save never overwrites it — and never returned by the API. An
+  unknown value is stored as NULL rather than refused. Trips before 2026-09-23 are NULL.
+  `scripts/usage-ledger.sh` prints the counts under the table. The privacy policy §2.2
+  discloses it and a test guards the wording.
+- **Invitation previews.** `/trip/:id` unfurls as "Mark the days you're free: Feb 1 –
+  28, 2027 | WeGoWhen" (`src/lib/tripPreview.ts`), English only, and **dates only, never
+  the trip's name**: the preview is fetched by the messaging app's servers. `og:url` is
+  the trip's own URL — Facebook and WhatsApp cache previews by it, and every shell used to
+  say `https://wegowhen.com/trip`. Any failure (unknown trip, refused id, D1 down) serves
+  the generic shell; §5 of the privacy policy says what a preview shows.
+- **Consequence for the ledger:** every invitation open now invokes a Function, so from
+  the deploy on the evening of 2026-09-23 the **API calls** column counts `/trip/:id`
+  page loads too — including messaging-app unfurlers — and is not comparable with the
+  days before.
+
+Verified 2026-09-23 in headless Chromium against `wrangler pages dev dist` with a fresh
+D1: a guest who saves sees the card, follows it to `/?from=trip`, creates a trip stored as
+`trip-page`; the same browser coming back through the logo stores `invitee`; a fresh
+browser straight to `/` stores `direct`; the organiser never sees the card; no horizontal
+scroll at 320px in all eight languages with the card showing. That check also found the
+trip page 1.1px too wide in Spanish once someone had joined, before this change — the
+implicit grid column took its widest card's min-content — fixed with `grid-cols-1`.
 
 ## The browser-local trip list
 

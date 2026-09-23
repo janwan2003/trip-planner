@@ -1,12 +1,9 @@
 # There is no www-to-apex rule here, and adding one does not work. Cloudflare Pages
 # ignores a source with a hostname in it: `https://www.wegowhen.com/* ... 301!` shipped
 # to production on 2026-08-31 and https://www.wegowhen.com/faq still answered 200, not
-# 301. The site is therefore live on both hostnames, held together by the
-# `<link rel="canonical">` pointing at the apex that every page carries.
-#
-# The real fix is a zone-level Redirect Rule in the Cloudflare dashboard, which needs a
-# credential this repo does not have. Do not re-add the line: an inert rule reads like
-# a solved problem.
+# 301. Since 2026-09-01 a zone-level Single Redirect does it instead (see the `www`
+# paragraph in CLAUDE.md). Do not re-add the line: an inert rule reads like a solved
+# problem.
 
 # The only path the prerenderer does not emit a file for. It rewrites to a shell whose
 # `#root` is empty and whose head says `noindex`: baking the landing page's body in
@@ -18,6 +15,11 @@
 # spelled `/trip-shell.html` turns this 200 rewrite into a redirect: `/trip/abc123`
 # answered 308 instead of serving the shell, which is every invitation link the product
 # has ever issued. Measured against `wrangler pages dev` on 2026-08-31, both spellings.
+#
+# `/trip/:id` itself no longer reaches this rule: `functions/trip/[id].ts` answers it,
+# serving the same shell with that trip's dates in the link-preview tags, and Pages does
+# not apply `_redirects` to a path a Function handles. The rule stays for anything under
+# `/trip/` the Function's single-segment route does not match.
 /trip/*  /trip-shell  200
 
 # Deliberately no `/* /index.html 200` catch-all. That answered every unknown path with

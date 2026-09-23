@@ -41,6 +41,10 @@ totals=$(d1 "SELECT
      WHERE t.id NOT IN ($TEST) GROUP BY t.id HAVING count(*) >= 2)) shared,
   (SELECT count(DISTINCT trip_id) FROM participants
      WHERE trip_id NOT IN ($TEST) AND updated_at >= date('now','-7 days')) active7")
+# How each trip's creator reached the create form; the column exists from 2026-09-23 and
+# earlier trips hold NULL. Tolerates a database the column has not reached yet.
+origins=$(d1 "SELECT coalesce(origin, 'unrecorded') o, count(*) n FROM trips
+  WHERE id NOT IN ($TEST) GROUP BY o" 2>/dev/null || echo null)
 zone=$(gql "$CLOUDFLARE_ANALYTICS_TOKEN" "{viewer{zones(filter:{zoneTag:\"$ZONE\"}){
   httpRequests1dGroups(limit:1000,filter:{date_geq:\"$SINCE\"}){
   dimensions{date} sum{pageViews} uniq{uniques}}}}}" \
@@ -51,7 +55,7 @@ fn=$(gql "$CLOUDFLARE" "{viewer{accounts(filter:{accountTag:\"$ACCOUNT\"}){
   | jq -c '[.data.viewer.accounts[0].pagesFunctionsInvocationsAdaptiveGroups[] | {d:.dimensions.date, n:.sum.requests}]')
 
 jq -rn --arg since "$SINCE" --argjson trips "$trips" --argjson joins "$joins" \
-  --argjson zone "$zone" --argjson fn "$fn" --argjson tot "$totals" '
+  --argjson zone "$zone" --argjson fn "$fn" --argjson tot "$totals" --argjson origins "$origins" '
   def idx(a; k): reduce a[] as $r ({}; .[$r.d] = $r[k]);
   (idx($trips; "n")) as $t | (idx($joins; "n")) as $j | (idx($fn; "n")) as $f
   | (idx($zone; "pv")) as $pv | (idx($zone; "u")) as $u
@@ -60,4 +64,7 @@ jq -rn --arg since "$SINCE" --argjson trips "$trips" --argjson joins "$joins" \
     "| --- | --- | --- | --- | --- | --- |",
     ($days[] as $d | "| \($d) | \($t[$d] // 0) | \($j[$d] // 0) | \($f[$d] // 0) | \($pv[$d] // "-") | \($u[$d] // "-") |"),
     "",
-    "Totals now: \($tot[0].trips) trips, \($tot[0].participants) participants; \($tot[0].shared) trips have 2+ participants; \($tot[0].active7) trips had a participant edit in the last 7 days."'
+    "Totals now: \($tot[0].trips) trips, \($tot[0].participants) participants; \($tot[0].shared) trips have 2+ participants; \($tot[0].active7) trips had a participant edit in the last 7 days.",
+    if $origins == null then "Trip origin: not recorded yet - production has no origin column."
+    else "Trip origin: \((idx($origins | map({d: .o, n}); "n")) as $o | ["trip-page", "invitee", "direct", "unrecorded"] | map("\(.) \($o[.] // 0)") | join(", "))."
+    end'

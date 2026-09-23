@@ -101,6 +101,11 @@ const messages = {
       "The trip may well be fine — we just couldn't reach it. Check your connection and try again.",
     tryAgain: 'Try again',
     createNew: 'Create a new trip',
+    startOwn: {
+      title: 'Planning something else?',
+      body: 'Start a trip of your own and send the link to your group. It takes a minute, and nobody needs an account.',
+      link: 'Start your own trip',
+    },
     notFoundTitle: 'Trip not found',
     notFoundBody: "This trip doesn't exist or has been removed.",
     share: 'Share',

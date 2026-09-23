@@ -93,7 +93,10 @@ The Pages project needs one binding: the **D1 database** `wegowhen`, bound as `D
 Without it every `/api` request answers 503. There are no build-time environment
 variables any more.
 
-`public/_redirects` supplies the SPA fallback (`/* /index.html 200`).
+`public/_redirects` carries one rule, `/trip/* /trip-shell 200`, and deliberately no
+SPA catch-all: an unknown path gets `dist/404.html`, a real 404. `/trip/:id` itself is
+answered by `functions/trip/[id].ts`, which serves the same shell with that trip's date
+window in the link-preview tags.
 
 ### Search engine discoverability
 

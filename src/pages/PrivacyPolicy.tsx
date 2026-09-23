@@ -49,7 +49,8 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>Page Analytics:</strong> We use Cloudflare Web Analytics, which counts page views and records which website referred you, if any. It sets no cookies, uses no device fingerprinting, and does not track you across sites or sessions. We see aggregate counts, such as how many people opened a page and how many arrived from a given site. We cannot tell from it who you are or which trip you opened</li>
               <li><strong>Server Request Logs:</strong> Our host, Cloudflare, records standard request metadata such as your IP address and browser user agent in order to serve and protect the site. We do not query, export, or link this to your trips</li>
-              <li><strong>Local Storage:</strong> Your tutorial preference, the language you chose for the site (if you picked one), the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us</li>
+              <li><strong>How a Trip Was Started:</strong> When you create a trip, we store one of three labels with it: that you followed the Start your own trip link on another trip's page, that your browser had opened someone else's trip before, or neither. Your browser works it out from the list of trips described below. The label says nothing about who you are, and we use it only to count how often people who were invited to a trip go on to plan one of their own</li>
+              <li><strong>Local Storage:</strong> Your tutorial preference, the language you chose for the site (if you picked one), the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us; only the single label above is derived from it</li>
             </ul>
           </section>
 
@@ -84,6 +85,7 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>With Trip Participants:</strong> Availability data is shared with others who access the same trip link</li>
+              <li><strong>Link Previews:</strong> When a trip link is pasted into a messaging app or social network, that service fetches a preview of it. The preview shows the trip's date range, never its name or who has joined</li>
               <li><strong>Service Providers:</strong> We use Cloudflare to host the application and to store trip data</li>
               <li><strong>Legal Requirements:</strong> If required by law or to protect our rights</li>
             </ul>

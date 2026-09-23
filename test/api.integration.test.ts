@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { spawn, ChildProcess } from 'node:child_process';
+import { execFileSync, spawn, ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { TRIP_ORIGINS } from '../src/lib/tripStore';
 
 /**
  * Integration tests for the trip API, run against a real `wrangler pages dev` with a
@@ -18,6 +22,26 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const API = `${BASE}/api/trips`;
 
 let server: ChildProcess;
+
+/**
+ * Each run gets its own local D1, seeded with the `trips` table as production had it
+ * before `origin` existed, plus one trip in it. So every run exercises the upgrade path
+ * production takes - `ensureSchema` adding a column to a table that already has rows -
+ * and not only the fresh-database path CI would otherwise see.
+ */
+const persistDir = mkdtempSync(join(tmpdir(), 'wegowhen-d1-'));
+const WRANGLER = join(process.cwd(), 'node_modules', '.bin', 'wrangler');
+const LEGACY_TRIP_ID = 'legacy00000000000000000000000001';
+
+/** Runs SQL against the test's local D1 and returns the rows. Test-only; ids are hex. */
+const sql = (query: string): Record<string, unknown>[] => {
+  const out = execFileSync(
+    WRANGLER,
+    ['d1', 'execute', 'wegowhen', '--local', '--persist-to', persistDir, '--json', '--command', query],
+    { encoding: 'utf8', env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' } },
+  );
+  return JSON.parse(out.slice(out.indexOf('[')))[0].results;
+};
 
 const newTripId = () => randomBytes(16).toString('hex');
 
@@ -60,16 +84,28 @@ const putParticipant = (tripId: string, name: string, availableDates: string[]) 
   });
 
 beforeAll(async () => {
+  sql(`CREATE TABLE trips (
+         id         TEXT PRIMARY KEY,
+         name       TEXT NOT NULL,
+         start_date TEXT NOT NULL,
+         end_date   TEXT NOT NULL,
+         created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+         updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+       );
+       INSERT INTO trips (id, name, start_date, end_date)
+       VALUES ('${LEGACY_TRIP_ID}', 'Made before origin', '2026-12-28', '2027-01-03');`);
+
   server = spawn(
-    'pnpm',
-    ['exec', 'wrangler', 'pages', 'dev', '--port', String(PORT), '--ip', '127.0.0.1'],
+    WRANGLER,
+    ['pages', 'dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', persistDir],
     { stdio: 'ignore', env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1' } },
   );
   await waitForServer();
-}, 120_000);
+}, 150_000);
 
 afterAll(() => {
   server?.kill('SIGTERM');
+  rmSync(persistDir, { recursive: true, force: true });
 });
 
 describe('trip lifecycle', () => {
@@ -593,5 +629,183 @@ describe('feedback', () => {
   it('cannot be read back', async () => {
     // Feedback is write-only: nothing one visitor sends is shown to another.
     expect((await fetch(`${BASE}/api/feedback`)).status).toBe(404);
+  });
+});
+
+describe('trip origin', () => {
+  it('is added to a database created before it existed, and older trips still read', async () => {
+    // The first request above ran ensureSchema against the seeded, origin-less table.
+    const response = await fetch(`${API}/${LEGACY_TRIP_ID}`);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ id: LEGACY_TRIP_ID, startDate: '2026-12-28' });
+
+    expect(sql("SELECT name FROM pragma_table_info('trips')").map((row) => row.name)).toContain(
+      'origin',
+    );
+    expect(sql(`SELECT origin FROM trips WHERE id = '${LEGACY_TRIP_ID}'`)).toEqual([{ origin: null }]);
+  });
+
+  it('stores every origin the client can send, and never returns it', async () => {
+    // Imported from the client, so the two lists cannot drift apart: a value the client
+    // sends and the API does not know would be stored as NULL and silently uncounted.
+    const created: Record<string, string> = {};
+    for (const origin of TRIP_ORIGINS) {
+      const { id, response } = await createTrip({ origin });
+      expect(response.status).toBe(200);
+      expect(await response.json()).not.toHaveProperty('origin');
+      created[id] = origin;
+    }
+
+    const rows = sql(
+      `SELECT id, origin FROM trips WHERE id IN (${Object.keys(created).map((id) => `'${id}'`).join(',')})`,
+    );
+    expect(Object.fromEntries(rows.map((row) => [row.id, row.origin]))).toEqual(created);
+  });
+
+  it('stores NULL for an unknown or missing origin, rather than refusing the trip', async () => {
+    const unknown = await createTrip({ origin: 'newsletter' });
+    const missing = await createTrip();
+    const wrongType = await createTrip({ origin: 42 });
+    for (const { response } of [unknown, missing, wrongType]) expect(response.status).toBe(200);
+
+    const ids = [unknown.id, missing.id, wrongType.id].map((id) => `'${id}'`).join(',');
+    expect(sql(`SELECT origin FROM trips WHERE id IN (${ids})`)).toEqual([
+      { origin: null },
+      { origin: null },
+      { origin: null },
+    ]);
+  });
+
+  it('keeps the origin a trip was created with when it is saved again', async () => {
+    const { id } = await createTrip({ origin: 'direct' });
+
+    const resave = await fetch(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        name: 'Renamed',
+        startDate: '2026-09-01',
+        endDate: '2026-09-10',
+        origin: 'trip-page',
+      }),
+    });
+    expect(resave.status).toBe(200);
+
+    expect(sql(`SELECT name, origin FROM trips WHERE id = '${id}'`)).toEqual([
+      { name: 'Renamed', origin: 'direct' },
+    ]);
+  });
+});
+
+describe('invitation link previews', () => {
+  /** The value of a meta tag, looked up by its `name` or `property`. */
+  const meta = (html: string, key: string): string | undefined =>
+    new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`).exec(html)?.[1];
+  const title = (html: string) => /<title>([^<]*)<\/title>/.exec(html)?.[1];
+  const canonical = (html: string) => /<link rel="canonical" href="([^"]*)"/.exec(html)?.[1];
+
+  const openInvitation = (path: string) => fetch(`${BASE}${path}`, { redirect: 'manual' });
+
+  it("names the trip's dates in every preview tag, and points og:url at the link itself", async () => {
+    const { id } = await createTrip({ startDate: '2027-02-01', endDate: '2027-02-28' });
+
+    const response = await openInvitation(`/trip/${id}`);
+    // 200, not the 308 a misspelt shell path once turned every invitation into.
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toMatch(/html/);
+    const html = await response.text();
+
+    const expected = "Mark the days you're free: Feb 1 – 28, 2027 | WeGoWhen";
+    expect(title(html)).toBe(expected);
+    expect(meta(html, 'og:title')).toBe(expected);
+    expect(meta(html, 'twitter:title')).toBe(expected);
+    for (const key of ['description', 'og:description', 'twitter:description']) {
+      expect(meta(html, key)).toMatch(/Tap the days you can make it/);
+    }
+    // Facebook and WhatsApp key their preview cache on og:url; one shared value for every
+    // trip could serve one trip's card for all of them.
+    expect(meta(html, 'og:url')).toBe(`https://wegowhen.com/trip/${id}`);
+    expect(canonical(html)).toBe(`https://wegowhen.com/trip/${id}`);
+  });
+
+  it("never puts the trip's name, or anyone's name, into the page", async () => {
+    const { id } = await createTrip({ name: 'Zqxv private trip name' });
+    await putParticipant(id, 'Qwzy Person', ['2026-09-02']);
+
+    const html = await (await openInvitation(`/trip/${id}`)).text();
+
+    expect(html).not.toContain('Zqxv');
+    expect(html).not.toContain('Qwzy');
+  });
+
+  it('is still the private, empty shell', async () => {
+    const { id } = await createTrip();
+
+    const html = await (await openInvitation(`/trip/${id}`)).text();
+
+    // Kept out of search by its own head, whatever robots.txt says.
+    expect(meta(html, 'robots')).toBe('noindex, nofollow');
+    // An empty root: the landing page's body here would put the create form on screen
+    // in front of someone opening an invitation, until the JavaScript replaced it.
+    expect(html).toMatch(/<div id="root"><\/div>/);
+  });
+
+  it('serves the generic shell for a trip that does not exist', async () => {
+    const response = await openInvitation(`/trip/${newTripId()}`);
+
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(meta(html, 'og:title')).toBe('Your trip | WeGoWhen');
+    expect(html).toMatch(/<div id="root"><\/div>/);
+  });
+
+  it('serves the generic shell for an id the API would refuse', async () => {
+    for (const path of [`/trip/${'a'.repeat(65)}`, '/trip/bad%22id%3Cscript%3E']) {
+      const response = await openInvitation(path);
+      expect(response.status).toBe(200);
+      const html = await response.text();
+      expect(meta(html, 'og:title')).toBe('Your trip | WeGoWhen');
+      expect(html).not.toContain('bad"id');
+    }
+  });
+
+  it('works for a trip created before origin existed', async () => {
+    const html = await (await openInvitation(`/trip/${LEGACY_TRIP_ID}`)).text();
+    expect(meta(html, 'og:title')).toBe(
+      "Mark the days you're free: Dec 28, 2026 – Jan 3, 2027 | WeGoWhen",
+    );
+  });
+
+  it('carries the same security headers as a static page', async () => {
+    // public/_headers is not applied to a Function's response, so the Function repeats
+    // its headers. This is what keeps the two copies from drifting apart.
+    const { id } = await createTrip();
+    const invitation = await openInvitation(`/trip/${id}`);
+    const staticPage = await fetch(`${BASE}/about`);
+
+    for (const header of ['strict-transport-security', 'x-content-type-options', 'referrer-policy']) {
+      expect(staticPage.headers.get(header)).toBeTruthy();
+      expect(invitation.headers.get(header)).toBe(staticPage.headers.get(header));
+    }
+    // The file's validator would describe bytes this response no longer has.
+    expect(invitation.headers.get('etag')).toBeNull();
+  });
+
+  it('answers HEAD with the headers and no body', async () => {
+    const { id } = await createTrip();
+    const response = await fetch(`${BASE}/trip/${id}`, { method: 'HEAD', redirect: 'manual' });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toMatch(/html/);
+    expect(await response.text()).toBe('');
+  });
+
+  it('leaves /trip itself a 404, and deeper paths on the old shell rewrite', async () => {
+    expect((await openInvitation('/trip')).status).toBe(404);
+
+    const deeper = await openInvitation('/trip/a/b');
+    expect(deeper.status).toBe(200);
+    expect(meta(await deeper.text(), 'og:title')).toBe('Your trip | WeGoWhen');
   });
 });

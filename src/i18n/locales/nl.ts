@@ -99,6 +99,11 @@ export default {
         'Waarschijnlijk is er niets mis met de reis, we konden hem alleen niet bereiken. Controleer je verbinding en probeer het opnieuw.',
       tryAgain: 'Opnieuw proberen',
       createNew: 'Nieuwe reis aanmaken',
+      startOwn: {
+        title: 'Plan je nog iets anders?',
+        body: 'Begin je eigen reis en stuur de link naar je groep. Het kost een minuut en niemand heeft een account nodig.',
+        link: 'Begin je eigen reis',
+      },
       notFoundTitle: 'Reis niet gevonden',
       notFoundBody: 'Deze reis bestaat niet of is verwijderd.',
       share: 'Delen',

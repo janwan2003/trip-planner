@@ -103,6 +103,11 @@ export default {
         'Seguramente el viaje está bien; es que no pudimos cargarlo. Revisa tu conexión e inténtalo de nuevo.',
       tryAgain: 'Reintentar',
       createNew: 'Crear un viaje nuevo',
+      startOwn: {
+        title: '¿Planeas algo más?',
+        body: 'Crea tu propio viaje y envía el enlace a tu grupo. Lleva un minuto y nadie necesita una cuenta.',
+        link: 'Crear mi propio viaje',
+      },
       notFoundTitle: 'Viaje no encontrado',
       notFoundBody: 'Este viaje no existe o se ha eliminado.',
       share: 'Compartir',

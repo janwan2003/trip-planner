@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 import { forgetName, lastUsedName, MAX_NAME_LENGTH, recalledName, rememberName } from '@/lib/identity';
-import { Trip, TripApiError, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween } from '@/lib/tripStore';
+import { Trip, TripApiError, getTrip, addParticipant, updateParticipantName, removeParticipant, getAvailabilityCount, getDatesBetween, START_OWN_TRIP_PATH } from '@/lib/tripStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -624,7 +624,13 @@ export default function TripPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/*
+            `grid-cols-1` below lg, not the implicit track: an implicit column is as wide
+            as its widest item's min-content, which in Spanish at 320px was 1.1px wider
+            than the screen - every card, and the page, scrolled sideways. `minmax(0, 1fr)`
+            caps the column at the container and lets the content wrap instead.
+          */}
           {/*
             Card order here is reading order. The page answers one question, so the answer
             comes before the heat map that supports it, and before the tutorial explaining
@@ -873,6 +879,27 @@ export default function TripPage() {
                 />
               </CardContent>
             </Card>
+
+            {/*
+              Invitation links are how nearly everyone arrives (see the usage ledger in
+              CLAUDE.md), so the person who has just answered someone else's trip is the
+              likeliest next organiser. Offered only once their own dates are saved -
+              before that it would compete with the one thing they came to do - and never
+              to the organiser, who is already here for their own trip.
+            */}
+            {hasSavedAvailability && !isOrganiser && (
+              <Card className="shadow-soft animate-fade-in">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">{t('trip.startOwn.title')}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{t('trip.startOwn.body')}</p>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" asChild className="w-full">
+                    <Link to={START_OWN_TRIP_PATH}>{t('trip.startOwn.link')}</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Tutorial last: it teaches the flow, it is not the flow */}
             {isOrganiser ? (

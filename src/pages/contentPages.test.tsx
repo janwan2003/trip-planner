@@ -109,6 +109,30 @@ describe('content pages', () => {
     expect(item).toHaveTextContent(/user agent/i);
   });
 
+  it('the privacy policy discloses the origin label stored with a new trip', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // POST /api/trips stores `origin`: trip-page, invitee or direct, derived from the
+    // recent-trips list. That list is otherwise "never sent to us", so the policy has to
+    // say what is derived from it and that it is not identifying.
+    const item = screen.getByText(/How a Trip Was Started/i).closest('li')!;
+    expect(item).toHaveTextContent(/Start your own trip/i);
+    expect(item).toHaveTextContent(/someone else's trip before/i);
+    expect(item).toHaveTextContent(/says nothing about who you are/i);
+    expect(screen.getByText(/^Local Storage:$/i).closest('li')).toHaveTextContent(
+      /only the single label above is derived from it/i,
+    );
+  });
+
+  it('the privacy policy says what an invitation link preview shows', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // functions/trip/[id].ts puts the date range in the preview tags, and nothing else.
+    const item = screen.getByText(/Link Previews/i).closest('li')!;
+    expect(item).toHaveTextContent(/date range/i);
+    expect(item).toHaveTextContent(/never its name or who has joined/i);
+  });
+
   it('the privacy policy does not promise an archival schedule nothing implements', () => {
     renderWithRouter(<PrivacyPolicy />);
 

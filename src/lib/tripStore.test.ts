@@ -245,6 +245,13 @@ describe('the API client', () => {
   });
 
   describe('saveTrip', () => {
+    it('sends the origin when there is one', async () => {
+      fetchMock.mockResolvedValue(reply(trip()));
+      await saveTrip(trip(), 'trip-page');
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ origin: 'trip-page' });
+    });
+
     it('posts only the trip fields, never participants', async () => {
       fetchMock.mockResolvedValue(reply(trip()));
       await saveTrip(trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-02'] }] }));

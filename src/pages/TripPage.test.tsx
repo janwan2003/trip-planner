@@ -269,6 +269,61 @@ describe('TripPage', () => {
     expect(screen.getByRole('button', { name: /mark my dates/i })).toBeInTheDocument();
   });
 
+  /**
+   * Invitation links are how nearly everyone arrives, so the person who has just answered
+   * someone else's trip is offered a way to start one. Only after they have saved, and
+   * never to the organiser.
+   */
+  describe('start your own trip', () => {
+    const saveADay = async () => {
+      addParticipant.mockResolvedValue(
+        trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-03'] }] }),
+      );
+      const user = userEvent.setup();
+      renderTripPage();
+      await screen.findByText('Alps trip');
+      await join(user, 'Ada');
+      expect(screen.queryByText(/Planning something else/i)).not.toBeInTheDocument();
+      await user.click(editableDayCell('3'));
+      await user.click(screen.getByRole('button', { name: /save availability/i }));
+      await waitFor(() => expect(addParticipant).toHaveBeenCalled());
+    };
+
+    it('is offered to a guest once their dates are saved, and marks where they came from', async () => {
+      await saveADay();
+
+      expect(await screen.findByText(/Planning something else/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /start your own trip/i })).toHaveAttribute(
+        'href',
+        '/?from=trip',
+      );
+    });
+
+    it('is not offered before anything is saved', async () => {
+      renderTripPage();
+      await screen.findByText('Alps trip');
+
+      expect(screen.queryByRole('link', { name: /start your own trip/i })).not.toBeInTheDocument();
+    });
+
+    it('is offered to a returning guest whose dates are already saved', async () => {
+      getTrip.mockResolvedValue(
+        trip({ participants: [{ name: 'Ada', availableDates: ['2026-09-03'] }] }),
+      );
+      rememberName('abc123', 'Ada');
+      renderTripPage();
+
+      expect(await screen.findByRole('link', { name: /start your own trip/i })).toBeInTheDocument();
+    });
+
+    it('is never offered to the organiser, who is here for their own trip', async () => {
+      rememberTrip(trip(), 'creator');
+      await saveADay();
+
+      expect(screen.queryByRole('link', { name: /start your own trip/i })).not.toBeInTheDocument();
+    });
+  });
+
   describe('the checklist', () => {
     it('gives someone who arrived from a link their own steps, not the organiser\'s', async () => {
       renderTripPage();

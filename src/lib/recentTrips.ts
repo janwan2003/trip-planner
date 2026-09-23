@@ -125,6 +125,14 @@ export const rememberTrip = (
 };
 
 /**
+ * Whether this browser has opened a trip it did not create - that is, whether whoever is
+ * using it has been invited to a trip before. Read when a trip is created, to record its
+ * origin; see `TripOrigin` in `tripStore.ts`.
+ */
+export const hasOpenedSomeoneElsesTrip = (): boolean =>
+  getRecentTrips().some((entry) => entry.role === 'visitor');
+
+/**
  * Removes one trip from this browser's list. The trip itself is untouched — the API
  * has no delete — so this only stops the row appearing on a shared computer.
  */

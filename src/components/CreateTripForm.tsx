@@ -1,18 +1,27 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { CalendarRange, Loader2 } from 'lucide-react';
-import { addDays, generateTripId, MAX_TRIP_DAYS, saveTrip, Trip } from '@/lib/tripStore';
-import { rememberTrip } from '@/lib/recentTrips';
+import {
+  addDays,
+  cameFromTripPage,
+  generateTripId,
+  MAX_TRIP_DAYS,
+  saveTrip,
+  Trip,
+  TripOrigin,
+} from '@/lib/tripStore';
+import { hasOpenedSomeoneElsesTrip, rememberTrip } from '@/lib/recentTrips';
 import { useToast } from '@/hooks/use-toast';
 import { ModernDateInput } from '@/components/ModernDateInput';
 import { useTranslation } from 'react-i18next';
 
 export function CreateTripForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -60,7 +69,14 @@ export function CreateTripForm() {
         participants: [],
       };
       
-      await saveTrip(trip);
+      // Worked out before rememberTrip below adds this trip, as 'creator', to the list.
+      const origin: TripOrigin = cameFromTripPage(searchParams)
+        ? 'trip-page'
+        : hasOpenedSomeoneElsesTrip()
+          ? 'invitee'
+          : 'direct';
+
+      await saveTrip(trip, origin);
       // Recorded before navigating, and only after the trip really exists: this list is
       // the only way back in for someone who closes the tab without keeping the link.
       rememberTrip(trip, 'creator');

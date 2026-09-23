@@ -3,6 +3,7 @@ import {
   forgetAllTrips,
   forgetTrip,
   getRecentTrips,
+  hasOpenedSomeoneElsesTrip,
   rememberTrip,
 } from './recentTrips';
 
@@ -102,6 +103,16 @@ describe('recentTrips', () => {
   it('ignores a trip with no id', () => {
     rememberTrip({ ...trip(''), id: '' });
     expect(getRecentTrips()).toEqual([]);
+  });
+
+  it('knows whether this browser has opened a trip it did not create', () => {
+    expect(hasOpenedSomeoneElsesTrip()).toBe(false);
+
+    rememberTrip(trip('mine'), 'creator');
+    expect(hasOpenedSomeoneElsesTrip()).toBe(false);
+
+    rememberTrip(trip('theirs'));
+    expect(hasOpenedSomeoneElsesTrip()).toBe(true);
   });
 
   it('forgets one trip and leaves the rest', () => {

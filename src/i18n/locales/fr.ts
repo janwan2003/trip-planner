@@ -93,6 +93,11 @@ export default {
         'Le voyage va sûrement très bien — on n’arrive simplement pas à le joindre. Vérifie ta connexion et réessaie.',
       tryAgain: 'Réessayer',
       createNew: 'Créer un nouveau voyage',
+      startOwn: {
+        title: 'Tu organises autre chose ?',
+        body: 'Crée ton propre voyage et envoie le lien à ton groupe. Ça prend une minute, et personne n’a besoin de compte.',
+        link: 'Créer mon propre voyage',
+      },
       notFoundTitle: 'Voyage introuvable',
       notFoundBody: 'Ce voyage n’existe pas ou a été supprimé.',
       share: 'Partager',

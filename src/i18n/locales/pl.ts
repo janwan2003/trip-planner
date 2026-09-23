@@ -101,6 +101,11 @@ export default {
         'Z wyjazdem najpewniej wszystko w porządku – po prostu nie udało się go pobrać. Sprawdź internet i spróbuj ponownie.',
       tryAgain: 'Spróbuj ponownie',
       createNew: 'Utwórz nowy wyjazd',
+      startOwn: {
+        title: 'Planujesz coś jeszcze?',
+        body: 'Utwórz własny wyjazd i wyślij link swojej grupie. To zajmie minutę, a nikt nie potrzebuje konta.',
+        link: 'Utwórz własny wyjazd',
+      },
       notFoundTitle: 'Nie znaleziono wyjazdu',
       notFoundBody: 'Ten wyjazd nie istnieje albo został usunięty.',
       share: 'Wyślij',

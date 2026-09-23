@@ -2,10 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateTripForm } from './CreateTripForm';
-import { getRecentTrips } from '@/lib/recentTrips';
+import { getRecentTrips, rememberTrip } from '@/lib/recentTrips';
 
 const navigate = vi.fn();
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
+let searchParams = new URLSearchParams();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => navigate,
+  useSearchParams: () => [searchParams],
+}));
 
 const saveTrip = vi.fn();
 vi.mock('@/lib/tripStore', async () => {
@@ -49,6 +53,45 @@ describe('CreateTripForm', () => {
     saveTrip.mockReset();
     saveTrip.mockResolvedValue(undefined);
     localStorage.clear();
+    searchParams = new URLSearchParams();
+  });
+
+  /**
+   * The origin is the only way to tell whether invited people go on to create trips:
+   * nearly every arrival is an invitation link, and D1 stored nothing about how a trip
+   * began until this field.
+   */
+  describe('origin', () => {
+    const submit = async () => {
+      const user = userEvent.setup();
+      render(<CreateTripForm />);
+      fill('Alps', '2026-09-01', '2026-09-03');
+      await user.click(screen.getByRole('button', { name: /create trip/i }));
+      await waitFor(() => expect(saveTrip).toHaveBeenCalledTimes(1));
+      return saveTrip.mock.calls[0][1];
+    };
+
+    it('is trip-page when the visitor followed "Start your own trip"', async () => {
+      searchParams = new URLSearchParams('from=trip');
+      // Takes precedence: someone following that link has opened a trip by definition.
+      rememberTrip({ id: 'theirs', name: 'T', startDate: '2026-09-01', endDate: '2026-09-02' });
+      expect(await submit()).toBe('trip-page');
+    });
+
+    it('is invitee when this browser has opened someone else\'s trip before', async () => {
+      rememberTrip({ id: 'theirs', name: 'T', startDate: '2026-09-01', endDate: '2026-09-02' });
+      expect(await submit()).toBe('invitee');
+    });
+
+    it('is direct for a browser that has only ever opened its own trips', async () => {
+      rememberTrip({ id: 'mine', name: 'M', startDate: '2026-09-01', endDate: '2026-09-02' }, 'creator');
+      expect(await submit()).toBe('direct');
+    });
+
+    it('is direct for a first visit, and ignores an unrelated query string', async () => {
+      searchParams = new URLSearchParams('from=newsletter');
+      expect(await submit()).toBe('direct');
+    });
   });
 
   it('gives the only call to action a 48px target and its own sizing', () => {

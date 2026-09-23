@@ -117,11 +117,14 @@ describe('ModernDateInput', () => {
 
     // The calendar is a lazy chunk; its first import under vitest includes a cold
     // transform, which can outlast findBy's 1s default.
-    const day = await screen.findByText('15', {}, { timeout: 5000 });
+    const day = await screen.findByText('15', {}, { timeout: 10_000 });
     await user.click(day);
 
     expect(onChange).toHaveBeenCalledWith('2099-09-15');
-  });
+    // The test's own limit must exceed the wait above. Both were 5s, so on a loaded
+    // machine (load average 23, 2026-09-23) the test died at 5s before its findBy could
+    // finish; alone it passed in 2.3s.
+  }, 15_000);
 
   it('cannot be opened when disabled', async () => {
     const user = userEvent.setup();

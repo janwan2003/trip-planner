@@ -99,6 +99,11 @@ export default {
         'Mit der Reise ist vermutlich alles in Ordnung – wir haben nur gerade keine Verbindung bekommen. Prüf dein Internet und versuch es noch einmal.',
       tryAgain: 'Erneut versuchen',
       createNew: 'Neue Reise erstellen',
+      startOwn: {
+        title: 'Planst du noch etwas anderes?',
+        body: 'Starte eine eigene Reise und schick den Link an deine Gruppe. Das dauert eine Minute, und niemand braucht ein Konto.',
+        link: 'Eigene Reise starten',
+      },
       notFoundTitle: 'Reise nicht gefunden',
       notFoundBody: 'Diese Reise gibt es nicht (mehr).',
       share: 'Teilen',

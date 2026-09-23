@@ -100,6 +100,20 @@ export const isCalendarDate = (value: unknown): value is string => {
 export const isTripId = (value: unknown): value is string =>
   typeof value === 'string' && value.length > 0 && value.length <= LIMITS.tripId && /^[A-Za-z0-9_-]+$/.test(value);
 
+/**
+ * How the creator reached the create form: `trip-page` through "Start your own trip" on
+ * someone else's trip, `invitee` when their browser had opened someone else's trip
+ * before, `direct` otherwise. Mirrors `TRIP_ORIGINS` in `src/lib/tripStore.ts`.
+ *
+ * Recorded once, on creation, and never returned by the API: it is for counting whether
+ * invitees go on to create trips of their own, and holds nothing about who anyone is.
+ */
+export const TRIP_ORIGINS = ['trip-page', 'invitee', 'direct'] as const;
+export type TripOrigin = (typeof TRIP_ORIGINS)[number];
+
+export const isTripOrigin = (value: unknown): value is TripOrigin =>
+  (TRIP_ORIGINS as readonly unknown[]).includes(value);
+
 export const isName = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0 && value.length <= LIMITS.name;
 
