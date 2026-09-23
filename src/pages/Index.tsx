@@ -5,6 +5,7 @@ import { usePageMeta } from '@/lib/usePageMeta';
 import { RecentTrips } from '@/components/RecentTrips';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { FeedbackLinks } from '@/components/FeedbackLinks';
 
 const Index = () => {
   usePageMeta('/');
@@ -12,6 +13,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <FeedbackLinks />
+
       {/* Header */}
       <header className="py-3 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">

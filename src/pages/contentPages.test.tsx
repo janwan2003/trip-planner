@@ -100,6 +100,15 @@ describe('content pages', () => {
     expect(screen.queryByText(/interaction patterns/i)).not.toBeInTheDocument();
   });
 
+  it('the privacy policy discloses what the feedback form stores', () => {
+    renderWithRouter(<PrivacyPolicy />);
+
+    // POST /api/feedback stores the message, the optional email, the page and the user agent.
+    const item = screen.getByText(/Report a bug or Suggest a feature/i);
+    expect(item).toHaveTextContent(/email address/i);
+    expect(item).toHaveTextContent(/user agent/i);
+  });
+
   it('the privacy policy does not promise an archival schedule nothing implements', () => {
     renderWithRouter(<PrivacyPolicy />);
 
@@ -146,7 +155,7 @@ describe('content pages', () => {
 
   it('both legal pages were re-dated when their content changed', () => {
     const { unmount } = renderWithRouter(<PrivacyPolicy />);
-    // Re-dated for the stored language choice (2026-09-23).
+    // Re-dated for the stored language choice and the feedback form (2026-09-23).
     expect(screen.getByText(/Last updated: September 23, 2026/)).toBeInTheDocument();
     unmount();
 

@@ -22,6 +22,7 @@ import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
 import { Tutorial } from '@/components/Tutorial';
+import { FeedbackLinks } from '@/components/FeedbackLinks';
 import { Copy, Check, ArrowLeft, Calendar, Users, Loader2, Pencil, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePageMeta } from '@/lib/usePageMeta';
@@ -552,6 +553,8 @@ export default function TripPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <FeedbackLinks />
+
       {/* Header */}
       <header className="py-3 px-4 border-b">
         <div className="container max-w-6xl mx-auto flex items-center justify-between">

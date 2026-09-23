@@ -559,3 +559,39 @@ describe('routing', () => {
     expect(response.headers.get('cache-control')).toMatch(/no-store/);
   });
 });
+
+describe('feedback', () => {
+  const postFeedback = (body: unknown) =>
+    fetch(`${BASE}/api/feedback`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  it('stores a bug report and a feature request', async () => {
+    const bug = await postFeedback({ kind: 'bug', message: 'It broke', contact: 'a@b.co', page: '/' });
+    expect(bug.status).toBe(201);
+    expect((await bug.json()).id).toBeTruthy();
+
+    const feature = await postFeedback({ kind: 'feature', message: 'Dark mode' });
+    expect(feature.status).toBe(201);
+  });
+
+  it('refuses an unknown kind, an empty message and an oversized one', async () => {
+    expect((await postFeedback({ kind: 'praise', message: 'hi' })).status).toBe(400);
+    expect((await postFeedback({ kind: 'bug', message: '   ' })).status).toBe(400);
+    expect((await postFeedback({ kind: 'bug', message: 'x'.repeat(2001) })).status).toBe(400);
+    expect((await postFeedback({ kind: 'bug', message: 'ok', contact: 'x'.repeat(201) })).status).toBe(400);
+    expect((await postFeedback({ kind: 'bug', message: 'ok', contact: 42 })).status).toBe(400);
+  });
+
+  it('refuses a body that is not JSON', async () => {
+    const response = await fetch(`${BASE}/api/feedback`, { method: 'POST', body: 'nope' });
+    expect(response.status).toBe(400);
+  });
+
+  it('cannot be read back', async () => {
+    // Feedback is write-only: nothing one visitor sends is shown to another.
+    expect((await fetch(`${BASE}/api/feedback`)).status).toBe(404);
+  });
+});

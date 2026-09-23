@@ -137,7 +137,8 @@ export default function Contact() {
               <li>Note the specific steps that caused the issue for future reference</li>
             </ul>
             <p className="text-sm text-muted-foreground mt-4">
-              We're working on establishing official bug reporting channels. Thank you for your patience!
+              Still stuck? Use Report a bug at the top of the home page or any trip page. It goes
+              straight to the person who built WeGoWhen.
             </p>
           </section>
         </div>

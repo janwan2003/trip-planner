@@ -230,5 +230,25 @@ export default {
         watchBody: '«Mejores fechas» se actualiza a medida que responde más gente',
       },
     },
+
+    feedback: {
+      bug: {
+        label: 'Informar de un error',
+        intro:
+          'Hola, soy Janek y he creado WeGoWhen. Si algo se ha roto o no funciona como esperabas, te agradecería mucho que me lo contaras. Cada aviso ayuda.',
+        placeholder: '¿Qué ha pasado y qué esperabas?',
+      },
+      feature: {
+        label: 'Sugerir una función',
+        intro:
+          'Hola, soy Janek y he creado WeGoWhen. ¿Echas algo en falta? Leo cada petición con atención y la mayoría acaban en la app.',
+        placeholder: '¿Qué te haría más fácil organizar el viaje?',
+      },
+      emailLabel: 'Tu correo (opcional)',
+      emailPlaceholder: 'Correo para responderte (opcional)',
+      send: 'Enviar',
+      thanks: '¡Gracias! Tu mensaje ya va de camino.',
+      failed: 'No se ha podido enviar. Revisa tu conexión e inténtalo de nuevo.',
+    },
   },
 } satisfies LocaleBundle;

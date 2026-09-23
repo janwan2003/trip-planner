@@ -42,6 +42,17 @@ const STATEMENTS = [
      ON participants (trip_id, lower(name))`,
   `CREATE INDEX IF NOT EXISTS idx_participants_trip_id ON participants (trip_id)`,
   `CREATE INDEX IF NOT EXISTS idx_trips_created_at ON trips (created_at)`,
+  // Bug reports and feature requests from the buttons at the top of the app. Not tied
+  // to a trip by key: feedback should outlive any trip it mentions.
+  `CREATE TABLE IF NOT EXISTS feedback (
+     id         TEXT PRIMARY KEY,
+     kind       TEXT NOT NULL CHECK (kind IN ('bug', 'feature')),
+     message    TEXT NOT NULL,
+     contact    TEXT,
+     page       TEXT,
+     user_agent TEXT,
+     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+   )`,
 ];
 
 /** Memoised per isolate, so the statements run once rather than once per request. */

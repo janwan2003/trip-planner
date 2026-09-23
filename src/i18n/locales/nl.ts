@@ -226,5 +226,25 @@ export default {
         watchBody: '‘Beste data’ wordt bijgewerkt zodra meer mensen reageren',
       },
     },
+
+    feedback: {
+      bug: {
+        label: 'Meld een bug',
+        intro:
+          'Hoi, ik ben Janek en ik heb WeGoWhen gemaakt. Werkt er iets niet of voelt iets raar? Ik zou het echt waarderen als je het me laat weten. Elke melding helpt.',
+        placeholder: 'Wat gebeurde er, en wat verwachtte je?',
+      },
+      feature: {
+        label: 'Stel een functie voor',
+        intro:
+          'Hoi, ik ben Janek en ik heb WeGoWhen gemaakt. Mis je iets? Ik lees elk verzoek zorgvuldig, en de meeste komen in de app terecht.',
+        placeholder: 'Wat zou het plannen voor jou makkelijker maken?',
+      },
+      emailLabel: 'Je e-mail (optioneel)',
+      emailPlaceholder: 'E-mail voor een antwoord (optioneel)',
+      send: 'Versturen',
+      thanks: 'Bedankt! Je bericht is onderweg naar mij.',
+      failed: 'Versturen is niet gelukt. Controleer je verbinding en probeer het opnieuw.',
+    },
   },
 } satisfies LocaleBundle;

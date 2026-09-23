@@ -75,6 +75,7 @@ export const ROUTES: RouteMeta[] = [
       'src/components/CreateTripForm.tsx',
       'src/components/Tutorial.tsx',
       'src/components/RecentTrips.tsx',
+      'src/components/FeedbackLinks.tsx',
     ],
     title: 'WeGoWhen — Find the dates everyone is free for a group trip',
     description:
@@ -401,6 +402,9 @@ export const htmlToText = (html: string): string => {
     // Controls are not prose: the language switcher's options and its aria-hidden
     // "en" badge came out as "enEnglishDeutschEspañolNederlands".
     .replace(/<select\b[^>]*>[\s\S]*?<\/select>/gi, '')
+    // Buttons too: the feedback links at the top of the page came out as
+    // "Report a bugSuggest a feature".
+    .replace(/<button\b[^>]*>[\s\S]*?<\/button>/gi, '')
     .replace(/<span\b[^>]*aria-hidden="true"[^>]*>[^<]*<\/span>/gi, '')
     .replace(/<\/(p|div|section|article|li|tr|h[1-6]|blockquote|figcaption)>/gi, '\n')
     .replace(/<(br|hr)\s*\/?>/gi, '\n')

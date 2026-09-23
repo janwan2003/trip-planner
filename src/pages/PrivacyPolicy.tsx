@@ -37,6 +37,7 @@ export default function PrivacyPolicy() {
               <li><strong>Trip Information:</strong> Trip names, start dates, and end dates</li>
               <li><strong>Participant Information:</strong> Names you provide when joining trips</li>
               <li><strong>Availability Data:</strong> The dates you mark as available for trips</li>
+              <li><strong>Feedback:</strong> If you use Report a bug or Suggest a feature, the message you write, the email address you give if you choose to give one, the page you sent it from, and your browser's user agent. Feedback is read only by the person who runs WeGoWhen, is never shown to other visitors, and the email is used only to reply to you</li>
             </ul>
 
             <h3 className="text-xl font-semibold mb-3 mt-4">2.2 Automatically Collected Information</h3>
@@ -137,6 +138,7 @@ export default function PrivacyPolicy() {
               currently delete inactive trips, and we would update this policy before starting to.
               You can remove your own name and availability from any trip at any time using Withdraw
               on that trip's page. To have an entire trip deleted, contact us with its link.
+              Feedback is kept indefinitely as well.
             </p>
           </section>
 

@@ -226,5 +226,25 @@ export default {
         watchBody: '„Beste Termine“ aktualisiert sich, sobald mehr Leute antworten',
       },
     },
+
+    feedback: {
+      bug: {
+        label: 'Fehler melden',
+        intro:
+          'Hi, ich bin Janek und habe WeGoWhen gebaut. Wenn etwas kaputt ist oder sich komisch anfühlt, freue ich mich sehr, wenn du es mir sagst. Jede Meldung hilft.',
+        placeholder: 'Was ist passiert, und was hast du erwartet?',
+      },
+      feature: {
+        label: 'Funktion vorschlagen',
+        intro:
+          'Hi, ich bin Janek und habe WeGoWhen gebaut. Fehlt dir etwas? Ich lese jeden Wunsch genau, und die meisten landen in der App.',
+        placeholder: 'Was würde dir die Planung leichter machen?',
+      },
+      emailLabel: 'Deine E-Mail (optional)',
+      emailPlaceholder: 'E-Mail für eine Antwort (optional)',
+      send: 'Senden',
+      thanks: 'Danke! Deine Nachricht ist auf dem Weg zu mir.',
+      failed: 'Das konnte nicht gesendet werden. Prüfe deine Verbindung und versuch es noch einmal.',
+    },
   },
 } satisfies LocaleBundle;

@@ -73,7 +73,9 @@ Two things together, per the product owner — neither alone is the claim:
 **Confirmed constraints, not negotiable:**
 
 - **No accounts, no logins.** A participant never registers and never supplies an email
-  address. Identity is a typed name plus possession of the trip link.
+  address. Identity is a typed name plus possession of the trip link. The one place an
+  email can be typed is the optional reply address on the bug and feature forms, which is
+  not tied to any trip or participant.
 - **Must work on a phone.** Marking availability is a touch interaction first. See the
   open defect below — this constraint is currently violated by the drag interaction.
 

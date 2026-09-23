@@ -262,6 +262,15 @@ describe('llms-full.txt', () => {
     ).toBe('Plan a trip');
   });
 
+  it('leaves out buttons, such as the feedback links', () => {
+    expect(
+      htmlToText(
+        '<div data-nosnippet=""><button type="button"><svg aria-hidden="true"></svg>Report a bug</button>' +
+          '<button type="button">Suggest a feature</button></div><p>Plan a trip</p>',
+      ),
+    ).toBe('Plan a trip');
+  });
+
   it('names each page with its title and canonical URL', () => {
     const full = renderLlmsFull(pages, '2026-09-15');
     expect(full).toContain('## WeGoWhen FAQ — group trip dates, answered');

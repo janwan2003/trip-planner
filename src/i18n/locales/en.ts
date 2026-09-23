@@ -236,6 +236,26 @@ const messages = {
       watchBody: 'Best Dates updates as more people reply',
     },
   },
+
+  feedback: {
+    bug: {
+      label: 'Report a bug',
+      intro:
+        "Hi, I'm Janek, and I made WeGoWhen. If something broke or felt off, I'd be really grateful if you told me. Every report helps.",
+      placeholder: 'What happened, and what did you expect?',
+    },
+    feature: {
+      label: 'Suggest a feature',
+      intro:
+        "Hi, I'm Janek, and I made WeGoWhen. Missing something? I read every request carefully, and most of them end up in the app.",
+      placeholder: 'What would make planning easier for you?',
+    },
+    emailLabel: 'Your email (optional)',
+    emailPlaceholder: 'Email for a reply (optional)',
+    send: 'Send',
+    thanks: "Thank you! It's on its way to me.",
+    failed: "Couldn't send that. Please check your connection and try again.",
+  },
 };
 
 export default { messages, dateLocale: enUS };

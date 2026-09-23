@@ -163,6 +163,30 @@ Local development with the real API:
 pnpm run build && pnpm exec wrangler pages dev   # http://127.0.0.1:8788, local D1
 ```
 
+### Feedback
+
+"Report a bug" and "Suggest a feature" sit in a slim strip above the header of the home
+and trip pages (`src/components/FeedbackLinks.tsx`, added 2026-09-23). Each opens a
+popover with a short personal note from the owner, a message box and an optional email.
+It posts to `POST /api/feedback` (`functions/api/feedback.ts`), which writes one row to
+the `feedback` table: `kind` (`bug` or `feature`), `message` (<= 2000 chars), `contact`
+(optional, <= 200), `page` (the pathname — for a trip page that is the trip's link),
+`user_agent` and `created_at`.
+
+It is **write-only**: there is no GET, so nothing one visitor sends is shown to another.
+Read it out of band, `SELECT`s only:
+
+```
+POST /accounts/<id>/d1/database/39bb1ce4-bc4a-4047-823a-6255e2c472bb/query
+{"sql": "SELECT kind, message, contact, page, created_at FROM feedback ORDER BY created_at DESC"}
+```
+
+Feedback holds strangers' words and possibly their email: the same rule as trip names
+applies — never paste it into this file, a commit or an issue. The privacy policy §2.1
+discloses what is stored and a test guards that disclosure. The popover is on the home
+page's critical path at a measured cost of +1.5 kB gzip (the Radix popover was already
+there for the date picker).
+
 ## Credentials
 
 The app itself needs none — D1 is reached through a binding, not a key, and the Supabase
@@ -558,7 +582,10 @@ information below", where below was a FAQ and no contact details existed anywher
 site.
 
 **Still outstanding:** no contact address is published, so a request to delete a whole trip
-has nowhere to go. Which address to publish is the owner's call.
+has nowhere official to go. Since 2026-09-23 the "Report a bug" form reaches the owner and
+can carry such a request, but the Contact page and policy do not yet present it as the
+channel for data requests; whether they should, or an address is published instead, is
+the owner's call.
 
 ## Languages
 
