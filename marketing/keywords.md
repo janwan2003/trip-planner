@@ -98,3 +98,49 @@ table, and `FAQPage` JSON-LD.
 The last one stays unbuilt until there is real usage to write it from. A guide padded out
 of nothing is the kind of page that ages into a liability, and 120 searches a month is not
 worth it.
+
+## International market sizing — 2026-09-23
+
+**Question:** which non-English markets are worth localised SEO/AEO pages, sized by the
+market's own demand rather than by our (English-only, therefore biased) analytics.
+
+**Method:** Google Ads monthly search volume per country from DataForSEO
+`/v3/keywords_data/google_ads/search_volume/live`, pulled 2026-09-23, for (a) dedicated
+group-scheduling brands — When2meet, WhenIsGood, Rallly and each market's local incumbent —
+and (b) local-language category phrases. Bare "doodle" is **excluded**: it collides with
+Google Doodles and doodle drawing (Brazil 74,000/mo, Indonesia 49,500 against
+"doodle enquete" 20). "Doodle + poll-word" (umfrage, sondage, sondaggio) is kept.
+"Category demand" below is the sum of the scheduling-specific terms per market.
+
+| Market | Category demand /mo | Main terms (volume) | Incumbent | Our UI language |
+| --- | --- | --- | --- | --- |
+| **Japan** | **~432,000** | 調整さん 368,000; 伝助 49,500; 日程調整 9,900; 日程調整ツール 3,600; when2meet 1,300 | Chouseisan, Densuke, Tonton, LINE's built-in poll | none |
+| US (baseline, above) | ~132,000 | when2meet 110,000; whenisgood 8,100; lettucemeet 6,600 | When2meet | en |
+| **France** | **~54,000** | framadate 40,500; doodle gratuit 6,600; doodle sondage 4,400; when2meet 1,600 | Framadate | none |
+| Netherlands | ~51,000 | datumprikker 49,500; when2meet 1,000 | Datumprikker | nl |
+| Germany | ~41,000 | doodle umfrage 18,100; nuudel 12,100; terminplaner 3,600; when2meet 2,400; dudle 1,600; doodle alternative 1,300 | Doodle, Nuudel | de |
+| Canada | ~13,000 | when2meet 12,100 | When2meet | en |
+| Vietnam | ~5,400 | when2meet 5,400; every Vietnamese phrase tried ≈ 0 | none local | none |
+| Korea | ~4,800 (Google only) | when2meet 4,400; 일정조율 사이트 210; 일정 조율 140 | none local; users type the English brand | none |
+| Australia | ~4,700 | when2meet 4,400 | When2meet | en |
+| UK | ~3,600 | when2meet 2,900; rallly 480 | When2meet | en |
+| Taiwan | ~3,100 | when2meet 2,900; 喬時間 210 | none local | none |
+| Italy | ~3,200 | doodle sondaggio 1,900; when2meet 1,000 | Doodle | none |
+| Singapore | ~2,900 | when2meet 2,900 | When2meet | en |
+| Brazil | ~2,400 | when2meet 2,400; Portuguese phrases ≈ 0 | none local | none |
+| Philippines | ~2,400 | when2meet 2,400 | When2meet | en |
+| Spain | ~1,500 | when2meet 1,300; doodle encuesta 170 | none local | es |
+| Mexico | ~1,300 | when2meet 1,300 | none local | es |
+| Poland | ~1,100 | when2meet 880; doodle ankieta 210 | Doodle | pl |
+| Indonesia / Hong Kong / India / Thailand | 400–700 each | when2meet | — | none |
+
+**Japan SERP, 日程調整, 2026-09-23:** chouseisan.com #1, tonton #2, densuke #4, then
+listicles ("日程調整ツールおすすめ11選｜無料・アカウント不要…", poppoline.com #5;
+aspicjapan.org #10) and LINE's own help page. The incumbents are free, no-login polls
+over *candidate dates* — the same pitch as ours minus the date-range heat map. Trip-specific
+demand is tiny (旅行 日程調整 10/mo), so Japan means competing as a general scheduler.
+
+**Blind spots:** Google only. China (Google blocked; WeChat mini-programs) is unmeasured.
+Korea understates badly — Naver holds most Korean search. Brand volume misses demand that
+never reaches a search box (LINE's in-chat poll, WhatsApp polls). Volumes are Google's
+rounded buckets.
