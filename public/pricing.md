@@ -10,7 +10,7 @@ and no feature held back behind a sign-up.
 - Price: $0. Not $0/month — there is no billing of any kind, and no card is ever asked for.
 - Accounts: none required, for the organiser or for participants.
 - Participants per trip: up to 200.
-- Days a participant may mark: up to 1000.
+- Trip length: up to 366 days, and a participant may mark any of them.
 - Trips per person: unlimited.
 - Included: shared trip link, whole-day availability marking on desktop and mobile, per-day
   heat map, ranked list of the consecutive date ranges that fit the most people, filtering

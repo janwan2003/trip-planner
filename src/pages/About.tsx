@@ -21,10 +21,16 @@ export default function About() {
           <h1 className="text-4xl font-display font-bold mb-6">About WeGoWhen</h1>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-display font-semibold mb-4">Our Mission</h2>
+            <h2 className="text-2xl font-display font-semibold mb-4">What WeGoWhen is</h2>
             <p className="mb-4">
-              WeGoWhen makes planning a group trip easier by taking the work out of coordinating everyone's availability.
-              Our goal is to make a very easy-to-use tool that removes the hassle from group trip planning, so you can focus on enjoying your time with friends and family.
+              WeGoWhen is a free web app for choosing the dates of a group trip. The organiser
+              sets an outer window and shares one link; everyone taps the whole days they are
+              free; WeGoWhen ranks the runs of consecutive days that fit the most people. No one
+              needs an account, and there is nothing to install.
+            </p>
+            <p className="mb-4">
+              It answers a different question from a meeting poll such as When2meet or Doodle:
+              not which hour suits everyone, but which stretch of days does.
             </p>
           </section>
 
@@ -99,8 +105,10 @@ export default function About() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">Start Planning Today</h2>
             <p className="mb-4">
-              WeGoWhen is a new tool designed to simplify group trip planning. We're continuously 
-              improving and adding features based on user feedback.
+              WeGoWhen has been public since 28 August 2026. It works in eight languages, holds up
+              to 200 people and a window of up to a year per trip, and has no paid tier. The
+              &ldquo;Report a bug&rdquo; and &ldquo;Suggest a feature&rdquo; links at the top of
+              the app reach the person who builds it.
             </p>
             <p className="mb-4">
               Ready to plan your next adventure? <Link to="/" className="text-primary underline underline-offset-2 font-semibold">Create a trip now</Link>

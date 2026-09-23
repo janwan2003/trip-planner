@@ -16,6 +16,19 @@ const indexHtml = readFileSync(resolve(__dirname, '../../index.html'), 'utf8');
  * landing page, each with its own head, in the sitemap and the hreflang cluster.
  */
 describe('localised routes', () => {
+  it.each(LOCALIZED_ROUTES)('$path declares its own language in the JSON-LD', (route) => {
+    // The structured data said "inLanguage": "en" with an English description on every
+    // localised page, contradicting <html lang> in the same head.
+    const html = renderRouteHtml(indexHtml, route, '<p>body</p>', '2026-09-23');
+    const app = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      .map((m) => JSON.parse(m[1]))
+      .find((d) => d['@type'] === 'WebApplication');
+
+    expect(app.inLanguage).toBe(route.locale);
+    expect(app.description).toBe(route.appDescription);
+    expect(app.description).toBe(LOCALE_SEO.find((s) => s.locale === route.locale)!.home.description);
+  });
+
   it('gives every shipped language except English its content file', () => {
     expect(LOCALE_SEO.map((seo) => seo.locale).sort()).toEqual(
       SUPPORTED_LOCALES.filter((l) => l !== 'en').sort(),

@@ -59,6 +59,11 @@ export interface RouteMeta {
    */
   locale?: string;
   /**
+   * How the WebApplication JSON-LD describes the product on this page, when the page is
+   * not in English. Set by `siteRoutes.ts` to that language's home-page description.
+   */
+  appDescription?: string;
+  /**
    * Overrides the file name derived from `path`. Needed exactly once, and for a
    * reason that costs an afternoon to rediscover: see `outputFileFor`.
    */
@@ -90,7 +95,7 @@ export const ROUTES: RouteMeta[] = [
   },
   {
     path: '/when2meet-alternative',
-    contentUpdated: '2026-08-31',
+    contentUpdated: '2026-09-23',
     contentSources: [
       'src/pages/When2meetAlternative.tsx',
       'src/components/MarketingPage.tsx',
@@ -284,6 +289,19 @@ export const renderRouteHtml = (
       `<meta property="og:locale" content="${OG_LOCALES[locale] ?? locale}" />`,
     ],
     [/"dateModified": "[^"]*"/, `"dateModified": "${date}"`],
+    // The WebApplication JSON-LD said `"inLanguage": "en"` with an English description
+    // on every page, the German and Japanese ones included, while `<html lang>` and
+    // og:locale said otherwise: two contradicting language signals in the same head.
+    // A localised page now declares its own language and describes the app in it, from
+    // `appDescription` (its language's home-page description: that one describes the
+    // product, where a comparison page's describes the comparison).
+    [/"inLanguage": "[^"]*"/, `"inLanguage": "${locale}"`],
+    [
+      /("@type": "WebApplication",[\s\S]*?"description": )"(?:[^"\\]|\\.)*"/,
+      locale === 'en'
+        ? '$&'
+        : `$1${JSON.stringify(route.appDescription ?? route.description).replace(/\$/g, '$$$$')}`,
+    ],
     [/<title>[^<]*<\/title>/, `<title>${escapeAttribute(route.title)}</title>`],
     [
       /<meta name="description" content="[^"]*" \/>/,

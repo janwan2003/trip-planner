@@ -21,6 +21,7 @@ export const LOCALIZED_ROUTES: RouteMeta[] = LOCALE_SEO.flatMap((seo) => [
   {
     path: homePath(seo.locale),
     locale: seo.locale,
+    appDescription: seo.home.description,
     title: seo.home.title,
     description: seo.home.description,
     priority: '0.9',
@@ -34,6 +35,7 @@ export const LOCALIZED_ROUTES: RouteMeta[] = LOCALE_SEO.flatMap((seo) => [
   {
     path: landingPath(seo),
     locale: seo.locale,
+    appDescription: seo.home.description,
     title: seo.landing.title,
     description: seo.landing.description,
     priority: '0.8',

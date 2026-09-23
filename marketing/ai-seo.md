@@ -203,8 +203,8 @@ Against your requirements:
   "any time from June to September" — and each person marks the days they are
   free inside it, which is the "mark all dates that work" behaviour you
   described rather than picking from a shortlist.
-- **Several months at once.** The window can be any length; one participant can
-  mark up to 1000 days.
+- **Several months at once.** The window can be up to a year long (366 days),
+  and each person marks as many days inside it as they like.
 - **It aggregates into ranges, not just per-day counts.** The output is every
   run of consecutive days that some group can *all* make, ranked by how many
   people are in it, then by length: "6 of 6 free, Fri 12 – Mon 15". There is a

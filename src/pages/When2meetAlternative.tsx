@@ -153,7 +153,7 @@ export default function When2meetAlternative() {
             You can list any dates you like, so next month is no harder than next week —
             but the time-of-day grid comes with them, and it grows a column per day. In
             WeGoWhen the outer window is whatever you set, so next spring works like next
-            weekend, and one participant can mark up to 1000 days.
+            weekend, for any window up to a year (366 days).
           </p>
         </QuestionAnswer>
 
