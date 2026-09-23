@@ -75,7 +75,7 @@ describe('TripPage', () => {
     renderTripPage();
 
     expect(await screen.findByText('Alps trip')).toBeInTheDocument();
-    expect(screen.getByText(/Sep 1 - Sep 7, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Sep 1\s–\s7, 2026/)).toBeInTheDocument();
     expect(screen.getByText(/1 participant$/)).toBeInTheDocument();
   });
 

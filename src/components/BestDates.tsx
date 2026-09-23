@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Trip } from '@/lib/tripStore';
 import { findBestDateRanges } from '@/lib/bestDates';
-import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { useFormat } from '@/i18n/format';
 import { Star, Users, HelpCircle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,8 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
    * meantime, and the box normalises to a valid number on blur.
    */
   const [minDaysInput, setMinDaysInput] = useState('1');
+  const { t } = useTranslation();
+  const f = useFormat();
   const minDays = Math.max(1, parseInt(minDaysInput, 10) || 1);
 
   // Computed without the length filter so that raising "Min" past every option empties
@@ -77,28 +80,27 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
         <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
         {trip.participants.length === 0 ? (
           <>
-            <p className="text-sm text-foreground">Best dates will appear here</p>
-            <p className="text-xs">Send the link to everyone, then their days show up</p>
+            <p className="text-sm text-foreground">{t('bestDates.empty.noParticipantsTitle')}</p>
+            <p className="text-xs">{t('bestDates.empty.noParticipantsBody')}</p>
           </>
         ) : filtered ? (
           <>
             <p className="text-sm text-foreground">
-              No days work for {selectedParticipants.join(', ')}
+              {t('bestDates.empty.filteredTitle', { names: selectedParticipants.join(', ') })}
             </p>
-            <p className="text-xs">Try including more people</p>
+            <p className="text-xs">{t('bestDates.empty.filteredBody')}</p>
           </>
         ) : nobodyHasMarked ? (
           <>
             <p className="text-sm text-foreground">
-              {trip.participants.length === 1 ? 'Someone has joined' : 'People have joined'}, but
-              nobody has marked days yet
+              {t('bestDates.empty.nobodyMarkedTitle', { count: trip.participants.length })}
             </p>
-            <p className="text-xs">Best dates appear as soon as anyone does</p>
+            <p className="text-xs">{t('bestDates.empty.nobodyMarkedBody')}</p>
           </>
         ) : (
           <>
-            <p className="text-sm text-foreground">No overlapping days yet</p>
-            <p className="text-xs">Nobody is free on the same day so far</p>
+            <p className="text-sm text-foreground">{t('bestDates.empty.noOverlapTitle')}</p>
+            <p className="text-xs">{t('bestDates.empty.noOverlapBody')}</p>
           </>
         )}
       </div>
@@ -111,13 +113,13 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-medium min-w-0">
           <Star className="w-4 h-4 text-accent shrink-0" />
-          <span className="shrink-0">Best Dates</span>
+          <span className="shrink-0">{t('bestDates.title')}</span>
           {selectedParticipants.length > 0 && (
             <span
               data-testid="best-dates-scope"
               className="text-xs font-normal text-muted-foreground truncate"
             >
-              for {selectedParticipants.join(', ')}
+              {t('bestDates.forNames', { names: selectedParticipants.join(', ') })}
             </span>
           )}
         </div>
@@ -132,13 +134,13 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
                 <p className="text-xs">
-                  Minimum length of trip period.
+                  {t('bestDates.minHelp')}
                 </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           
-          <span className="text-xs text-muted-foreground">Min:</span>
+          <span className="text-xs text-muted-foreground">{t('bestDates.minLabel')}</span>
           <Input
             type="number"
             inputMode="numeric"
@@ -151,15 +153,13 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
             onBlur={() => setMinDaysInput(String(minDays))}
             min="1"
             className="h-6 w-12 text-xs px-1.5"
-            title="Min days"
+            title={t('bestDates.minTitle')}
           />
         </div>
       </div>
       
       <div className="space-y-2">
         {topRanges.map((range) => {
-          const startDateObj = parseISO(range.startDate);
-          const endDateObj = parseISO(range.endDate);
           const isBest = range.count === maxCount;
           const isRange = range.startDate !== range.endDate;
           
@@ -182,19 +182,19 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
                 {isRange ? (
                   <>
                     <div className="text-base font-display font-semibold">
-                      {format(startDateObj, 'd MMM')} - {format(endDateObj, 'd MMM')}
+                      {f.dateRange(range.startDate, range.endDate, 'dayMonth')}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {range.days} days
+                      {t('bestDates.days', { count: range.days })}
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="text-lg font-display font-semibold">
-                      {format(startDateObj, 'd')}
+                      {f.date(range.startDate, 'day')}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {format(startDateObj, 'MMM')}
+                      {f.date(range.startDate, 'month')}
                     </div>
                   </>
                 )}
@@ -203,9 +203,9 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
               <div className="flex-1">
                 <div className="text-sm font-medium">
                   {isRange ? (
-                    `${format(startDateObj, 'EEE')} - ${format(endDateObj, 'EEE')}`
+                    f.dateRange(range.startDate, range.endDate, 'weekday')
                   ) : (
-                    format(startDateObj, 'EEEE')
+                    f.date(range.startDate, 'weekdayLong')
                   )}
                 </div>
                 <div data-testid="best-date-names" className="text-xs text-muted-foreground">
@@ -223,7 +223,7 @@ export function BestDates({ trip, selectedParticipants = [] }: BestDatesProps) {
                   {/* The icon carries no text, so the ratio needs saying in full. */}
                   <span className="sr-only">
                     {' '}
-                    of {scopeTotal} {scopeTotal === 1 ? 'person' : 'people'} free
+                    {t('bestDates.ofPeopleFree', { count: scopeTotal })}
                   </span>
                 </span>
               </div>

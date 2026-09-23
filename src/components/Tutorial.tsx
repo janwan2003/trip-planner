@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TutorialProps {
   completedSteps?: number[];
@@ -42,6 +43,7 @@ const storage = {
 
 export function Tutorial({ completedSteps = [], audience = 'organiser' }: TutorialProps) {
   const [isHidden, setIsHidden] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (storage.get() === 'true') {
@@ -67,7 +69,7 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
         onClick={handleShow}
         className="w-full"
       >
-        Show Tutorial
+        {t('tutorial.show')}
       </Button>
     );
   }
@@ -76,26 +78,26 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
     {
       icon: Calendar,
       number: 1,
-      title: 'Create a Trip',
-      description: 'Set your trip name and date range',
+      title: t('tutorial.organiser.createTitle'),
+      description: t('tutorial.organiser.createBody'),
     },
     {
       icon: Share2,
       number: 2,
-      title: 'Share the Link',
-      description: 'Send the trip link to all participants',
+      title: t('tutorial.organiser.shareTitle'),
+      description: t('tutorial.organiser.shareBody'),
     },
     {
       icon: Users,
       number: 3,
-      title: 'Mark and Save Availability',
-      description: 'Everyone selects their available dates',
+      title: t('tutorial.organiser.markTitle'),
+      description: t('tutorial.organiser.markBody'),
     },
     {
       icon: Check,
       number: 4,
-      title: 'Pick Best Dates',
-      description: 'See when most people are free',
+      title: t('tutorial.organiser.pickTitle'),
+      description: t('tutorial.organiser.pickBody'),
     },
   ];
 
@@ -108,20 +110,20 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
     {
       icon: Calendar,
       number: 1,
-      title: 'Mark the days you can go',
-      description: 'Tap a day, or drag across several',
+      title: t('tutorial.participant.markTitle'),
+      description: t('tutorial.participant.markBody'),
     },
     {
       icon: Check,
       number: 2,
-      title: 'Save',
-      description: 'Your dates go to the group straight away',
+      title: t('tutorial.participant.saveTitle'),
+      description: t('tutorial.participant.saveBody'),
     },
     {
       icon: Users,
       number: 3,
-      title: 'Watch the answer change',
-      description: 'Best Dates updates as more people reply',
+      title: t('tutorial.participant.watchTitle'),
+      description: t('tutorial.participant.watchBody'),
     },
   ];
 
@@ -130,17 +132,19 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-display font-semibold text-foreground">
-            {audience === 'participant' ? 'What to do' : 'How it works'}
+        {/* gap + a wrapping button: "Anleitung ausblenden" is twice "Hide Tutorial" and
+            pushed a 320px screen 20px wide before the label was allowed to break. */}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h2 className="shrink-0 text-lg font-display font-semibold text-foreground">
+            {audience === 'participant' ? t('tutorial.participantHeading') : t('tutorial.organiserHeading')}
           </h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleHide}
-            className="text-xs"
+            className="text-xs h-auto min-h-9 whitespace-normal text-right"
           >
-            Hide Tutorial
+            {t('tutorial.hide')}
           </Button>
         </div>
         <div className="space-y-4">

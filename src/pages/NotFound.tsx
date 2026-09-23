@@ -2,9 +2,11 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 
 import { usePageMeta } from "@/lib/usePageMeta";
+import { useTranslation } from "react-i18next";
 
 const NotFound = () => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   // The SPA fallback answers an unknown path with a 200, so without this a mistyped
   // URL is indexable as a real page.
@@ -18,9 +20,9 @@ const NotFound = () => {
     <div className="flex min-h-screen items-center justify-center bg-muted">
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
+        <p className="mb-4 text-xl text-muted-foreground">{t("notFound.message")}</p>
         <Link to="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
+          {t("notFound.home")}
         </Link>
       </div>
     </div>

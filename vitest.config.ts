@@ -15,7 +15,7 @@ export default defineConfig({
       // Vendored shadcn/ui components and the entrypoint are excluded: they are
       // third-party code we do not author, and coverage of them would be noise
       // that hides how well our own logic is tested.
-      include: ["src/lib/**", "src/components/**", "src/pages/**"],
+      include: ["src/lib/**", "src/components/**", "src/pages/**", "src/i18n/**"],
       exclude: ["src/components/ui/**", "src/test/**", "src/main.tsx", "src/vite-env.d.ts"],
       // Set below the measured result rather than at it: a threshold pinned to the
       // exact current number turns any unrelated refactor into a red build. The floor

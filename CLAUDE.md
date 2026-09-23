@@ -209,13 +209,14 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
   entirely, along with the localStorage write-through that used to hide its absence.
 - **Typing is fully strict.** `strict`, `noUnusedLocals`, `noUnusedParameters`,
   `noImplicitAny` and `noFallthroughCasesInSwitch` are all on, and the tree is clean.
-- `pnpm lint` exits 0. The 7 remaining warnings are all
-  `react-refresh/only-export-components` in vendored shadcn files; warnings do not fail
-  the run, and those files are not ours to restructure.
-- **Coverage is 98.34% of lines, 93.48% of branches** across `src/lib`,
-  `src/components` and `src/pages`, from 402 unit tests (measured 2026-09-23 with
-  `pnpm run test:coverage`; earlier snapshots: 390 / 98.51% on 2026-09-13, 243 / 97.70%
-  on 2026-08-28). Thresholds in
+- `pnpm lint` exits 0 with no warnings (measured 2026-09-23); the
+  `react-refresh/only-export-components` warnings in vendored shadcn files are switched
+  off for `src/components/ui/**` in `eslint.config.js`.
+- **Coverage is 98.73% of lines, 93.15% of branches** across `src/lib`,
+  `src/components`, `src/pages` and `src/i18n`, from 430 unit tests (measured
+  2026-09-23 with `pnpm run test:coverage`, when `src/i18n` joined the measured set;
+  earlier snapshots: 402 / 98.34% earlier on 2026-09-23, 390 / 98.51% on 2026-09-13,
+  243 / 97.70% on 2026-08-28). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
@@ -559,6 +560,65 @@ site.
 **Still outstanding:** no contact address is published, so a request to delete a whole trip
 has nowhere to go. Which address to publish is the owner's call.
 
+## Languages
+
+The app UI ships in **English, German, Spanish and Dutch** since 2026-09-23. Chosen from
+evidence, not a market list: strangers' trips are named in Dutch, German and Spanish, and
+NL, DE and PY are in the top-ten countries by traffic (see "Production data"). Russian,
+Vietnamese and Korean are the next candidates on the same evidence.
+
+**What is translated:** everything a trip creator or invitee sees — home page, create
+form, trip page, calendar, best dates, participants, tutorial, toasts, 404.
+**What is not, on purpose:** the comparison pages, FAQ, About, Contact and the legal
+pages. They are English SEO copy and legal text; translating them properly needs
+per-language URLs (`/de/faq`), `hreflang` and per-language prerendering, not strings. The
+page `<title>`/description in `siteMeta.ts` stay English for the same reason.
+
+How it works — all in `src/i18n/`:
+
+- `locales/en.ts` is the **source of truth**, keys grouped by component. `de.ts`, `es.ts`,
+  `nl.ts` are typed `satisfies LocaleBundle`, whose `Messages` type is derived from
+  English — **a key missing, misspelt or extra in any locale fails `pnpm run typecheck`**.
+  `i18next.d.ts` types every `t('...')` call the same way.
+- **`eslint-plugin-i18next` (`no-literal-string`) fails lint on raw text in JSX** —
+  text nodes and `alt`/`title`/`placeholder`/`label`/`aria-label`. It covers
+  `src/**/*.tsx` by default; the English-only pages are an explicit ignore list in
+  `eslint.config.js`. A new component cannot ship English-only by accident.
+- `locales.test.ts` checks what types cannot: no empty strings, the same `{{placeholders}}`
+  and `<tags>` as English. A dropped `{{name}}` typechecks and then renders no name.
+- `config.ts` is the registry. English is bundled; the others are ~12 kB lazy chunks.
+  **Cost:** the entry chunk grew from 90.24 to 112.65 kB gzip (+22.4 kB: i18next,
+  react-i18next and the English messages), measured by building `main` at 0f1af3a and
+  this change side by side on 2026-09-23.
+- `detect.ts`: a choice made in the switcher (`localStorage` key `wegowhen.locale.v1`,
+  disclosed in the privacy policy §2.2 and §7) wins, then `navigator.languages`
+  (`de-AT` → `de`), then English. Storage calls are guarded as in `recentTrips.ts`.
+- `format.ts`: **dates are formatted by named style through `Intl.DateTimeFormat`, never a
+  pattern string.** `useFormat().date(iso, 'dayMonth')`, `.dateRange(...)`,
+  `.weekdays()`. Built and formatted in UTC, so no offset moves a day. The format tag is
+  the browser's own when it speaks the UI language, so `en-GB` gets "1 Sept", `en-US`
+  "Sep 1". The week starts on the locale's day (Monday in de/es/nl, from the date-fns
+  locale's `weekStartsOn`); the calendar grid offsets from it.
+- Plurals: `key_one` / `key_other` with `t(key, { count })`. The type allows `_few`,
+  `_many` etc., so Russian or Polish can be added without loosening it.
+
+**Hydration.** The build prerenders English. `main.tsx` hydrates only when the detected
+language is English; anyone else waits for their chunk and gets a fresh `createRoot`
+render. Crawlers are unaffected (no JS, or an English browser).
+
+**Adding a language:** create `locales/xx.ts` (copy `de.ts`; the compiler lists every
+missing key), add one line to `LOCALES` in `config.ts`, run `pnpm run check`, then check
+the layout at 320px in that language — longer strings broke it twice on 2026-09-23
+(German "Anleitung ausblenden", Spanish "Compartir"), and jsdom cannot see layout.
+**Adding a string:** add the key to `en.ts`, use `t('...')`; typecheck then names each
+locale that needs it.
+
+Verified 2026-09-23 in Chromium against `wrangler pages dev dist`: English home hydrates
+with no console errors; `de-DE` gets German and `<html lang="de">`; a `nl-NL` phone
+joins, sees a Monday-first calendar, saves and gets the Dutch toast; switching to
+Español persists across reload; `vi-VN` falls back to English; no horizontal scroll at
+320px on `/` or `/trip/:id` in any of the four languages.
+
 ## Dates: never parse `YYYY-MM-DD` with `new Date()`
 
 `new Date('2026-09-01')` is not 1 September. The spec parses a date-only string as an
@@ -573,9 +633,10 @@ start date included. Fixed in `0a433d5`.
   `new Date(Date.UTC(y, m - 1, d))`, read back with `getUTC*`. This is what
   `getDatesBetween` and the API's `isCalendarDate` both do. Also check the result, because
   `Date.UTC` rolls `2026-02-31` forward to 3 March instead of rejecting it.
-- **Displaying a date, or feeding a date picker?** `parseISO(value)` from date-fns, which
-  reads a date-only string as a *local* calendar day, then `format(d, 'yyyy-MM-dd')` to go
-  back. Never `toISOString().slice(0, 10)` on a local Date.
+- **Displaying a date?** `useFormat()` from `src/i18n/format.ts` — it takes the
+  `YYYY-MM-DD` string and a named style. **Feeding a date picker?** `parseISO(value)` from
+  date-fns, which reads a date-only string as a *local* calendar day, then
+  `format(d, 'yyyy-MM-dd')` to go back. Never `toISOString().slice(0, 10)` on a local Date.
 - **Comparing two `YYYY-MM-DD` strings?** Compare the strings. The format sorts correctly.
 
 **The suite runs in `America/New_York`** — see `src/test/setup.ts`; override with

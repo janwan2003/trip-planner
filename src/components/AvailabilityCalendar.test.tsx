@@ -273,7 +273,7 @@ describe('AvailabilityCalendar', () => {
 
     it('puts the count in the cell name, which aria-label would otherwise hide', () => {
       render(<AvailabilityCalendar {...group()} />);
-      expect(dayCell('3')).toHaveAccessibleName('Thursday 3 September 2026, 2 available');
+      expect(dayCell('3')).toHaveAccessibleName('Thursday, September 3, 2026, 2 available');
     });
   });
 
@@ -404,6 +404,6 @@ describe('AvailabilityCalendar', () => {
   it('names each date for a screen reader rather than leaving a bare number', () => {
     render(<AvailabilityCalendar {...props()} />);
 
-    expect(dayCell('3')).toHaveAccessibleName('Thursday 3 September 2026');
+    expect(dayCell('3')).toHaveAccessibleName('Thursday, September 3, 2026');
   });
 });

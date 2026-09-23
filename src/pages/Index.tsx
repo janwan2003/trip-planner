@@ -3,9 +3,12 @@ import { CreateTripForm } from '@/components/CreateTripForm';
 import { Tutorial } from '@/components/Tutorial';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { RecentTrips } from '@/components/RecentTrips';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const Index = () => {
   usePageMeta('/');
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -13,13 +16,14 @@ const Index = () => {
       <header className="py-3 px-4">
         <div className="container max-w-6xl mx-auto flex items-center gap-3">
           <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0">
-            <img src="/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
+            <img src="/favicon.png" alt={t('common.logoAlt')} className="w-full h-full object-contain" />
           </div>
           <div className="h-8 flex items-center">
             <span className="font-display font-semibold text-xl sm:text-2xl select-none">
               WeGoWhen
             </span>
           </div>
+          <LanguageSwitcher className="ml-auto" />
         </div>
       </header>
 
@@ -43,17 +47,17 @@ const Index = () => {
               <div className="max-w-md mx-auto lg:mx-0">
                 <div className="text-center lg:text-left mb-8">
                   <h1 className="text-4xl font-display font-bold text-foreground mb-3">
-                    Find the days your group can actually go
+                    {t('home.title')}
                   </h1>
                   <p className="text-lg text-muted-foreground">
-                    Plan trips with friends by finding when everyone's available
+                    {t('home.subtitle')}
                   </p>
                 </div>
 
                 <CreateTripForm />
 
                 <p className="mt-4 text-sm text-muted-foreground text-center lg:text-left">
-                  Free, no account, and nothing for your friends to sign up to.
+                  {t('home.freeNote')}
                 </p>
 
                 {/* Renders nothing for a browser that has not opened a trip yet. */}
@@ -78,22 +82,22 @@ const Index = () => {
             <div>
               <h3 className="font-display font-semibold text-lg mb-3">WeGoWhen</h3>
               <p className="text-sm text-muted-foreground">
-                Pick trip dates with friends. No accounts, just a link.
+                {t('home.footer.tagline')}
               </p>
             </div>
 
             {/* Company */}
             <div>
-              <h4 className="font-medium mb-3">Project</h4>
+              <h4 className="font-medium mb-3">{t('home.footer.project')}</h4>
               <ul className="text-sm">
                 <li>
                   <Link to="/about" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    About
+                    {t('home.footer.about')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/contact" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    Contact
+                    {t('home.footer.contact')}
                   </Link>
                 </li>
               </ul>
@@ -101,21 +105,21 @@ const Index = () => {
 
             {/* Learn */}
             <div>
-              <h4 className="font-medium mb-3">Learn</h4>
+              <h4 className="font-medium mb-3">{t('home.footer.learn')}</h4>
               <ul className="text-sm">
                 <li>
                   <Link to="/faq" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    FAQ
+                    {t('home.footer.faq')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/when2meet-alternative" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    When2meet alternative
+                    {t('home.footer.when2meet')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/doodle-alternative" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    Doodle alternative
+                    {t('home.footer.doodle')}
                   </Link>
                 </li>
               </ul>
@@ -123,16 +127,16 @@ const Index = () => {
 
             {/* Legal */}
             <div>
-              <h4 className="font-medium mb-3">Legal</h4>
+              <h4 className="font-medium mb-3">{t('home.footer.legal')}</h4>
               <ul className="text-sm">
                 <li>
                   <Link to="/terms" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    Terms of Service
+                    {t('home.footer.terms')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/privacy" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
-                    Privacy Policy
+                    {t('home.footer.privacy')}
                   </Link>
                 </li>
               </ul>
@@ -142,7 +146,7 @@ const Index = () => {
           {/* Bottom bar */}
           <div className="border-t border-border/40 pt-6 text-center" data-app-version="1.7.4">
             <p className="text-sm text-muted-foreground">
-              Share the link. Mark your dates. Go on adventures.
+              {t('home.footer.closing')}
             </p>
           </div>
         </div>

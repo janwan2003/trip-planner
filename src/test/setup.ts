@@ -14,6 +14,16 @@
 process.env.TZ = process.env.WGW_TEST_TZ ?? 'America/New_York';
 
 import "@testing-library/jest-dom";
+import { afterEach } from "vitest";
+
+// Every component renders through react-i18next, which needs the instance initialised.
+// English is in memory, so rendering stays synchronous. A test that switches language
+// must not leak it into the next file's assertions.
+import { i18n } from "@/i18n";
+
+afterEach(async () => {
+  if (i18n.language !== "en") await i18n.changeLanguage("en");
+});
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

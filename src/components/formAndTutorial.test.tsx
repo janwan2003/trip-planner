@@ -91,7 +91,8 @@ describe('ModernDateInput', () => {
   it('formats a supplied value for reading, not as an ISO string', () => {
     render(<ModernDateInput label="Start Date" value="2026-09-03" onChange={vi.fn()} />);
 
-    expect(screen.getByText('03/09/2026')).toBeInTheDocument();
+    // en-US in jsdom, so month first; the order follows the reader's locale.
+    expect(screen.getByText('09/03/2026')).toBeInTheDocument();
     expect(screen.queryByText('2026-09-03')).not.toBeInTheDocument();
   });
 

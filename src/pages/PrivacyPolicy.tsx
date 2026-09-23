@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
 
         <div className="prose prose-slate max-w-none">
           <h1 className="text-4xl font-display font-bold mb-6">Privacy Policy</h1>
-          <p className="text-muted-foreground mb-8">Last updated: August 28, 2026</p>
+          <p className="text-muted-foreground mb-8">Last updated: September 23, 2026</p>
 
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">1. Introduction</h2>
@@ -48,7 +48,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li><strong>Page Analytics:</strong> We use Cloudflare Web Analytics, which counts page views and records which website referred you, if any. It sets no cookies, uses no device fingerprinting, and does not track you across sites or sessions. We see aggregate counts, such as how many people opened a page and how many arrived from a given site. We cannot tell from it who you are or which trip you opened</li>
               <li><strong>Server Request Logs:</strong> Our host, Cloudflare, records standard request metadata such as your IP address and browser user agent in order to serve and protect the site. We do not query, export, or link this to your trips</li>
-              <li><strong>Local Storage:</strong> Your tutorial preference, the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us</li>
+              <li><strong>Local Storage:</strong> Your tutorial preference, the language you chose for the site (if you picked one), the list of trips you have opened in this browser (each trip's name, dates and link), and the name you last used to join a trip. This is held on your device and is never sent to us</li>
             </ul>
           </section>
 
@@ -112,7 +112,8 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-display font-semibold mb-4">7. Cookies and Local Storage</h2>
             <p className="mb-4">
-              We use browser local storage to save your tutorial preferences, UI state, and a list of the trips
+              We use browser local storage to save your tutorial preferences, UI state, the language you picked
+              for the site, and a list of the trips
               you have opened in this browser so you can find them again without the link. That list holds each
               trip's name, dates and link, and nothing about other participants. This data is stored only on
               your device and is not transmitted to our servers. You can remove an individual trip from the list

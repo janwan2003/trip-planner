@@ -1,7 +1,9 @@
 import { memo, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getDatesBetween, Participant } from '@/lib/tripStore';
-import { format, parseISO, getDay } from 'date-fns';
+import { getDay, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { useFormat } from '@/i18n/format';
 
 interface AvailabilityCalendarProps {
   startDate: string;
@@ -17,7 +19,6 @@ interface AvailabilityCalendarProps {
 
 const EMPTY: string[] = [];
 const NO_PARTICIPANTS: Participant[] = [];
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /**
  * Memoised: the page holds two of these, and during a drag only the editable one's
@@ -38,22 +39,23 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartValue, setDragStartValue] = useState<boolean | null>(null);
   const draggedDatesRef = useRef<Set<string>>(new Set());
+  const { t } = useTranslation();
+  const f = useFormat();
   
   const dates = useMemo(() => getDatesBetween(startDate, endDate), [startDate, endDate]);
   const selectedSet = useMemo(() => new Set(selectedDates), [selectedDates]);
 
   /**
-   * Each day's labels, formatted once per range. date-fns `format` ran twice per cell on
-   * every render, and on a full-year trip that was most of what a drag step cost.
+   * Each day's labels, formatted once per range and language. Formatting ran twice per
+   * cell on every render, and on a full-year trip that was most of what a drag step cost.
    */
   const dayLabels = useMemo(() => {
     const labels = new Map<string, { full: string; day: string }>();
     for (const date of dates) {
-      const dateObj = parseISO(date);
-      labels.set(date, { full: format(dateObj, 'EEEE d MMMM yyyy'), day: format(dateObj, 'd') });
+      labels.set(date, { full: f.date(date, 'full'), day: f.date(date, 'day') });
     }
     return labels;
-  }, [dates]);
+  }, [dates, f]);
 
   const usesFilter = readOnly && participants.length > 0;
 
@@ -216,7 +218,7 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
     [participants, selectedParticipants],
   );
 
-  const weekDays = WEEK_DAYS;
+  const weekDays = useMemo(() => f.weekdays(), [f]);
 
   // Group dates by month. The key is the string's own `YYYY-MM` prefix: no parsing, and
   // no timezone to get wrong.
@@ -249,22 +251,23 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
     >
       {months.map((monthKey, monthIndex) => {
         const monthDates = datesByMonth[monthKey];
-        const firstDate = parseISO(monthDates[0]);
-        const firstDayOfWeek = getDay(firstDate);
+        // Blank cells before the first day, counted from the locale's first weekday:
+        // Sunday in the US, Monday across most of Europe.
+        const leadingBlanks = (getDay(parseISO(monthDates[0])) - f.weekStartsOn + 7) % 7;
         
         return (
           <div key={monthKey} className={cn(monthIndex > 0 && "pt-2 border-t")}>
             {/* Month header - only show if spanning multiple months */}
             {spanMultipleMonths && (
               <h3 className="text-sm font-semibold mb-3 text-foreground">
-                {format(firstDate, 'MMMM yyyy')}
+                {f.date(monthDates[0], 'monthYear')}
               </h3>
             )}
             
             {/* Week day headers */}
             <div className="grid grid-cols-7 gap-0.5 sm:gap-1 text-center mb-1">
-              {weekDays.map(day => (
-                <div key={day} className="text-xs font-medium text-muted-foreground py-2">
+              {weekDays.map((day, i) => (
+                <div key={i} className="text-xs font-medium text-muted-foreground py-2">
                   {day}
                 </div>
               ))}
@@ -273,11 +276,9 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
             {/* Calendar grid */}
             <div className={cn("grid grid-cols-7 gap-0.5 sm:gap-1", isDragging && "touch-none")}>
               {/* Empty cells for alignment - only for first week of each month */}
-              {monthIndex === 0 || getDay(firstDate) !== 0 ? (
-                Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                  <div key={`empty-${monthKey}-${i}`} className="aspect-square sm:aspect-auto sm:h-14" />
-                ))
-              ) : null}
+              {Array.from({ length: leadingBlanks }).map((_, i) => (
+                <div key={`empty-${monthKey}-${i}`} className="aspect-square sm:aspect-auto sm:h-14" />
+              ))}
               
               {monthDates.map(date => {
                 const isSelected = selectedSet.has(date);
@@ -294,7 +295,7 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
                     aria-expanded={readOnly ? revealedDate === date : undefined}
                     aria-label={
                       readOnly
-                        ? `${labels.full}, ${availableCount} available`
+                        ? t('calendar.dayWithCount', { date: labels.full, count: availableCount })
                         : labels.full
                     }
                     onMouseDown={() => {
@@ -403,15 +404,16 @@ export const AvailabilityCalendar = memo(function AvailabilityCalendar({
         >
           {revealedDate ? (
             <p className="text-sm">
-              <span className="font-medium">{format(parseISO(revealedDate), 'EEE d MMM')}</span>
+              <span className="font-medium">{f.date(revealedDate, 'weekdayDayMonth')}</span>
               <span className="text-muted-foreground">
+                {' — '}
                 {namesAvailableOn(revealedDate).length > 0
-                  ? ` — ${namesAvailableOn(revealedDate).join(', ')}`
-                  : ' — nobody is free'}
+                  ? namesAvailableOn(revealedDate).join(', ')
+                  : t('calendar.nobodyFree')}
               </span>
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">Tap a day to see who is free</p>
+            <p className="text-sm text-muted-foreground">{t('calendar.tapHint')}</p>
           )}
         </div>
       )}

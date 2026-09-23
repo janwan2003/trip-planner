@@ -40,7 +40,7 @@ describe('RecentTrips', () => {
 
     renderWithRouter(<RecentTrips />);
 
-    expect(screen.getByText('Jul 1 - Jul 10, 2026')).toBeInTheDocument();
+    expect(screen.getByText(/^Jul 1\s–\s10, 2026$/)).toBeInTheDocument();
   });
 
   it('marks the trips this browser created, and only those', () => {
@@ -116,7 +116,7 @@ describe('RecentTrips', () => {
     renderWithRouter(<RecentTrips />);
 
     expect(
-      screen.getByRole('link', { name: 'Open Alps hike, Jul 1 - Jul 10, 2026' }),
+      screen.getByRole('link', { name: /^Open Alps hike, Jul 1\s–\s10, 2026$/ }),
     ).toHaveAttribute('href', '/trip/aaa');
   });
 

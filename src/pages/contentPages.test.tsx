@@ -146,11 +146,17 @@ describe('content pages', () => {
 
   it('both legal pages were re-dated when their content changed', () => {
     const { unmount } = renderWithRouter(<PrivacyPolicy />);
-    expect(screen.getByText(/Last updated: August 28, 2026/)).toBeInTheDocument();
+    // Re-dated for the stored language choice (2026-09-23).
+    expect(screen.getByText(/Last updated: September 23, 2026/)).toBeInTheDocument();
     unmount();
 
     renderWithRouter(<TermsOfService />);
     expect(screen.getByText(/Last updated: August 28, 2026/)).toBeInTheDocument();
+  });
+
+  it('discloses the stored language choice, which src/i18n/detect.ts writes to local storage', () => {
+    renderWithRouter(<PrivacyPolicy />);
+    expect(screen.getAllByText(/the language you (chose|picked) for the site/i).length).toBe(2);
   });
 
   it('NotFound tells the visitor where they are and offers a way out', () => {

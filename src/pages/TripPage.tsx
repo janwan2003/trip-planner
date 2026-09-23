@@ -23,9 +23,25 @@ import { ParticipantsList } from '@/components/ParticipantsList';
 import { BestDates } from '@/components/BestDates';
 import { Tutorial } from '@/components/Tutorial';
 import { Copy, Check, ArrowLeft, Calendar, Users, Loader2, Pencil, LogOut } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { Trans, useTranslation } from 'react-i18next';
+import { useFormat } from '@/i18n/format';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+
+/**
+ * The name in the greeting, as the button that renames it. Trans places the translated
+ * name inside as `children`; the pencil follows it wherever the language puts the name.
+ */
+const NameButton = ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
+  <button
+    onClick={onClick}
+    className="font-medium text-foreground hover:underline inline-flex items-center gap-1"
+  >
+    {children}
+    <Pencil className="w-3 h-3" />
+  </button>
+);
 
 /** Stable props for the read-only group calendar, so its memo holds during a drag. */
 const NO_DATES: string[] = [];
@@ -86,6 +102,8 @@ export default function TripPage() {
     () => getRecentTrips().find((entry) => entry.id === tripId)?.role === 'creator',
   );
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const f = useFormat();
 
   /**
    * Re-attaches this browser to the participant it answered as last time.
@@ -203,8 +221,8 @@ export default function TripPage() {
         );
         setHasSavedAvailability(true);
         toast({
-          title: "Availability saved!",
-          description: `Your dates have been updated.`,
+          title: t('trip.toast.savedTitle'),
+          description: t('trip.toast.savedBody'),
         });
       }
     } catch (error) {
@@ -216,16 +234,16 @@ export default function TripPage() {
         setSavedDates(current?.availableDates ?? []);
         setBaseUpdatedAt(current ? current.updated_at : null);
         toast({
-          title: "These dates changed meanwhile",
-          description: `${userName}'s answer was updated from another device. Your marks are still here; save again to replace it, or check the group view first.`,
+          title: t('trip.toast.conflictTitle'),
+          description: t('trip.toast.conflictBody', { name: userName }),
           variant: "destructive",
         });
         return;
       }
       console.error('Error saving availability:', error);
       toast({
-        title: "Error saving",
-        description: "Something went wrong. Please try again.",
+        title: t('trip.toast.saveErrorTitle'),
+        description: t('common.genericError'),
         variant: "destructive",
       });
     } finally {
@@ -251,8 +269,8 @@ export default function TripPage() {
         return;
       }
       toast({
-        title: "Couldn't copy the link",
-        description: "Copy it from your browser's address bar instead.",
+        title: t('trip.toast.copyFailedTitle'),
+        description: t('trip.toast.copyFailedBody'),
         variant: "destructive",
       });
       return;
@@ -261,8 +279,8 @@ export default function TripPage() {
     setHasSharedLink(true);
     setTimeout(() => setCopied(false), 2000);
     toast({
-      title: "Link copied!",
-      description: "Share this link with your friends.",
+      title: t('trip.toast.linkCopiedTitle'),
+      description: t('trip.toast.linkCopiedBody'),
     });
   };
 
@@ -287,8 +305,8 @@ export default function TripPage() {
 
     if (nameExists) {
       toast({
-        title: "Name already taken",
-        description: "Someone else is already using this name.",
+        title: t('trip.toast.nameTakenTitle'),
+        description: t('trip.toast.nameTakenBody'),
         variant: "destructive",
       });
       return;
@@ -315,15 +333,15 @@ export default function TripPage() {
         setBaseUpdatedAt(updatedTrip.participants.find((p) => sameName(p.name, newName))?.updated_at);
         setUserName(newName);
         toast({
-          title: "Name updated!",
-          description: `You are now known as ${newName}.`,
+          title: t('trip.toast.renamedTitle'),
+          description: t('trip.toast.renamedBody', { name: newName }),
         });
       }
     } catch (error) {
       console.error('Error updating name:', error);
       toast({
-        title: "Error updating name",
-        description: "Something went wrong. Please try again.",
+        title: t('trip.toast.renameErrorTitle'),
+        description: t('common.genericError'),
         variant: "destructive",
       });
     } finally {
@@ -351,15 +369,15 @@ export default function TripPage() {
         setSavedDates([]);
         setHasSavedAvailability(false);
         toast({
-          title: "Withdrawn from trip",
-          description: "Your availability has been removed.",
+          title: t('trip.toast.withdrawnTitle'),
+          description: t('trip.toast.withdrawnBody'),
         });
       }
     } catch (error) {
       console.error('Error withdrawing:', error);
       toast({
-        title: "Error withdrawing",
-        description: "Something went wrong. Please try again.",
+        title: t('trip.toast.withdrawErrorTitle'),
+        description: t('common.genericError'),
         variant: "destructive",
       });
     } finally {
@@ -493,7 +511,7 @@ export default function TripPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading trip...</p>
+          <p className="text-muted-foreground">{t('trip.loading')}</p>
         </div>
       </div>
     );
@@ -503,14 +521,14 @@ export default function TripPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <h2 className="text-2xl font-display font-semibold mb-2">Couldn't load this trip</h2>
+          <h2 className="text-2xl font-display font-semibold mb-2">{t('trip.loadErrorTitle')}</h2>
           <p className="text-muted-foreground mb-4">
-            The trip may well be fine — we just couldn't reach it. Check your connection and try again.
+            {t('trip.loadErrorBody')}
           </p>
           <div className="flex gap-2 justify-center">
-            <Button onClick={() => window.location.reload()}>Try again</Button>
+            <Button onClick={() => window.location.reload()}>{t('trip.tryAgain')}</Button>
             <Button variant="outline" asChild>
-              <Link to="/">Create a new trip</Link>
+              <Link to="/">{t('trip.createNew')}</Link>
             </Button>
           </div>
         </div>
@@ -522,10 +540,10 @@ export default function TripPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-display font-semibold mb-2">Trip not found</h2>
-          <p className="text-muted-foreground mb-4">This trip doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-display font-semibold mb-2">{t('trip.notFoundTitle')}</h2>
+          <p className="text-muted-foreground mb-4">{t('trip.notFoundBody')}</p>
           <Button asChild>
-            <Link to="/">Create a new trip</Link>
+            <Link to="/">{t('trip.createNew')}</Link>
           </Button>
         </div>
       </div>
@@ -539,9 +557,10 @@ export default function TripPage() {
         <div className="container max-w-6xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0">
-              <img src="/favicon.png" alt="WeGoWhen Logo" className="w-full h-full object-contain" />
+              <img src="/favicon.png" alt={t('common.logoAlt')} className="w-full h-full object-contain" />
             </div>
-            <div className="h-8 flex items-center">
+            {/* The logo still names the link below 360px; see the Share button note. */}
+            <div className="h-8 flex items-center max-[359px]:hidden">
               <span className="font-display font-semibold text-xl sm:text-2xl select-none">
                 WeGoWhen
               </span>
@@ -553,14 +572,20 @@ export default function TripPage() {
             header wider than a 320px viewport and gave the whole page 66px of
             horizontal overflow. The word "Link" carries nothing the icon does not, so
             it is dropped on the narrowest screens rather than wrapping the header.
+
+            Translation made the short label longer again - Spanish "Compartir" put the
+            page 28px over at 320px. Below 360px the wordmark goes instead, because the
+            logo beside it already says whose site this is and the button's label is
+            the only thing saying what it does.
           */}
           <Button variant="outline" onClick={handleCopyLink} className="gap-2 shrink-0">
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? (
-              'Copied!'
+              t('trip.copied')
             ) : (
               <>
-                Share<span className="hidden sm:inline">&nbsp;Link</span>
+                <span className="sm:hidden">{t('trip.share')}</span>
+                <span className="hidden sm:inline">{t('trip.shareLink')}</span>
               </>
             )}
           </Button>
@@ -576,7 +601,7 @@ export default function TripPage() {
               className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to trip view
+              {t('trip.back')}
             </button>
           )}
           <h1 className="text-3xl font-display font-bold mb-2">{trip.name}</h1>
@@ -584,13 +609,13 @@ export default function TripPage() {
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
               <span className="text-sm">
-                {format(parseISO(trip.startDate), 'MMM d')} - {format(parseISO(trip.endDate), 'MMM d, yyyy')}
+                {f.dateRange(trip.startDate, trip.endDate, 'dayMonthYear')}
               </span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               <span className="text-sm">
-                {trip.participants.length} participant{trip.participants.length !== 1 ? 's' : ''}
+                {t('trip.participantCount', { count: trip.participants.length })}
               </span>
             </div>
           </div>
@@ -610,24 +635,23 @@ export default function TripPage() {
             {!hasJoined ? (
               <Card className="animate-scale-in shadow-warm border-0">
                 <CardHeader>
-                  <CardTitle className="font-display">Join this trip</CardTitle>
+                  <CardTitle className="font-display">{t('trip.join.title')}</CardTitle>
                   {/*
                     A cold arrival has been sent a link by a friend and is being asked for
                     a name by a site they have never seen. Say what the name is for and
                     that it is not an account, or the ask reads like a signup wall.
                   */}
                   <p className="text-sm text-muted-foreground">
-                    Your name labels the days you pick, so everyone can see who is free
-                    when. No account, no email.
+                    {t('trip.join.body')}
                   </p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleJoin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="userName">Your Name</Label>
+                      <Label htmlFor="userName">{t('trip.join.nameLabel')}</Label>
                       <Input
                         id="userName"
-                        placeholder="Enter your name"
+                        placeholder={t('trip.join.namePlaceholder')}
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
                         className="h-11"
@@ -638,7 +662,7 @@ export default function TripPage() {
                     {/* "Continue" named no destination on the one screen where the
                         visitor does not yet know what the product does. */}
                     <Button type="submit" className="w-full">
-                      Mark my dates
+                      {t('trip.join.submit')}
                     </Button>
                   </form>
                 </CardContent>
@@ -648,7 +672,7 @@ export default function TripPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="font-display">Mark Your Availability</CardTitle>
+                      <CardTitle className="font-display">{t('trip.mark.title')}</CardTitle>
                       {isEditingName ? (
                         <div className="flex items-center gap-2 mt-2">
                           <Input
@@ -668,13 +692,13 @@ export default function TripPage() {
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground mt-1">
-                          Hi <button 
-                            onClick={handleEditName}
-                            className="font-medium text-foreground hover:underline inline-flex items-center gap-1"
-                          >
-                            {userName}
-                            <Pencil className="w-3 h-3" />
-                          </button>! Tap or drag across the days you're free.
+                          <Trans
+                            i18nKey="trip.mark.greeting"
+                            values={{ name: userName }}
+                            components={{
+                              name: <NameButton onClick={handleEditName} />,
+                            }}
+                          />
                         </p>
                       )}
                     </div>
@@ -683,29 +707,27 @@ export default function TripPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label="Withdraw from trip"
+                          aria-label={t('trip.withdraw.label')}
                           className="min-h-11 min-w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          title="Withdraw from trip"
+                          title={t('trip.withdraw.label')}
                         >
                           <LogOut className="w-4 h-4" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Withdraw from this trip?</AlertDialogTitle>
+                          <AlertDialogTitle>{t('trip.withdraw.confirmTitle')}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            The days you marked will be removed from {trip.name}, and the
-                            group will no longer see you as coming. You can rejoin with the
-                            same name later, but your dates will be gone.
+                            {t('trip.withdraw.confirmBody', { trip: trip.name })}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Stay on the trip</AlertDialogCancel>
+                          <AlertDialogCancel>{t('trip.withdraw.cancel')}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={handleWithdraw}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            Withdraw
+                            {t('trip.withdraw.confirm')}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -720,7 +742,7 @@ export default function TripPage() {
                       size="sm"
                       onClick={() => setSelectedDates(getDatesBetween(trip.startDate, trip.endDate))}
                     >
-                      Select All
+                      {t('trip.mark.selectAll')}
                     </Button>
                     <Button
                       type="button"
@@ -728,7 +750,7 @@ export default function TripPage() {
                       size="sm"
                       onClick={() => setSelectedDates([])}
                     >
-                      Clear All
+                      {t('trip.mark.clearAll')}
                     </Button>
                   </div>
                   
@@ -744,11 +766,11 @@ export default function TripPage() {
                   <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded bg-success-light border-2 border-success" />
-                      <span>Available</span>
+                      <span>{t('trip.mark.legendAvailable')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded bg-muted" />
-                      <span>Not selected</span>
+                      <span>{t('trip.mark.legendNotSelected')}</span>
                     </div>
                   </div>
                   
@@ -768,12 +790,12 @@ export default function TripPage() {
                       {isSaving ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Saving...
+                          {t('trip.mark.saving')}
                         </>
                       ) : hasUnsavedChanges ? (
-                        'Save Availability'
+                        t('trip.mark.save')
                       ) : (
-                        'No Changes to Save'
+                        t('trip.mark.noChanges')
                       )}
                     </Button>
                   </div>
@@ -793,11 +815,11 @@ export default function TripPage() {
             {trip.participants.length > 0 && (
               <Card className="shadow-soft animate-fade-in">
                 <CardHeader>
-                  <CardTitle className="font-display">Group Availability</CardTitle>
+                  <CardTitle className="font-display">{t('trip.group.title')}</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {activeFilter.length === 0
-                      ? 'Showing all participants'
-                      : `Filtered to: ${activeFilter.join(', ')}`}
+                      ? t('trip.group.showingAll')
+                      : t('trip.group.filteredTo', { names: activeFilter.join(', ') })}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -819,8 +841,8 @@ export default function TripPage() {
                       <div className="flex-1 h-3 rounded-full bg-gradient-to-r from-muted to-primary" />
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>No one</span>
-                      <span>Everyone</span>
+                      <span>{t('trip.group.noOne')}</span>
+                      <span>{t('trip.group.everyone')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -833,9 +855,9 @@ export default function TripPage() {
             {/* Participants */}
             <Card className="shadow-soft animate-fade-in">
               <CardHeader>
-                <CardTitle className="font-display text-lg">Participants</CardTitle>
+                <CardTitle className="font-display text-lg">{t('trip.participants.title')}</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Click to filter by subset, or the pencil to edit someone's dates
+                  {t('trip.participants.hint')}
                 </p>
               </CardHeader>
               <CardContent>
@@ -870,6 +892,15 @@ export default function TripPage() {
       </main>
 
       {/*
+        Below the page rather than in the header, which already drops a word from the
+        Share button to fit 320px. The language is picked from the browser on arrival,
+        so this is the override, not the way in.
+      */}
+      <footer className="container max-w-6xl mx-auto px-4 pb-8 flex justify-center">
+        <LanguageSwitcher />
+      </footer>
+
+      {/*
         Switching identity replaces the marked days on screen, so unsaved marks would go
         with it. The rest of the product warns before losing them (see the beforeunload
         handler above); this path has to as well.
@@ -882,24 +913,17 @@ export default function TripPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard your unsaved days?</AlertDialogTitle>
+            <AlertDialogTitle>{t('trip.leaveEditor.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingLeave?.kind === 'switch' ? (
-                <>
-                  You have days marked as {userName} that are not saved. Editing{' '}
-                  {pendingLeave.name}'s dates loads their answer instead, and your unsaved
-                  marks are lost.
-                </>
-              ) : (
-                <>
-                  You have days marked as {userName} that are not saved. Going back to the
-                  trip view loses them.
-                </>
-              )}
+              {pendingLeave?.kind === 'switch'
+                ? t('trip.leaveEditor.switchBody', { current: userName, other: pendingLeave.name })
+                : t('trip.leaveEditor.backBody', { current: userName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing as {userName}</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t('trip.leaveEditor.keep', { name: userName })}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (pendingLeave?.kind === 'switch') switchToParticipant(pendingLeave.name);
@@ -908,8 +932,8 @@ export default function TripPage() {
               }}
             >
               {pendingLeave?.kind === 'switch'
-                ? `Edit ${pendingLeave.name}'s dates`
-                : 'Discard and go back'}
+                ? t('common.editDates', { name: pendingLeave.name })
+                : t('trip.leaveEditor.discardBack')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

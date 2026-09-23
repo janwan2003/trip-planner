@@ -14,16 +14,18 @@ Find the perfect dates for group trips by coordinating everyone's availability.
 - 🔗 **Easy sharing** - One-click link sharing for inviting friends
 - 💾 **Shared storage** - Trips live in Cloudflare D1, so a link works across devices and people
 - 📱 **Responsive design** - Works seamlessly on mobile and desktop
+- 🌍 **Four languages** - English, German, Spanish and Dutch, picked from the browser, with a switcher
 - 🎨 **Beautiful UI** - Built with shadcn/ui and Tailwind CSS
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite
+- **Frontend**: React 19, TypeScript, Vite
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Styling**: Tailwind CSS
 - **Backend**: Cloudflare Pages Functions with a Cloudflare D1 database
 - **Routing**: React Router
-- **Date Handling**: date-fns
+- **Date Handling**: date-fns, and `Intl.DateTimeFormat` for display
+- **Translations**: i18next + react-i18next, typed against the English messages
 - **State Management**: React Query
 
 ## 📦 Installation

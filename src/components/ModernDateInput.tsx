@@ -8,6 +8,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useTranslation } from 'react-i18next';
+import { currentLocale, localeBundle } from '@/i18n';
+import { useFormat } from '@/i18n/format';
 
 // react-day-picker is the largest thing on the home page, and nobody sees it until a
 // popover opens. Loading it then - or on hover/focus of the trigger, which usually
@@ -33,8 +36,10 @@ export function ModernDateInput({
   minDate,
   maxDate,
   disabled,
-  placeholder = 'Select date',
+  placeholder,
 }: ModernDateInputProps) {
+  const { t } = useTranslation();
+  const f = useFormat();
   const [isOpen, setIsOpen] = useState(false);
   // Derived from `value` rather than mirrored into state, so clearing the value from
   // the parent clears the button too; the mirrored copy only ever followed a truthy one.
@@ -76,7 +81,9 @@ export function ModernDateInput({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : placeholder}
+            {selectedDate
+              ? f.date(format(selectedDate, 'yyyy-MM-dd'), 'numeric')
+              : (placeholder ?? t('dateInput.placeholder'))}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -88,6 +95,8 @@ export function ModernDateInput({
               defaultMonth={getDefaultMonth()}
               disabled={(day) => day < minDateObj || (maxDateObj !== undefined && day > maxDateObj)}
               autoFocus
+              // Month and weekday names, and which day starts the week.
+              locale={localeBundle(currentLocale()).dateLocale}
             />
           </Suspense>
         </PopoverContent>

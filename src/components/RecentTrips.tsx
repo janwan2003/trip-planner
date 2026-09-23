@@ -3,21 +3,25 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, History, X } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { forgetTrip, getRecentTrips, RecentTrip } from '@/lib/recentTrips';
+import { useTranslation } from 'react-i18next';
+import { useFormat, type Formatter } from '@/i18n/format';
 
 /**
  * A date range, or null if either end is unusable. The entries come from our own
  * writes, so a bad date means storage was tampered with or written by an older build —
  * worth degrading to "no dates shown" rather than throwing out of a render.
  */
-const formatRange = (startDate: string, endDate: string): string | null => {
+const isCalendarDay = (value: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(parseISO(value).getTime());
+
+const formatRange = (f: Formatter, startDate: string, endDate: string): string | null => {
+  if (!isCalendarDay(startDate) || !isCalendarDay(endDate)) return null;
   try {
-    const start = parseISO(startDate);
-    const end = parseISO(endDate);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
-    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+    return f.dateRange(startDate, endDate, 'dayMonthYear');
   } catch {
+    // formatRange throws a RangeError when the end precedes the start in some engines.
     return null;
   }
 };
@@ -30,6 +34,8 @@ const formatRange = (startDate: string, endDate: string): string | null => {
  */
 export function RecentTrips() {
   const [trips, setTrips] = useState<RecentTrip[]>([]);
+  const { t } = useTranslation();
+  const f = useFormat();
 
   // Read after mount, not in a `useState` initializer. The landing page ships
   // prerendered now, and the build has no localStorage, so a first render that
@@ -51,18 +57,17 @@ export function RecentTrips() {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-display flex items-center gap-2">
           <History className="w-4 h-4 text-primary" />
-          Your trips
+          {t('recentTrips.title')}
         </CardTitle>
         <CardDescription>
-          Trips you opened in this browser. Saved here only — not on our servers, and not
-          on your other devices.
+          {t('recentTrips.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <ul className="divide-y divide-border/60">
           {trips.map((trip) => {
-            const range = formatRange(trip.startDate, trip.endDate);
-            const name = trip.name || 'Untitled trip';
+            const range = formatRange(f, trip.startDate, trip.endDate);
+            const name = trip.name || t('recentTrips.untitled');
 
             return (
               <li key={trip.id} className="flex items-center gap-2 py-2">
@@ -71,7 +76,11 @@ export function RecentTrips() {
                   // The row is two stacked lines, and a name computed from them reads as
                   // one run-on string; naming the link explicitly keeps the trip name
                   // first for anyone tabbing through with a screen reader.
-                  aria-label={range ? `Open ${name}, ${range}` : `Open ${name}`}
+                  aria-label={
+                    range
+                      ? t('recentTrips.openWithRange', { name, range })
+                      : t('recentTrips.open', { name })
+                  }
                   className="flex-1 min-w-0 group rounded-md px-1 py-1 hover:bg-muted/60 transition-colors"
                 >
                   <span className="flex items-center gap-2">
@@ -80,7 +89,7 @@ export function RecentTrips() {
                     </span>
                     {trip.role === 'creator' && (
                       <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-primary bg-primary/10 rounded px-1.5 py-0.5">
-                        Yours
+                        {t('recentTrips.yours')}
                       </span>
                     )}
                   </span>
@@ -95,7 +104,7 @@ export function RecentTrips() {
                   variant="ghost"
                   size="icon"
                   className="shrink-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                  aria-label={`Remove ${name} from this list`}
+                  aria-label={t('recentTrips.remove', { name })}
                   onClick={() => handleForget(trip.id)}
                 >
                   <X className="w-4 h-4" />

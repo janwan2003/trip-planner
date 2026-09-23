@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useTranslation } from "react-i18next";
 
 // Code-split route components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -14,6 +15,11 @@ const When2meetAlternative = lazy(() => import("./pages/When2meetAlternative"));
 const DoodleAlternative = lazy(() => import("./pages/DoodleAlternative"));
 const Faq = lazy(() => import("./pages/Faq"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+const RouteFallback = () => {
+  const { t } = useTranslation();
+  return <div className="flex items-center justify-center min-h-screen">{t("common.loading")}</div>;
+};
 
 /**
  * Everything below the router: the providers and the route table.
@@ -32,7 +38,7 @@ export const AppShell = () => (
   <>
     <Toaster />
     <ErrorBoundary>
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/trip/:tripId" element={<TripPage />} />

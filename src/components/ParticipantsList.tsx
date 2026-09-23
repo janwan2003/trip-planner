@@ -1,6 +1,7 @@
 import { Participant } from '@/lib/tripStore';
 import { User, Check, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface ParticipantsListProps {
   participants: Participant[];
@@ -21,12 +22,14 @@ export function ParticipantsList({
   onToggleParticipant,
   onEditParticipant,
 }: ParticipantsListProps) {
+  const { t } = useTranslation();
+
   if (participants.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">No one has responded yet</p>
-        <p className="text-xs">Be the first to mark your availability!</p>
+        <p className="text-sm">{t('participantsList.emptyTitle')}</p>
+        <p className="text-xs">{t('participantsList.emptyBody')}</p>
       </div>
     );
   }
@@ -71,7 +74,7 @@ export function ParticipantsList({
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm truncate">{participant.name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {participant.availableDates.length} day{participant.availableDates.length !== 1 ? 's' : ''} available
+                  {t('participantsList.daysAvailable', { count: participant.availableDates.length })}
                 </div>
               </div>
               {isSelected && (
@@ -88,8 +91,8 @@ export function ParticipantsList({
               <button
                 type="button"
                 onClick={() => onEditParticipant(participant.name)}
-                aria-label={`Edit ${participant.name}'s dates`}
-                title={`Edit ${participant.name}'s dates`}
+                aria-label={t('common.editDates', { name: participant.name })}
+                title={t('common.editDates', { name: participant.name })}
                 className="shrink-0 h-11 w-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/60"
               >
                 <Pencil className="w-4 h-4" />

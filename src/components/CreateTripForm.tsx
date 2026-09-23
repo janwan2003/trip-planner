@@ -9,10 +9,12 @@ import { addDays, generateTripId, MAX_TRIP_DAYS, saveTrip, Trip } from '@/lib/tr
 import { rememberTrip } from '@/lib/recentTrips';
 import { useToast } from '@/hooks/use-toast';
 import { ModernDateInput } from '@/components/ModernDateInput';
+import { useTranslation } from 'react-i18next';
 
 export function CreateTripForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -30,8 +32,8 @@ export function CreateTripForm() {
     // reintroduces the timezone question this format exists to avoid.
     if (endDate < startDate) {
       toast({
-        title: "Invalid dates",
-        description: "End date must be after start date.",
+        title: t('createTrip.invalidDatesTitle'),
+        description: t('createTrip.invalidDatesBody'),
         variant: "destructive",
       });
       return;
@@ -40,8 +42,8 @@ export function CreateTripForm() {
     const lastAllowed = addDays(startDate, MAX_TRIP_DAYS - 1);
     if (lastAllowed && endDate > lastAllowed) {
       toast({
-        title: "Trip too long",
-        description: `A trip can span at most ${MAX_TRIP_DAYS} days.`,
+        title: t('createTrip.tooLongTitle'),
+        description: t('createTrip.tooLongBody', { count: MAX_TRIP_DAYS }),
         variant: "destructive",
       });
       return;
@@ -66,8 +68,8 @@ export function CreateTripForm() {
     } catch (error) {
       console.error('Error creating trip:', error);
       toast({
-        title: "Error creating trip",
-        description: "Something went wrong. Please try again.",
+        title: t('createTrip.errorTitle'),
+        description: t('common.genericError'),
         variant: "destructive",
       });
       setIsCreating(false);
@@ -84,19 +86,19 @@ export function CreateTripForm() {
         </div>
         {/* An h2, not the vendored CardTitle's h3: this sits straight under the page's h1. */}
         <h2 className="text-2xl font-semibold leading-none tracking-tight font-display">
-          Plan Your Trip
+          {t('createTrip.title')}
         </h2>
         <CardDescription className="text-muted-foreground">
-          Create a trip and share the link with friends to find the best dates
+          {t('createTrip.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">Trip Name</Label>
+            <Label htmlFor="name" className="text-sm font-medium">{t('createTrip.nameLabel')}</Label>
             <Input
               id="name"
-              placeholder="Summer Adventure 2026"
+              placeholder={t('createTrip.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="h-11"
@@ -107,20 +109,20 @@ export function CreateTripForm() {
           
           <div className="grid grid-cols-2 gap-4">
             <ModernDateInput
-              label="Start Date"
+              label={t('createTrip.startLabel')}
               value={startDate}
               onChange={setStartDate}
               disabled={isCreating}
-              placeholder="Start date"
+              placeholder={t('createTrip.startPlaceholder')}
             />
             <ModernDateInput
-              label="End Date"
+              label={t('createTrip.endLabel')}
               value={endDate}
               onChange={setEndDate}
               minDate={startDate}
               maxDate={startDate ? addDays(startDate, MAX_TRIP_DAYS - 1) ?? undefined : undefined}
               disabled={isCreating || !startDate}
-              placeholder="End date"
+              placeholder={t('createTrip.endPlaceholder')}
             />
           </div>
           
@@ -128,10 +130,10 @@ export function CreateTripForm() {
             {isCreating ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating...
+                {t('createTrip.submitting')}
               </>
             ) : (
-              'Create Trip'
+              t('createTrip.submit')
             )}
           </Button>
         </form>

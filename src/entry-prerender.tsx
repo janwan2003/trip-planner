@@ -2,6 +2,8 @@ import { prerenderToNodeStream } from "react-dom/static";
 import { StaticRouter } from "react-router-dom/server";
 
 import { AppShell } from "./AppShell";
+// Initialises i18next in English before anything renders; the build's pages are English.
+import "./i18n";
 
 /**
  * Renders one route to the HTML that goes inside `<div id="root">` at build time.
