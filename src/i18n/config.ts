@@ -7,7 +7,9 @@ import type { LocaleBundle } from './types';
  * Chosen from who actually uses the product, not from a market list: the trips
  * strangers created after 2026-09-02 are named in Dutch, German and Spanish (among
  * others), and NL, DE and PY are all in the top ten countries by traffic.
- * Polish was added at the owner's request on 2026-09-23. See the
+ * Polish was added at the owner's request on 2026-09-23. French, Japanese and Korean
+ * followed the same day from market sizing rather than our own traffic - see
+ * "International market sizing" in marketing/keywords.md. See the
  * "Languages" section of CLAUDE.md for how to add one.
  *
  * `label` is the language's own name for itself, shown in the switcher, so someone who
@@ -20,8 +22,11 @@ export const LOCALES = {
   en: { label: 'English', load: async () => ({ default: en }) },
   de: { label: 'Deutsch', load: () => import('./locales/de') },
   es: { label: 'Español', load: () => import('./locales/es') },
+  fr: { label: 'Français', load: () => import('./locales/fr') },
   nl: { label: 'Nederlands', load: () => import('./locales/nl') },
   pl: { label: 'Polski', load: () => import('./locales/pl') },
+  ja: { label: '日本語', load: () => import('./locales/ja') },
+  ko: { label: '한국어', load: () => import('./locales/ko') },
 } as const satisfies Record<string, { label: string; load: () => Promise<{ default: LocaleBundle }> }>;
 
 export type Locale = keyof typeof LOCALES;

@@ -31,8 +31,22 @@ export default {
         terms: 'Gebruiksvoorwaarden',
         privacy: 'Privacybeleid',
         closing: 'Deel de link. Kies je datums. Ga op avontuur.',
+        languages: 'Talen',
       },
     },
+
+    landing: {
+
+      home: 'Home',
+
+      ctaTitle: 'Vind de dagen waarop je groep echt kan',
+
+      ctaBody: 'Gratis, zonder account en niets te installeren.',
+
+      ctaButton: 'Maak een reis aan',
+
+    },
+
 
     createTrip: {
       title: 'Plan je reis',

@@ -15,6 +15,9 @@ const When2meetAlternative = lazy(() => import("./pages/When2meetAlternative"));
 const DoodleAlternative = lazy(() => import("./pages/DoodleAlternative"));
 const Faq = lazy(() => import("./pages/Faq"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+// One chunk each, holding every language's content: loaded only on a localised page.
+const LocalizedHome = lazy(() => import("./pages/LocalizedHome"));
+const LocalizedLanding = lazy(() => import("./pages/LocalizedLanding"));
 
 const RouteFallback = () => {
   const { t } = useTranslation();
@@ -49,6 +52,10 @@ export const AppShell = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          {/* `/ja`, `/fr/alternative-framadate`. Static paths above outrank these, and
+              an unknown language or slug renders NotFound from inside the page. */}
+          <Route path="/:lang" element={<LocalizedHome />} />
+          <Route path="/:lang/:slug" element={<LocalizedLanding />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

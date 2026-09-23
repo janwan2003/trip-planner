@@ -289,3 +289,32 @@
 .rdp-day_today.rdp-day_selected {
   @apply font-bold;
 }
+
+/*
+ * Japanese and Korean. DM Sans and Fraunces carry no CJK glyphs, so without this every
+ * kana, kanji and hangul character falls back to whatever the browser picks, mixed
+ * mid-word with the Latin brand fonts. Latin runs keep DM Sans; CJK gets the system's
+ * own well-hinted Gothic. The display serif is dropped for these two languages: a Latin
+ * serif beside a CJK sans reads as two fonts fighting. Nothing is downloaded - these
+ * are the fonts already on every phone that reads the language.
+ */
+:lang(ja) body,
+:lang(ja) .font-sans,
+:lang(ja) .font-display,
+:lang(ja) h1, :lang(ja) h2, :lang(ja) h3, :lang(ja) h4 {
+  font-family: 'DM Sans', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP',
+    'Yu Gothic', 'Meiryo', sans-serif;
+}
+
+:lang(ko) body,
+:lang(ko) .font-sans,
+:lang(ko) .font-display,
+:lang(ko) h1, :lang(ko) h2, :lang(ko) h3, :lang(ko) h4 {
+  font-family: 'DM Sans', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+
+/* Korean wraps between words, not inside them; the browser default splits a word anywhere. */
+:lang(ko) body {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

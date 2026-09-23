@@ -6,6 +6,7 @@ import { AvailabilityCalendar } from '@/components/AvailabilityCalendar';
 import { BestDates } from '@/components/BestDates';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ParticipantsList } from '@/components/ParticipantsList';
+import { renderWithRouter } from '@/test/render';
 import type { Trip } from '@/lib/tripStore';
 
 import { LOCALE_STORAGE_KEY } from './detect';
@@ -111,7 +112,7 @@ describe('LanguageSwitcher', () => {
 
   it('switches the page, remembers the choice and updates <html lang>', async () => {
     const user = userEvent.setup();
-    render(
+    renderWithRouter(
       <>
         <LanguageSwitcher />
         <ParticipantsList participants={[]} />
@@ -128,8 +129,17 @@ describe('LanguageSwitcher', () => {
   });
 
   it('lists every language by its own name', () => {
-    render(<LanguageSwitcher />);
+    renderWithRouter(<LanguageSwitcher />);
     const names = screen.getAllByRole('option').map((o) => o.textContent);
-    expect(names).toEqual(['English', 'Deutsch', 'Español', 'Nederlands', 'Polski']);
+    expect(names).toEqual([
+      'English',
+      'Deutsch',
+      'Español',
+      'Français',
+      'Nederlands',
+      'Polski',
+      '日本語',
+      '한국어',
+    ]);
   });
 });

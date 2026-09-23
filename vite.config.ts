@@ -6,13 +6,13 @@ import { pathToFileURL } from "node:url";
 
 import {
   PRIVATE_ROUTES,
-  ROUTES,
   RenderedPage,
   outputFileFor,
   renderLlmsFull,
   renderRouteHtml,
   renderSitemap,
 } from "./src/lib/siteMeta";
+import { ALL_ROUTES, alternatesFor } from "./src/lib/siteRoutes";
 
 /**
  * Writes a real static HTML file per indexable route - head *and* body - plus the
@@ -91,10 +91,12 @@ const prerenderRoutes = (): Plugin => {
       try {
         const { renderRouteBody } = (await import(
           pathToFileURL(path.join(ssrDir, "entry-prerender.js")).href
-        )) as { renderRouteBody: (routePath: string) => Promise<string> };
+        )) as { renderRouteBody: (routePath: string, locale?: string) => Promise<string> };
 
-        for (const route of ROUTES) {
-          const body = await renderRouteBody(route.path);
+        // Every route in its own language: `/ja` must reach a crawler in Japanese, not
+        // as the English page with a Japanese title.
+        for (const route of ALL_ROUTES) {
+          const body = await renderRouteBody(route.path, route.locale);
           if (body.trim().length === 0) {
             throw new Error(
               `prerender: ${route.path} rendered an empty body. That is the bug this ` +
@@ -104,7 +106,7 @@ const prerenderRoutes = (): Plugin => {
           rendered.push({ route, body });
           await write(
             outputFileFor(route),
-            renderRouteHtml(baseHtml, route, body, route.contentUpdated),
+            renderRouteHtml(baseHtml, route, body, route.contentUpdated, alternatesFor(route)),
           );
         }
       } finally {
@@ -118,7 +120,10 @@ const prerenderRoutes = (): Plugin => {
         await write(outputFileFor(route), renderRouteHtml(baseHtml, route));
       }
 
-      await writeFile(path.join(outDir, "sitemap.xml"), renderSitemap());
+      await writeFile(
+        path.join(outDir, "sitemap.xml"),
+        renderSitemap(undefined, ALL_ROUTES, alternatesFor),
+      );
 
       // The full text of every page, for the answer engines that would otherwise have
       // to fetch and strip eight HTML documents. Generated from the bodies just
@@ -127,7 +132,7 @@ const prerenderRoutes = (): Plugin => {
       await writeFile(path.join(outDir, "llms-full.txt"), renderLlmsFull(rendered));
 
       this.info(
-        `prerendered ${ROUTES.length} routes with bodies, ` +
+        `prerendered ${ALL_ROUTES.length} routes with bodies, ` +
           `${PRIVATE_ROUTES.length} noindex shells, sitemap.xml and llms-full.txt`,
       );
     },

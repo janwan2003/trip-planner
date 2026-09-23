@@ -12,6 +12,15 @@ const preferredTags = (): readonly string[] => {
   return navigator.languages?.length ? navigator.languages : [navigator.language];
 };
 
+/**
+ * The language a path names, if it starts with one: `/ja/nittei-chousei` -> `ja`.
+ * English has no prefix, so `/`, `/faq` and `/trip/abc` name none.
+ */
+export const localeFromPath = (pathname: string): Locale | undefined => {
+  const first = pathname.split('/')[1];
+  return first !== DEFAULT_LOCALE && isLocale(first) ? first : undefined;
+};
+
 /** `de-AT` -> `de`. Region variants share their language's strings. */
 const baseLanguage = (tag: string) => tag.toLowerCase().split('-')[0];
 

@@ -39,7 +39,15 @@ const messages = {
       terms: 'Terms of Service',
       privacy: 'Privacy Policy',
       closing: 'Share the link. Mark your dates. Go on adventures.',
+      languages: 'Languages',
     },
+  },
+
+  landing: {
+    home: 'Home',
+    ctaTitle: 'Find the days your group can actually go',
+    ctaBody: 'Free, no account, and nothing to install.',
+    ctaButton: 'Create a trip',
   },
 
   createTrip: {

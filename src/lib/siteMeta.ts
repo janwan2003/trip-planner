@@ -54,6 +54,11 @@ export interface RouteMeta {
    */
   contentSources?: string[];
   /**
+   * The page's language as a BCP 47 code. Written into `<html lang>` and `og:locale`
+   * in the served bytes. Absent means English.
+   */
+  locale?: string;
+  /**
    * Overrides the file name derived from `path`. Needed exactly once, and for a
    * reason that costs an afternoon to rediscover: see `outputFileFor`.
    */
@@ -69,6 +74,7 @@ export { FAQ };
 export const ROUTES: RouteMeta[] = [
   {
     path: '/',
+    locale: 'en',
     contentUpdated: '2026-09-23',
     contentSources: [
       'src/pages/Index.tsx',
@@ -211,6 +217,27 @@ export const faqJsonLd = (): string =>
     2,
   );
 
+/**
+ * One `<link rel="alternate" hreflang>` entry: the same page in another language.
+ * `x-default` names the page for anyone whose language has no version of its own.
+ */
+export interface Alternate {
+  hreflang: string;
+  href: string;
+}
+
+/** `og:locale` wants a territory. The ones the site's audience actually lives in. */
+const OG_LOCALES: Record<string, string> = {
+  en: 'en_US',
+  de: 'de_DE',
+  es: 'es_ES',
+  fr: 'fr_FR',
+  ja: 'ja_JP',
+  ko: 'ko_KR',
+  nl: 'nl_NL',
+  pl: 'pl_PL',
+};
+
 const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -246,9 +273,16 @@ export const renderRouteHtml = (
   route: RouteMeta,
   body?: string,
   date: string = buildDate(),
+  alternates: Alternate[] = [],
 ): string => {
   const canonical = canonicalFor(route.path);
+  const locale = route.locale ?? 'en';
   const substitutions: [RegExp, string][] = [
+    [/<html lang="[^"]*">/, `<html lang="${locale}">`],
+    [
+      /<meta property="og:locale" content="[^"]*" \/>/,
+      `<meta property="og:locale" content="${OG_LOCALES[locale] ?? locale}" />`,
+    ],
     [/"dateModified": "[^"]*"/, `"dateModified": "${date}"`],
     [/<title>[^<]*<\/title>/, `<title>${escapeAttribute(route.title)}</title>`],
     [
@@ -290,6 +324,16 @@ export const renderRouteHtml = (
       );
     }
     html = html.replace(pattern, replacement);
+  }
+
+  // The same page in the other languages. Only in the served bytes: every crawler that
+  // honours hreflang reads it from the head of the document it fetched, and the sitemap
+  // repeats it for the ones that prefer that.
+  if (alternates.length > 0) {
+    const links = alternates
+      .map((alt) => `    <link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}" />`)
+      .join('\n');
+    html = html.replace('</head>', `${links}\n  </head>`);
   }
 
   if (route.faq) {
@@ -345,16 +389,21 @@ export const outputFileFor = (route: RouteMeta): string =>
  */
 export const renderSitemap = (
   lastmodFor: (route: RouteMeta) => string | undefined = (route) => route.contentUpdated,
+  routes: RouteMeta[] = ROUTES,
+  alternatesFor: (route: RouteMeta) => Alternate[] = () => [],
 ): string =>
   [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<!-- Generated at build time from src/lib/siteMeta.ts. Do not edit by hand. -->',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...ROUTES.map((route) => {
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ...routes.map((route) => {
       const lastmod = lastmodFor(route);
       return [
         '  <url>',
         `    <loc>${canonicalFor(route.path)}</loc>`,
+        ...alternatesFor(route).map(
+          (alt) => `    <xhtml:link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}" />`,
+        ),
         ...(lastmod ? [`    <lastmod>${lastmod}</lastmod>`] : []),
         '    <changefreq>monthly</changefreq>',
         `    <priority>${route.priority}</priority>`,

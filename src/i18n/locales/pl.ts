@@ -31,8 +31,22 @@ export default {
         terms: 'Regulamin',
         privacy: 'Polityka prywatności',
         closing: 'Wyślij link. Zaznacz dni. Ruszaj w drogę.',
+        languages: 'Języki',
       },
     },
+
+    landing: {
+
+      home: 'Strona główna',
+
+      ctaTitle: 'Znajdź dni, w które cała ekipa może jechać',
+
+      ctaBody: 'Za darmo, bez konta i bez instalowania.',
+
+      ctaButton: 'Utwórz wyjazd',
+
+    },
+
 
     createTrip: {
       title: 'Zaplanuj wyjazd',

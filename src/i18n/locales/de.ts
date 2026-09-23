@@ -31,8 +31,22 @@ export default {
         terms: 'Nutzungsbedingungen',
         privacy: 'Datenschutzerklärung',
         closing: 'Link teilen. Tage eintragen. Los geht’s.',
+        languages: 'Sprachen',
       },
     },
+
+    landing: {
+
+      home: 'Startseite',
+
+      ctaTitle: 'Finde die Tage, an denen deine Gruppe wirklich kann',
+
+      ctaBody: 'Kostenlos, ohne Konto und ohne Installation.',
+
+      ctaButton: 'Reise anlegen',
+
+    },
+
 
     createTrip: {
       title: 'Plane deine Reise',

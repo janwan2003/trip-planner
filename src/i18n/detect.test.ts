@@ -12,7 +12,7 @@ describe('detectLocale', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('uses the first browser language we ship', () => {
-    setLanguages(['fr-FR', 'nl-NL', 'en-US']);
+    setLanguages(['it-IT', 'nl-NL', 'en-US']);
     expect(detectLocale()).toBe('nl');
   });
 
@@ -26,7 +26,7 @@ describe('detectLocale', () => {
   });
 
   it('falls back to English when nothing matches', () => {
-    setLanguages(['vi-VN', 'ko-KR']);
+    setLanguages(['vi-VN', 'th-TH']);
     expect(detectLocale()).toBe('en');
   });
 
@@ -69,5 +69,21 @@ describe('formattingTag', () => {
   it('falls back to the bare language otherwise', () => {
     setLanguages(['en-US']);
     expect(formattingTag('nl')).toBe('nl');
+  });
+});
+
+describe('localeFromPath', () => {
+  it('reads a language prefix', async () => {
+    const { localeFromPath } = await import('./detect');
+    expect(localeFromPath('/ja')).toBe('ja');
+    expect(localeFromPath('/fr/alternative-framadate')).toBe('fr');
+  });
+
+  it('names none for English and unprefixed paths', async () => {
+    const { localeFromPath } = await import('./detect');
+    expect(localeFromPath('/')).toBeUndefined();
+    expect(localeFromPath('/en')).toBeUndefined();
+    expect(localeFromPath('/faq')).toBeUndefined();
+    expect(localeFromPath('/trip/abc')).toBeUndefined();
   });
 });

@@ -35,8 +35,22 @@ export default {
         terms: 'Términos del servicio',
         privacy: 'Política de privacidad',
         closing: 'Comparte el enlace. Marca tus días. ¡Y a viajar!',
+        languages: 'Idiomas',
       },
     },
+
+    landing: {
+
+      home: 'Inicio',
+
+      ctaTitle: 'Encuentra los días en que tu grupo sí puede ir',
+
+      ctaBody: 'Gratis, sin cuenta y sin instalar nada.',
+
+      ctaButton: 'Crear un viaje',
+
+    },
+
 
     createTrip: {
       title: 'Organiza tu viaje',

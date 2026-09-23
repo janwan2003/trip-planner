@@ -80,6 +80,21 @@ subsets of participants.
 - [Terms of service](https://wegowhen.com/terms)
 - [Contact](https://wegowhen.com/contact)
 
+## In other languages
+
+The app itself runs in English, German, Spanish, French, Dutch, Polish, Japanese and Korean.
+Each language has its own home page and one page written for that market's searches
+(for example a Framadate alternative in French, 日程調整ツール in Japanese). The comparison
+pages above, the FAQ and the legal pages are in English only.
+
+- German: [Reisetermin finden – Terminplaner für Gruppen | WeGoWhen](https://wegowhen.com/de); [Doodle-Alternative für Reisen: Terminplaner kostenlos](https://wegowhen.com/de/doodle-alternative)
+- Spanish: [Elegir fechas para un viaje en grupo, gratis | WeGoWhen](https://wegowhen.com/es); [Alternativa a When2meet para viajes, en español | WeGoWhen](https://wegowhen.com/es/alternativa-when2meet)
+- French: [Trouver une date pour partir à plusieurs, sans compte](https://wegowhen.com/fr); [Alternative à Framadate pour trouver les dates d’un voyage](https://wegowhen.com/fr/alternative-framadate)
+- Japanese: [旅行の日程調整を無料で｜登録不要のWeGoWhen](https://wegowhen.com/ja); [旅行の日程調整ツール｜無料・アカウント不要｜WeGoWhen](https://wegowhen.com/ja/nittei-chousei)
+- Korean: [여행 날짜 정하기 · 무료 일정 조율 | WeGoWhen](https://wegowhen.com/ko); [When2meet 대안 · 여행 날짜 정하는 일정조율 사이트](https://wegowhen.com/ko/when2meet-alternative)
+- Dutch: [Datum prikken voor je reis – samen datums kiezen | WeGoWhen](https://wegowhen.com/nl); [Datumprikker alternatief voor een reis met vrienden](https://wegowhen.com/nl/datumprikker-alternatief)
+- Polish: [Ustal termin wyjazdu ze znajomymi – za darmo | WeGoWhen](https://wegowhen.com/pl); [Alternatywa dla Doodle do ustalania terminu wyjazdu | WeGoWhen](https://wegowhen.com/pl/alternatywa-dla-doodle)
+
 ## Notes
 
 WeGoWhen became publicly reachable on 2026-08-28 and has been in real use since

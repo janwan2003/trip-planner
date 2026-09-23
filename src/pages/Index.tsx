@@ -2,13 +2,22 @@ import { Link } from 'react-router-dom';
 import { CreateTripForm } from '@/components/CreateTripForm';
 import { Tutorial } from '@/components/Tutorial';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { LanguageLinks } from '@/components/LanguageLinks';
+import { useLocation } from 'react-router-dom';
 import { RecentTrips } from '@/components/RecentTrips';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { FeedbackLinks } from '@/components/FeedbackLinks';
 
-const Index = () => {
-  usePageMeta('/');
+interface IndexProps {
+  /** The head for a localised home (`/ja`); `/` reads its own from siteMeta. */
+  meta?: { title: string; description: string };
+  /** That language's landing page, listed first under "Learn". */
+  landing?: { to: string; label: string };
+}
+
+const Index = ({ meta, landing }: IndexProps = {}) => {
+  usePageMeta(useLocation().pathname, meta);
   const { t } = useTranslation();
 
   return (
@@ -110,6 +119,13 @@ const Index = () => {
             <div>
               <h4 className="font-medium mb-3">{t('home.footer.learn')}</h4>
               <ul className="text-sm">
+                {landing && (
+                  <li>
+                    <Link to={landing.to} className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
+                      {landing.label}
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link to="/faq" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-foreground transition-colors">
                     {t('home.footer.faq')}
@@ -151,6 +167,9 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">
               {t('home.footer.closing')}
             </p>
+            <div className="mt-4 flex justify-center text-sm text-muted-foreground">
+              <LanguageLinks />
+            </div>
           </div>
         </div>
       </footer>

@@ -132,9 +132,10 @@ export function Tutorial({ completedSteps = [], audience = 'organiser' }: Tutori
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/10">
       <CardContent className="p-6">
-        {/* gap + a wrapping button: "Anleitung ausblenden" is twice "Hide Tutorial" and
-            pushed a 320px screen 20px wide before the label was allowed to break. */}
-        <div className="flex items-center justify-between gap-2 mb-4">
+        {/* Wraps: "Anleitung ausblenden" and then "Masquer le tutoriel" each pushed a 320px
+            screen wide. A label that does not fit beside the heading drops below it,
+            whatever the language. */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <h2 className="shrink-0 text-lg font-display font-semibold text-foreground">
             {audience === 'participant' ? t('tutorial.participantHeading') : t('tutorial.organiserHeading')}
           </h2>

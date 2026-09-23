@@ -150,7 +150,7 @@ describe('sitemap', () => {
 
   it('is a well-formed urlset', () => {
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
-    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
     expect(xml.trimEnd().endsWith('</urlset>')).toBe(true);
   });
 });

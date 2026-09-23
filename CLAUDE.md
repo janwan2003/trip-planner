@@ -236,11 +236,11 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
 - `pnpm lint` exits 0 with no warnings (measured 2026-09-23); the
   `react-refresh/only-export-components` warnings in vendored shadcn files are switched
   off for `src/components/ui/**` in `eslint.config.js`.
-- **Coverage is 98.73% of lines, 93.15% of branches** across `src/lib`,
-  `src/components`, `src/pages` and `src/i18n`, from 430 unit tests (measured
-  2026-09-23 with `pnpm run test:coverage`, when `src/i18n` joined the measured set;
-  earlier snapshots: 402 / 98.34% earlier on 2026-09-23, 390 / 98.51% on 2026-09-13,
-  243 / 97.70% on 2026-08-28). Thresholds in
+- **Coverage is 99.03% of lines, 93.22% of branches** across `src/lib`,
+  `src/components`, `src/pages` and `src/i18n`, from 525 unit tests (measured
+  2026-09-23 with `pnpm run test:coverage`, after the localised pages landed; earlier
+  snapshots: 430 / 98.73% and 402 / 98.34% earlier the same day, 390 / 98.51% on
+  2026-09-13, 243 / 97.70% on 2026-08-28). Thresholds in
   `vitest.config.ts` enforce 90/90/85/90 — set below the measured result so an unrelated
   refactor does not turn red on its own. `src/components/ui/**` is excluded: vendored
   third-party code, and measuring it would dilute the number that matters.
@@ -320,7 +320,8 @@ Things in this repo that marketing depends on, so do not break them silently:
   line kept under the form is "Free, no account, and nothing for your friends to sign up
   to." Recover the component from git (`git show e0fc7f9:src/components/HeatPreview.tsx`)
   if it is ever wanted on a comparison page rather than the home page.
-- **`src/lib/siteMeta.ts` is the single source for every indexable URL.** The router,
+- **`src/lib/siteMeta.ts` is the single source for every English indexable URL**, and
+  `src/lib/siteRoutes.ts` adds the localised ones (see "Languages"). The router,
   the per-route static HTML, `sitemap.xml` and the `FAQPage` structured data all come
   from it, so a new page cannot be added in one place and forgotten in another. Adding a
   page means adding an entry there and a `<Route>` in `src/App.tsx`; `src/lib/siteMeta.test.ts`
@@ -589,77 +590,115 @@ the owner's call.
 
 ## Languages
 
-The app UI ships in **English, German, Spanish, Dutch and Polish** since 2026-09-23. The
-first three were chosen from evidence: strangers' trips are named in Dutch, German and
-Spanish, and NL, DE and PY are in the top-ten countries by traffic (see "Production
-data"). Polish was added at the owner's request the same day. Russian,
-Vietnamese and Korean are the next candidates on the same evidence.
+The app UI ships in **eight languages**: English, German, Spanish, Dutch and Polish (first
+pass 2026-09-23, then rewritten for a native register the same day), and French, Japanese
+and Korean (added the same evening). German, Spanish and Dutch came from strangers' trip
+names and traffic; Polish at the owner's request; French, Japanese and Korean from **market
+sizing, not our own analytics** — our traffic only measures who an English-only site
+already reaches. The sizing is Google search volume for scheduling tools per country
+(Japan ~432k/mo, France ~54k, Korea/Vietnam/Taiwan small but uncontested), recorded with its
+blind spots in `marketing/keywords.md`, "International market sizing".
 
-**What is translated:** everything a trip creator or invitee sees — home page, create
-form, trip page, calendar, best dates, participants, tutorial, toasts, 404.
-**What is not, on purpose:** the comparison pages, FAQ, About, Contact and the legal
-pages. They are English SEO copy and legal text; translating them properly needs
-per-language URLs (`/de/faq`), `hreflang` and per-language prerendering, not strings. The
-page `<title>`/description in `siteMeta.ts` stay English for the same reason.
+### Per-language URLs — what makes the translations count for SEO
 
-How it works — all in `src/i18n/`:
+Client-side translation alone does nothing for search: crawlers fetch one URL and see one
+language. So every non-English language has **its own URLs, prerendered in that language**:
 
-- `locales/en.ts` is the **source of truth**, keys grouped by component. `de.ts`, `es.ts`,
-  `nl.ts` are typed `satisfies LocaleBundle`, whose `Messages` type is derived from
-  English — **a key missing, misspelt or extra in any locale fails `pnpm run typecheck`**.
+| Path | What it is |
+| --- | --- |
+| `/de` `/es` `/fr` `/ja` `/ko` `/nl` `/pl` | The home page (the app), in that language, with a head written for that market |
+| `/de/doodle-alternative` | Terminplaner / Doodle-Alternative, vs Doodle and Nuudel |
+| `/es/alternativa-when2meet` | When2meet alternative in Spanish |
+| `/fr/alternative-framadate` | vs Framadate (whose old version stopped taking polls in April 2026) |
+| `/ja/nittei-chousei` | 旅行の日程調整ツール, vs 調整さん, respectful of it |
+| `/ko/when2meet-alternative` | When2meet 대안 — Koreans search the English brand; no local incumbent |
+| `/nl/datumprikker-alternatief` | vs Datumprikker |
+| `/pl/alternatywa-dla-doodle` | vs Doodle |
+
+- **The words are data.** `src/content/seo/<lang>.ts` (typed by `types.ts`) holds each
+  language's home head and its landing page. `LocalizedLanding.tsx` renders any of them;
+  `LocalizedHome.tsx` renders `Index` in that language with that head. A new market is a
+  new content file, not a component.
+- **Build-time route list:** `src/lib/siteRoutes.ts` (`ALL_ROUTES`, `alternatesFor`)
+  combines `siteMeta.ROUTES` with the localised routes. It is kept out of the browser: the
+  entry bundle never imports the content files, and the app routes the pages through two
+  generic lazy routes, `/:lang` and `/:lang/:slug`, which render NotFound for anything
+  unknown. Pages still 404s unknown paths itself, because no file exists for them.
+- **In the served bytes:** `<html lang>`, `og:locale`, and on the eight home pages a full
+  `hreflang` cluster with `/` as `x-default`. **Landing pages are deliberately not in the
+  cluster** — each is written for one market's searches, not translated, and declaring
+  non-equivalent pages as alternates is a signal Google is told to distrust. The sitemap
+  repeats the cluster with `xhtml:link`. `llms.txt` lists every localised URL and a test
+  fails if one is missing; `llms-full.txt` includes them automatically.
+- **Language precedence:** a language in the URL beats everything (and is never
+  persisted — visiting a page is not choosing a language); then the switcher's stored
+  choice; then `navigator.languages`; then English. On a home page the switcher navigates
+  to that language's URL; elsewhere it only switches the UI. `LanguageLinks` puts plain
+  `<a hreflang>` links to all eight homes in the home and landing footers, because no
+  crawler follows a `<select>`.
+- **Hydration:** `main.tsx` loads the URL's language before hydrating a localised page, so
+  it always hydrates. An unprefixed prerendered page (`/`, `/faq`) hydrates only for an
+  English visitor; anyone else gets a fresh render in their language.
+- **Every competitor claim was read off the competitor's own site** on the date in each
+  page's `checked` line (Chouseisan: 無料, ログインなし, calendar-clicked candidate dates, no
+  participant cap per its help centre; Framadate: free, no account, Framasoft, old version
+  closed; Nuudel: Digitalcourage, Framadate-based; Datumprikker: Plus €29/yr or €3/mo excl.
+  VAT; Doodle: "Everyone can vote for the time they prefer"). Re-check before editing a
+  table; the French page's Framadate-shutdown wording is time-sensitive and goes stale after
+  September 2026.
+- **CJK typography:** DM Sans and Fraunces have no CJK glyphs, so `index.css` gives
+  `:lang(ja)` and `:lang(ko)` the system Gothic stacks (nothing downloaded) and drops the
+  display serif; Korean gets `word-break: keep-all` so it wraps between words.
+
+### How the strings work — all in `src/i18n/`
+
+- `locales/en.ts` is the **source of truth**, keys grouped by component. Every other
+  locale is typed `satisfies LocaleBundle`, whose `Messages` type is derived from English —
+  **a key missing, misspelt or extra in any locale fails `pnpm run typecheck`**.
   `i18next.d.ts` types every `t('...')` call the same way.
-- **`eslint-plugin-i18next` (`no-literal-string`) fails lint on raw text in JSX** —
-  text nodes and `alt`/`title`/`placeholder`/`label`/`aria-label`. It covers
-  `src/**/*.tsx` by default; the English-only pages are an explicit ignore list in
-  `eslint.config.js`. A new component cannot ship English-only by accident.
+- **`eslint-plugin-i18next` (`no-literal-string`) fails lint on raw text in JSX** — text
+  nodes and `alt`/`title`/`placeholder`/`label`/`aria-label`. It covers `src/**/*.tsx` by
+  default; the English-only pages are an explicit ignore list in `eslint.config.js`. Toasts
+  are plain objects and are *not* covered — grep for them.
 - `locales.test.ts` checks what types cannot: no empty strings, the same `{{placeholders}}`
-  and `<tags>` as English. A dropped `{{name}}` typechecks and then renders no name.
-- `config.ts` is the registry. English is bundled; the others are ~12 kB lazy chunks.
-  **Cost:** the entry chunk grew from 90.24 to 112.65 kB gzip (+22.4 kB: i18next,
-  react-i18next and the English messages), measured by building `main` at 0f1af3a and
-  this change side by side on 2026-09-23.
-- `detect.ts`: a choice made in the switcher (`localStorage` key `wegowhen.locale.v1`,
-  disclosed in the privacy policy §2.2 and §7) wins, then `navigator.languages`
-  (`de-AT` → `de`), then English. Storage calls are guarded as in `recentTrips.ts`.
+  and `<tags>` as English.
+- `config.ts` is the registry. English is bundled; the others are lazy chunks (5-16 kB).
+  **Cost:** the entry chunk grew from 90.24 to 112.65 kB gzip with i18n (measured
+  2026-09-23 against `main` at 0f1af3a); the localised pages added no measurable weight to
+  it (113.40 kB after, the difference being the extra route components).
+- `detect.ts`: `localeFromPath`, then the stored choice (`wegowhen.locale.v1`, disclosed in
+  the privacy policy §2.2 and §7), then `navigator.languages` (`de-AT` → `de`), then English.
 - `format.ts`: **dates are formatted by named style through `Intl.DateTimeFormat`, never a
-  pattern string.** `useFormat().date(iso, 'dayMonth')`, `.dateRange(...)`,
-  `.weekdays()`. Built and formatted in UTC, so no offset moves a day. The format tag is
-  the browser's own when it speaks the UI language, so `en-GB` gets "1 Sept", `en-US`
-  "Sep 1". The week starts on the locale's day (Monday in de/es/nl, from the date-fns
-  locale's `weekStartsOn`); the calendar grid offsets from it.
-- Plurals: `key_one` / `key_other` with `t(key, { count })`. The type allows `_few`,
-  `_many` etc.; Polish uses them (`1 wolny dzień`, `2 wolne dni`, `5 wolnych dni`, chosen
-  by `Intl.PluralRules('pl')`) and must provide all four forms for every plural key.
+  pattern string**, built and formatted in UTC. The week starts on the locale's day
+  (Monday outside en, from the date-fns locale's `weekStartsOn`).
+- Plurals: `key_one` / `key_other` with `t(key, { count })`. Polish uses `_few` and `_many`
+  as well and must provide all four; Japanese and Korean have no plural forms and repeat the
+  same text in `_one` and `_other`.
 
-**Hydration.** The build prerenders English. `main.tsx` hydrates only when the detected
-language is English; anyone else waits for their chunk and gets a fresh `createRoot`
-render. Crawlers are unaffected (no JS, or an English browser).
+### Register and terms — keep them when adding strings
 
-**The translations are meant to read as native, not translated** — the owner's explicit
-requirement. On 2026-09-23 each of de/es/nl was rewritten by a native-register editing
-pass and pl written the same way, with one term per concept and a casual register:
+Each language was written for a native, casual register with one term per concept.
 German "Reise", "Tage", "eintragen/austragen" (not "abmelden", which reads as log out);
-Spanish neutral tú, no vosotros, "días" for what you mark and "fechas" for results; Dutch
-"datums" (as Datumprikker), never "data"; Polish "wyjazd", "dni"/"termin", no forms that
-force a gender on the reader, and participant names never declined (they sit after a
-colon or after "osoby"). Keep those choices when adding strings. No human native speaker
-has reviewed them yet.
+Spanish neutral tú, no vosotros, no Spain-only perfect tense; Dutch "datums", never "data";
+Polish "wyjazd", no verb forms that force a gender on the reader, names never declined;
+French "tu", "voyage"; Japanese です・ます prose with short labels, さん after names;
+Korean 해요체, and never a particle straight after `{{name}}` (it depends on the name's
+last sound) — always `{{name}} 님`. **No human native speaker has reviewed any of it yet.**
 
-**Adding a language:** create `locales/xx.ts` (copy `de.ts`; the compiler lists every
-missing key), add one line to `LOCALES` in `config.ts`, run `pnpm run check`, then check
-the layout at 320px in that language — longer strings broke it twice on 2026-09-23
-(German "Anleitung ausblenden", Spanish "Compartir"), and jsdom cannot see layout.
-**Adding a string:** add the key to `en.ts`, use `t('...')`; typecheck then names each
-locale that needs it.
+**Adding a language:** a locale file (copy `de.ts`; the compiler lists every missing key),
+one line in `LOCALES`, a `src/content/seo/<lang>.ts`, one line in `LOCALE_SEO`, the pages
+in `public/llms.txt`, then `pnpm run check` — and **check 320px in a real browser** in that
+language. Longer strings broke the layout three times on 2026-09-23 (German "Anleitung
+ausblenden", Spanish "Compartir", French "Masquer le tutoriel"); jsdom cannot see layout.
 
-Verified 2026-09-23 in Chromium against `wrangler pages dev dist`: English home hydrates
-with no console errors; `de-DE` gets German and `<html lang="de">`; a `nl-NL` phone
-joins, sees a Monday-first calendar, saves and gets the Dutch toast; switching to
-Español persists across reload; `vi-VN` falls back to English; no horizontal scroll at
-320px on `/` or `/trip/:id` in any of the four languages. Re-run after the native rewrite
-and Polish: a `pl-PL` phone joins, sees `pon.`-first weekdays, saves and gets the Polish
-toast; all five languages hold 320px both before joining and in the editing view with
-unsaved changes.
+**Verified 2026-09-23** against `wrangler pages dev dist`: all 15 localised URLs answer 200,
+`/xx` and `/fr/nope` 404, `/de/` and `/ja.html` 308 once to the canonical; `/ja/nittei-chousei`
+serves 2,073 visible characters of Japanese to `curl`. In Chromium, every localised home and
+landing page hydrates with no console errors and the right `<html lang>` even from an
+English browser; the switcher on `/ja` lands on `/ko`, the footer link on `/ko` lands on
+`/fr`; a French browser on `/` gets French; visiting `/ja` does not change the language of
+a later trip link; and all eight languages hold 320px on the home, landing and trip pages
+before and after joining.
 
 ## Dates: never parse `YYYY-MM-DD` with `new Date()`
 

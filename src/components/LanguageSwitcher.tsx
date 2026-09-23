@@ -2,7 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { LOCALES, currentLocale, isLocale, setLocale } from '@/i18n';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { LOCALES, SUPPORTED_LOCALES, currentLocale, isLocale, setLocale } from '@/i18n';
+
+/** `/` and `/xx`: the home page in each language, which has a URL per language. */
+const HOME_PATHS = new Set(SUPPORTED_LOCALES.map((code) => (code === 'en' ? '/' : `/${code}`)));
 
 /**
  * A native `<select>` laid invisibly over a globe and the two-letter code.
@@ -19,6 +24,8 @@ import { LOCALES, currentLocale, isLocale, setLocale } from '@/i18n';
 export function LanguageSwitcher({ className }: { className?: string }) {
   const { t } = useTranslation();
   const locale = currentLocale();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div
@@ -39,7 +46,12 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         aria-label={t('common.language')}
         value={locale}
         onChange={(e) => {
-          if (isLocale(e.target.value)) void setLocale(e.target.value, { persist: true });
+          const next = e.target.value;
+          if (!isLocale(next)) return;
+          // On a home page the language has its own URL, so switching goes there: the
+          // address bar, a shared link and a reload then all agree with the screen.
+          if (HOME_PATHS.has(pathname)) navigate(next === 'en' ? '/' : `/${next}`);
+          void setLocale(next, { persist: true });
         }}
         className="absolute inset-0 cursor-pointer opacity-0"
       >

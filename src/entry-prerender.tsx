@@ -2,8 +2,8 @@ import { prerenderToNodeStream } from "react-dom/static";
 import { StaticRouter } from "react-router-dom/server";
 
 import { AppShell } from "./AppShell";
-// Initialises i18next in English before anything renders; the build's pages are English.
-import "./i18n";
+// Initialises i18next before anything renders.
+import { DEFAULT_LOCALE, isLocale, setLocale } from "./i18n";
 
 /**
  * Renders one route to the HTML that goes inside `<div id="root">` at build time.
@@ -19,8 +19,12 @@ import "./i18n";
  * `lazy`, and only the prerender API waits for a suspended boundary to resolve.
  * `renderToString` would emit the "Loading..." fallback on every page.
  */
-export const renderRouteBody = async (path: string): Promise<string> => {
+export const renderRouteBody = async (path: string, locale?: string): Promise<string> => {
   const errors: unknown[] = [];
+
+  // Each page is built in its own language. The i18n instance is shared across the
+  // routes this loop renders one after another, so every call sets it, English included.
+  await setLocale(isLocale(locale) ? locale : DEFAULT_LOCALE);
 
   const { prelude } = await prerenderToNodeStream(
     <StaticRouter location={path}>

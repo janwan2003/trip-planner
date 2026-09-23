@@ -11,10 +11,16 @@ import { canonicalFor, routeFor } from './siteMeta';
  * lands on the home page and clicks through to the FAQ keeps the home page's title in
  * their tab, in their history, and in anything they share from the browser UI.
  */
-export const usePageMeta = (path: string, overrides: { title?: string } = {}): void => {
+export const usePageMeta = (
+  path: string,
+  overrides: { title?: string; description?: string } = {},
+): void => {
   const route = routeFor(path);
   const title = overrides.title ?? route?.title;
-  const description = route?.description;
+  const description = overrides.description ?? route?.description;
+  // Localised pages are not in siteMeta's browser-side list (see siteRoutes.ts); their
+  // own path is their canonical.
+  const canonicalPath = route?.path ?? (overrides.description ? path : undefined);
   const noindex = route?.noindex ?? false;
 
   useEffect(() => {
@@ -26,7 +32,7 @@ export const usePageMeta = (path: string, overrides: { title?: string } = {}): v
     }
 
     const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical && route) canonical.setAttribute('href', canonicalFor(route.path));
+    if (canonical && canonicalPath) canonical.setAttribute('href', canonicalFor(canonicalPath));
 
     // Trip pages are reachable by anyone holding the link, which makes them private by
     // convention rather than by access control. Keeping them out of an index is the
@@ -39,5 +45,5 @@ export const usePageMeta = (path: string, overrides: { title?: string } = {}): v
     } else {
       existing?.remove();
     }
-  }, [title, description, noindex, route]);
+  }, [title, description, noindex, canonicalPath]);
 };
