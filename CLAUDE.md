@@ -589,9 +589,10 @@ the owner's call.
 
 ## Languages
 
-The app UI ships in **English, German, Spanish and Dutch** since 2026-09-23. Chosen from
-evidence, not a market list: strangers' trips are named in Dutch, German and Spanish, and
-NL, DE and PY are in the top-ten countries by traffic (see "Production data"). Russian,
+The app UI ships in **English, German, Spanish, Dutch and Polish** since 2026-09-23. The
+first three were chosen from evidence: strangers' trips are named in Dutch, German and
+Spanish, and NL, DE and PY are in the top-ten countries by traffic (see "Production
+data"). Polish was added at the owner's request the same day. Russian,
 Vietnamese and Korean are the next candidates on the same evidence.
 
 **What is translated:** everything a trip creator or invitee sees — home page, create
@@ -627,11 +628,22 @@ How it works — all in `src/i18n/`:
   "Sep 1". The week starts on the locale's day (Monday in de/es/nl, from the date-fns
   locale's `weekStartsOn`); the calendar grid offsets from it.
 - Plurals: `key_one` / `key_other` with `t(key, { count })`. The type allows `_few`,
-  `_many` etc., so Russian or Polish can be added without loosening it.
+  `_many` etc.; Polish uses them (`1 wolny dzień`, `2 wolne dni`, `5 wolnych dni`, chosen
+  by `Intl.PluralRules('pl')`) and must provide all four forms for every plural key.
 
 **Hydration.** The build prerenders English. `main.tsx` hydrates only when the detected
 language is English; anyone else waits for their chunk and gets a fresh `createRoot`
 render. Crawlers are unaffected (no JS, or an English browser).
+
+**The translations are meant to read as native, not translated** — the owner's explicit
+requirement. On 2026-09-23 each of de/es/nl was rewritten by a native-register editing
+pass and pl written the same way, with one term per concept and a casual register:
+German "Reise", "Tage", "eintragen/austragen" (not "abmelden", which reads as log out);
+Spanish neutral tú, no vosotros, "días" for what you mark and "fechas" for results; Dutch
+"datums" (as Datumprikker), never "data"; Polish "wyjazd", "dni"/"termin", no forms that
+force a gender on the reader, and participant names never declined (they sit after a
+colon or after "osoby"). Keep those choices when adding strings. No human native speaker
+has reviewed them yet.
 
 **Adding a language:** create `locales/xx.ts` (copy `de.ts`; the compiler lists every
 missing key), add one line to `LOCALES` in `config.ts`, run `pnpm run check`, then check
@@ -644,7 +656,10 @@ Verified 2026-09-23 in Chromium against `wrangler pages dev dist`: English home 
 with no console errors; `de-DE` gets German and `<html lang="de">`; a `nl-NL` phone
 joins, sees a Monday-first calendar, saves and gets the Dutch toast; switching to
 Español persists across reload; `vi-VN` falls back to English; no horizontal scroll at
-320px on `/` or `/trip/:id` in any of the four languages.
+320px on `/` or `/trip/:id` in any of the four languages. Re-run after the native rewrite
+and Polish: a `pl-PL` phone joins, sees `pon.`-first weekdays, saves and gets the Polish
+toast; all five languages hold 320px both before joining and in the editing view with
+unsaved changes.
 
 ## Dates: never parse `YYYY-MM-DD` with `new Date()`
 

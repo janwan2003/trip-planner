@@ -21,6 +21,8 @@ describe('detectLocale', () => {
     expect(detectLocale()).toBe('de');
     setLanguages(['es-PY']);
     expect(detectLocale()).toBe('es');
+    setLanguages(['pl-PL']);
+    expect(detectLocale()).toBe('pl');
   });
 
   it('falls back to English when nothing matches', () => {

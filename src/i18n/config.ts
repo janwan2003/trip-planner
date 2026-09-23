@@ -6,7 +6,8 @@ import type { LocaleBundle } from './types';
  *
  * Chosen from who actually uses the product, not from a market list: the trips
  * strangers created after 2026-09-02 are named in Dutch, German and Spanish (among
- * others), and NL, DE and PY are all in the top ten countries by traffic. See the
+ * others), and NL, DE and PY are all in the top ten countries by traffic.
+ * Polish was added at the owner's request on 2026-09-23. See the
  * "Languages" section of CLAUDE.md for how to add one.
  *
  * `label` is the language's own name for itself, shown in the switcher, so someone who
@@ -20,6 +21,7 @@ export const LOCALES = {
   de: { label: 'Deutsch', load: () => import('./locales/de') },
   es: { label: 'Español', load: () => import('./locales/es') },
   nl: { label: 'Nederlands', load: () => import('./locales/nl') },
+  pl: { label: 'Polski', load: () => import('./locales/pl') },
 } as const satisfies Record<string, { label: string; load: () => Promise<{ default: LocaleBundle }> }>;
 
 export type Locale = keyof typeof LOCALES;

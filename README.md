@@ -14,7 +14,7 @@ Find the perfect dates for group trips by coordinating everyone's availability.
 - 🔗 **Easy sharing** - One-click link sharing for inviting friends
 - 💾 **Shared storage** - Trips live in Cloudflare D1, so a link works across devices and people
 - 📱 **Responsive design** - Works seamlessly on mobile and desktop
-- 🌍 **Four languages** - English, German, Spanish and Dutch, picked from the browser, with a switcher
+- 🌍 **Five languages** - English, German, Spanish, Dutch and Polish, picked from the browser, with a switcher
 - 🎨 **Beautiful UI** - Built with shadcn/ui and Tailwind CSS
 
 ## 🛠️ Tech Stack

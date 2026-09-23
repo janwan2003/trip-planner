@@ -43,8 +43,8 @@ describe('rendered in German', () => {
       />,
     );
 
-    expect(screen.getByText('1 Tag verfügbar')).toBeInTheDocument();
-    expect(screen.getByText('2 Tage verfügbar')).toBeInTheDocument();
+    expect(screen.getByText('1 Tag frei')).toBeInTheDocument();
+    expect(screen.getByText('2 Tage frei')).toBeInTheDocument();
   });
 
   it('starts the week on Monday, with German day names, and still lands each date on its weekday', async () => {
@@ -84,6 +84,28 @@ describe('rendered in German', () => {
   });
 });
 
+describe('rendered in Polish', () => {
+  it('uses all three Polish plural forms, which English-shaped _one/_other cannot express', async () => {
+    await act(() => setLocale('pl'));
+    render(
+      <ParticipantsList
+        participants={[
+          { name: 'Ola', availableDates: ['2026-09-02'] },
+          { name: 'Kuba', availableDates: ['2026-09-02', '2026-09-03'] },
+          {
+            name: 'Ewa',
+            availableDates: ['2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05', '2026-09-06'],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('1 wolny dzień')).toBeInTheDocument();
+    expect(screen.getByText('2 wolne dni')).toBeInTheDocument();
+    expect(screen.getByText('5 wolnych dni')).toBeInTheDocument();
+  });
+});
+
 describe('LanguageSwitcher', () => {
   afterEach(() => localStorage.clear());
 
@@ -108,6 +130,6 @@ describe('LanguageSwitcher', () => {
   it('lists every language by its own name', () => {
     render(<LanguageSwitcher />);
     const names = screen.getAllByRole('option').map((o) => o.textContent);
-    expect(names).toEqual(['English', 'Deutsch', 'Español', 'Nederlands']);
+    expect(names).toEqual(['English', 'Deutsch', 'Español', 'Nederlands', 'Polski']);
   });
 });
