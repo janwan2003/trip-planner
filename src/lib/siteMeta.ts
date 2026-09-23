@@ -398,6 +398,10 @@ export const htmlToText = (html: string): string => {
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '')
+    // Controls are not prose: the language switcher's options and its aria-hidden
+    // "en" badge came out as "enEnglishDeutschEspañolNederlands".
+    .replace(/<select\b[^>]*>[\s\S]*?<\/select>/gi, '')
+    .replace(/<span\b[^>]*aria-hidden="true"[^>]*>[^<]*<\/span>/gi, '')
     .replace(/<\/(p|div|section|article|li|tr|h[1-6]|blockquote|figcaption)>/gi, '\n')
     .replace(/<(br|hr)\s*\/?>/gi, '\n')
     .replace(/<\/(td|th)>/gi, ' \u2014 ')

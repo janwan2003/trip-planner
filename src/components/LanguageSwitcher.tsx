@@ -22,6 +22,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   return (
     <div
+      // Google leaves data-nosnippet content out of result snippets; a list of
+      // language names is never what a searcher wants to read there.
+      data-nosnippet
       className={cn(
         'relative inline-flex h-11 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground',
         'hover:text-foreground focus-within:ring-2 focus-within:ring-ring',

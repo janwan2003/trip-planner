@@ -252,6 +252,16 @@ describe('llms-full.txt', () => {
     );
   });
 
+  it('leaves out form controls, such as the language switcher', () => {
+    expect(
+      htmlToText(
+        '<p>Plan a trip</p><div data-nosnippet=""><span aria-hidden="true">en</span>' +
+          '<select aria-label="Language"><option value="en">English</option>' +
+          '<option value="de">Deutsch</option></select></div>',
+      ),
+    ).toBe('Plan a trip');
+  });
+
   it('names each page with its title and canonical URL', () => {
     const full = renderLlmsFull(pages, '2026-09-15');
     expect(full).toContain('## WeGoWhen FAQ — group trip dates, answered');
