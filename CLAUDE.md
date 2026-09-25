@@ -226,7 +226,7 @@ only reads traffic — `CLOUDFLARE` carries ~390 permission groups including
 `Billing Write`, `Account API Tokens Write` and `Zone Write` on every zone, which is far
 more than any analytics query needs.
 
-Two free-plan limits on zone analytics, both hit on 2026-08-31:
+Free-plan limits on zone analytics, hit on 2026-08-31 and 2026-09-25:
 
 - `httpRequestsAdaptiveGroups` **rejects any window wider than 1 day** — "cannot request a
   time range wider than 1d". For multi-day use `httpRequests1dGroups`, which carries
@@ -238,6 +238,12 @@ Two free-plan limits on zone analytics, both hit on 2026-08-31:
   request before acting on it.
 - `clientRequestScheme` is not available on this plan; `clientRequestHTTPHost`,
   `clientRequestPath`, `edgeResponseStatus` and `datetimeHour` are.
+- Nor are `clientRefererHost`, `clientRequestQuery` or `clientASNDescription` — each an
+  `authz` error, "does not have access to the field", tried 2026-09-25. So referrers come
+  only from RUM, and a query string such as `/?from=trip` cannot be counted at all; the
+  "Start your own trip" card shows up only as `trips.origin = 'trip-page'`.
+  `userAgentBrowser`, `clientCountryName`, `clientDeviceType` and
+  `clientRequestHTTPMethodName` do work.
 
 ## Known state, as of 2026-08-28
 
@@ -405,7 +411,7 @@ a session touches usage, traffic or marketing, regenerate it and replace the tab
 scripts/usage-ledger.sh            # read-only; counts only, never names
 ```
 
-Last regenerated **2026-09-23** (that day partial):
+Last regenerated **2026-09-25 at 10:20Z** (that day partial):
 
 | date | trips created | participants joined | API calls | page views | uniques |
 | --- | --- | --- | --- | --- | --- |
@@ -430,11 +436,14 @@ Last regenerated **2026-09-23** (that day partial):
 | 2026-09-20 | 3 | 11 | 61 | 199 | 170 |
 | 2026-09-21 | 5 | 15 | 106 | 245 | 220 |
 | 2026-09-22 | 1 | 1 | 50 | 147 | 141 |
-| 2026-09-23 | 0 | 0 | 21 | 63 | 63 |
+| 2026-09-23 | 0 | 1 | 133 | 482 | 205 |
+| 2026-09-24 | 0 | 1 | 54 | 165 | 138 |
+| 2026-09-25 | 0 | 0 | 6 | 46 | 58 |
 
-Totals on 2026-09-23: **28 trips, 91 participants**, not counting the eight test trips;
-**17 of the 28 have 2+ participants**, 7 have only the creator, 4 have nobody; 12 trips
-had a participant edit in the last 7 days.
+Totals on 2026-09-25: **28 trips, 93 participants**, not counting the eight test trips;
+**18 of the 28 have 2+ participants**, 6 have only the creator, 4 have nobody; 10 trips
+had a participant edit in the last 7 days. `trips.origin`: all 28 unrecorded — no trip has
+been created since the column shipped on the evening of 2026-09-23.
 
 How to read the columns:
 
@@ -444,13 +453,40 @@ How to read the columns:
 - **API calls** are `pagesFunctionsInvocationsAdaptiveGroups`: only a browser running the
   app makes them, so this is the traffic column that means people. It is sampled, and
   back-filled days can shift a little between runs — the 2026-09-13 snapshot this table
-  replaced had 09-06 at 21 where the same query now returns 68.
+  replaced had 09-06 at 21 where the same query now returns 68. **From the evening of
+  2026-09-23 it also counts `/trip/:id` page loads** (see "Trip origin and invitation
+  previews"), so it is not comparable across that date. For a series that is, count
+  `httpRequestsAdaptiveGroups` with `requestSource:"eyeball"` and
+  `clientRequestPath_like:"/api/%"`, one day per query: 09-16 71, 09-17 35, 09-18 7,
+  09-22 50, 09-23 81 (our own checks included), 09-24 21.
 - **Page views** and **uniques** are `httpRequests1dGroups` and include bots and scanners;
-  treat them as a ceiling. They barely moved when real use began.
-- Cloudflare Web Analytics (browsers only, sampled in tens) put roughly 300 page loads on
-  09-13..09-22, mostly `/trip/:id` invitation links. Referrers: 150 none, 130
-  `wegowhen.com`, 10 `instagram.com`, **no search engine at all** — growth so far is
-  invitation links, not SEO.
+  treat them as a ceiling. They barely moved when real use began. 09-23's 482 is inflated
+  by our own checks around that day's eleven deploys (`GB` headless Chrome and `curl`).
+- **Where people come from** is answerable only from Cloudflare Web Analytics, the RUM
+  (real-user monitoring) beacon: browsers only, `rumPageloadEventsAdaptiveGroups`, siteTag
+  `5c4f103f2c1a43e0b8ec9d5f3e27428e`. It is adaptively sampled: a query grouped by `date`
+  comes back in multiples of 10, the same days grouped by `datetimeHour` come back at
+  `sampleInterval` 1 (09-21: 90 by date, 95 summed by hour). For 09-02..09-22, 290
+  entries (`visits`, a load whose referrer is not our own site): 230 `/trip/:id` with no
+  referrer — an invitation link opened from a messaging app, which strips it — 20
+  `/trip/:id` from `chatgpt.com`, 10 from `instagram.com`, 30 `/` with no referrer. 09-23..09-25
+  looks the same. **No search engine, none of the four backlinks, and not one human entry
+  on a comparison page, the FAQ or a localised page.** Growth is invitation links, not SEO.
+- **Which language visitors use** has no field anywhere — RUM has no language dimension
+  and English is bundled. The signal is the **lazy locale bundle**: a browser rendering
+  German must fetch `/assets/de-<hash>.js`, so eyeball requests for
+  `clientRequestPath_like:"/assets/%"` filtered to `^/assets/(de|es|fr|ja|ko|nl|pl)-` count
+  devices per language (not visits: the file is `immutable`, so a returning browser
+  fetches it once per deploy). Split by `userAgentBrowser` and `clientCountryName`: our
+  own checks are `GB` (this machine's traffic exits at LHR) as `ChromeHeadless`, `Firefox`
+  or `Curl`; `GoogleBot` and a `US` `Unknown` renderer fetch every language. Result for
+  2026-09-23T10Z..09-25T10Z: **German only** — one iPhone and one Android phone in `DE`,
+  both on invitation links to existing trips, plus one Firefox in `IT` that fetched `es`
+  and `nl` in the same hour. **No person fetched es, nl, pl, fr, ja or ko.** The
+  localised URLs drew ~206 requests, nearly all crawlers (YandexBot 22, GoogleBot 10, an
+  `Unknown` renderer ~100) or us; the 17 with phone user agents came one per page, across
+  every language, from US/HK/SG/JP in one window — a crawler's pattern — and RUM recorded
+  no human load of any localised page.
 
 Two findings from the same data, both still open:
 
