@@ -1,0 +1,8 @@
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/interface/drop_002.ogg|0.15 0.55 0.95 1.35|0.22
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/keyboard/keypress-004.wav|7.02 7.14 7.27 7.41 7.53 7.66 7.8 7.93|0.10
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/ui/click2.ogg|8.25 8.55|0.14
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/ui/click1.ogg|9.08|0.22
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/ui/rollover2.ogg|10.6 10.8 11.0 11.2 11.4 11.6|0.08
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/interface/drop_003.ogg|14.1 14.5 14.9 15.3 15.7|0.12
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/interface/bong_001.ogg|17.4|0.16
+/tmp/claude-0/-home-user-trip-planner/fbdd2754-6416-5b23-9f50-5b0e4666ae28/scratchpad/brag/skills/brag/assets/sfx/interface/drop_001.ogg|19.64|0.2

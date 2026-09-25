@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WeGoWhen brag</title>
+<style>
+@font-face { font-family: 'DM Sans'; font-weight: 400 700; src: url('../../src/assets/fonts/dmsans-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Fraunces'; font-weight: 400 700; src: url('../../src/assets/fonts/fraunces-latin.woff2') format('woff2'); }
+:root {
+  --bg: hsl(40 33% 98%);
+  --fg: hsl(25 30% 15%);
+  --muted: hsl(25 15% 42%);
+  --primary: hsl(16 65% 44%);
+  --accent: hsl(35 80% 65%);
+  --soft: hsl(40 20% 94%);
+  --border: hsl(35 20% 88%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); }
+body { font-family: 'DM Sans', sans-serif; color: var(--fg); position: relative; }
+#stage { position: absolute; inset: 0; overflow: hidden;
+  background: radial-gradient(1200px 800px at 80% 10%, hsl(35 80% 65% / .16), transparent 60%),
+              radial-gradient(1000px 700px at 10% 100%, hsl(16 65% 55% / .10), transparent 60%), var(--bg); }
+.scene { position: absolute; inset: 0; opacity: 0; will-change: transform, opacity; }
+.display { font-family: 'Fraunces', serif; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+.cap { position: absolute; }
+.cap h2 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 84px; line-height: 1.04; letter-spacing: -0.025em; }
+.cap h2 em { font-style: normal; color: var(--primary); }
+.cap p { margin-top: 28px; font-size: 34px; color: var(--muted); }
+.kicker { font-size: 24px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--primary); margin-bottom: 26px; }
+.shot { position: absolute; border-radius: 22px; box-shadow: 0 30px 80px -20px hsl(25 40% 25% / .28), 0 8px 24px -8px hsl(25 40% 25% / .15); overflow: hidden; background: white; }
+.shot img { display: block; width: 100%; height: 100%; }
+.shot img.layer { position: absolute; inset: 0; }
+
+/* chat */
+.bubble { position: absolute; font-size: 40px; padding: 26px 36px; border-radius: 34px; max-width: 760px; white-space: nowrap;
+  background: white; box-shadow: 0 14px 40px -12px hsl(25 40% 25% / .22); }
+.bubble .who { display: block; font-size: 22px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.bubble.r { background: var(--primary); color: hsl(40 33% 98%); }
+.bubble.r .who { color: hsl(40 33% 90%); }
+
+#cursor { position: absolute; width: 44px; height: 44px; left: 0; top: 0; z-index: 50; opacity: 0; pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / .25)); }
+.ring { position: absolute; border-radius: 50%; border: 4px solid var(--primary); opacity: 0; z-index: 49; }
+.chip { position: absolute; font-size: 30px; font-weight: 600; padding: 14px 28px; border-radius: 999px; background: white;
+  box-shadow: 0 10px 30px -10px hsl(25 40% 25% / .25); }
+.chip b { color: var(--primary); font-variant-numeric: tabular-nums; }
+.glow { position: absolute; border-radius: 16px; border: 5px solid var(--primary); opacity: 0; box-shadow: 0 0 0 0 hsl(16 65% 44% / .3); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- 1 Hook -->
+  <section class="scene" id="s1">
+    <div class="bubble" id="b1" style="left:260px; top:150px"><span class="who">Tom</span>who's free in June?</div>
+    <div class="bubble r" id="b2" style="right:260px; top:330px"><span class="who">Maya</span>I can do the 12th-ish</div>
+    <div class="bubble" id="b3" style="left:330px; top:520px"><span class="who">Priya</span>not the weekend of the 19th 😬</div>
+    <div class="bubble r" id="b4" style="right:330px; top:720px"><span class="who">Sam</span>wait, which June??</div>
+    <div class="cap" id="hook" style="left:0; right:0; top:370px; text-align:center">
+      <h2 style="font-size:124px">Planning a trip<br>in the <em>group chat?</em></h2>
+    </div>
+  </section>
+
+  <!-- 2 Reveal: the real home page -->
+  <section class="scene" id="s2">
+    <div class="shot" id="home" style="left:96px; top:40px; width:1728px; height:1080px; border-radius:24px">
+      <img src="cap/home.png" alt="">
+    </div>
+  </section>
+
+  <!-- 3 Create -->
+  <section class="scene" id="s3">
+    <div class="cap" id="c3" style="left:140px; top:330px; width:760px">
+      <div class="kicker">Organiser</div>
+      <h2>Name it.<br>Pick the dates.<br><em>Share the link.</em></h2>
+    </div>
+    <div class="shot" id="form" style="left:966px; top:115px; width:874px; height:850px">
+      <img id="formImg" src="cap/form_00.png" alt="">
+    </div>
+  </section>
+
+  <!-- 4 Mark -->
+  <section class="scene" id="s4">
+    <div class="shot" id="mark" style="left:100px; top:100px; width:1070px; height:880px">
+      <img id="markImg" src="cap/drag_00.png" alt="">
+    </div>
+    <div class="cap" id="c4" style="left:1250px; top:320px; width:600px">
+      <div class="kicker">Everyone else</div>
+      <h2>Drag across the days <em>you're free.</em></h2>
+      <p id="c4sub">No account, no email.</p>
+    </div>
+  </section>
+
+  <!-- 5 Heat -->
+  <section class="scene" id="s5">
+    <div class="cap" id="c5" style="left:140px; top:330px; width:720px">
+      <h2>Watch the group's days <em>light up.</em></h2>
+    </div>
+    <div class="chip" id="chip" style="left:140px; top:640px"><b id="count">1</b> <span id="countWord">person</span> in</div>
+    <div class="shot" id="heat" style="left:930px; top:198px; width:880px; height:683px">
+      <img id="heatImg" src="cap/heat_1.png" alt="">
+    </div>
+  </section>
+
+  <!-- 6 Best -->
+  <section class="scene" id="s6">
+    <div class="cap" id="c6" style="left:140px; top:300px; width:660px">
+      <h2>Get the days everyone can <em>actually go.</em></h2>
+    </div>
+    <div class="shot" id="best" style="left:860px; top:242px; width:1000px">
+      <img src="cap/best.png" alt="">
+      <div class="glow" id="glow"></div>
+    </div>
+  </section>
+
+  <!-- 7 Outro -->
+  <section class="scene" id="s7" style="display:flex; flex-direction:column; align-items:center; justify-content:center">
+    <img id="logo" src="../../public/favicon.png" style="width:190px; height:190px" alt="">
+    <div id="word" class="display" style="font-size:150px; margin-top:18px">WeGoWhen</div>
+    <div id="tag" style="font-size:44px; color:var(--muted); margin-top:26px">Free. No accounts. Just a link.</div>
+    <div id="url" class="chip" style="position:relative; margin-top:46px; font-size:40px; padding:18px 44px; background:var(--primary); color:hsl(40 33% 98%)">wegowhen.com</div>
+  </section>
+
+  <svg id="cursor" viewBox="0 0 24 24"><path d="M3 2 L3 19 L7.5 15 L10.5 22 L13.5 20.7 L10.6 14 L17 14 Z" fill="#1f1a17" stroke="white" stroke-width="1.6" stroke-linejoin="round"/></svg>
+  <div class="ring" id="ring"></div>
+</div>
+
+<script>
+const META = __META__;
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = (k) => 1 - Math.pow(1 - clamp(k), 3);             // out-cubic
+const easeIO = (k) => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+const back = (k) => { k = clamp(k); const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+
+const SCENES = [['s1', 0, 3.8], ['s2', 3.8, 6.6], ['s3', 6.6, 9.6], ['s4', 9.6, 13.4], ['s5', 13.4, 16.6], ['s6', 16.6, 19.4], ['s7', 19.4, 99]];
+const FIN = 0.35, FOUT = 0.25;
+function env(t, a, b) {
+  if (t < a || t > b) return 0;
+  const i = a === 0 ? 1 : ease((t - a) / FIN);
+  const o = b >= 99 ? 1 : clamp((b - t) / FOUT);
+  return Math.min(i, o);
+}
+function enter(el, t, t0, dy = 40, dur = 0.5) {
+  const k = ease(prog(t, t0, t0 + dur));
+  el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * dy}px)`;
+}
+function src(img, s) { if (img.getAttribute('src') !== s) img.setAttribute('src', s); }
+const pad = (n) => String(n).padStart(2, '0');
+const cursor = $('cursor'), ring = $('ring');
+function placeCursor(x, y, show, press = 0) {
+  cursor.style.opacity = show; cursor.style.transform = `translate(${x - 8}px, ${y - 4}px) scale(${1 - 0.12 * press})`;
+}
+function click(x, y, t, tc) {
+  const k = prog(t, tc, tc + 0.45);
+  ring.style.opacity = k > 0 && k < 1 ? (1 - k) * .9 : 0;
+  const r = 20 + 50 * ease(k);
+  ring.style.left = (x - r) + 'px'; ring.style.top = (y - r) + 'px'; ring.style.width = ring.style.height = 2 * r + 'px';
+}
+
+window.render = function (t) {
+  for (const [id, a, b] of SCENES) $(id).style.opacity = env(t, a, b);
+  placeCursor(0, 0, 0); ring.style.opacity = 0;
+
+  // 1 Hook: bubbles pop on the beat, then step back for the line
+  const pops = [0.15, 0.55, 0.95, 1.35];
+  pops.forEach((p, i) => {
+    const el = $('b' + (i + 1)); const k = back(prog(t, p, p + 0.35));
+    const recede = easeIO(prog(t, 1.6, 2.1));
+    el.style.opacity = clamp(prog(t, p, p + 0.12)) * (1 - 0.8 * recede);
+    el.style.transform = `scale(${(0.6 + 0.4 * k) * (1 - 0.08 * recede)})`;
+    el.style.filter = `blur(${recede * 6}px)`;
+    el.style.transformOrigin = i % 2 ? 'right bottom' : 'left bottom';
+  });
+  const hk = ease(prog(t, 1.7, 2.15));
+  $('hook').style.opacity = hk; $('hook').style.transform = `translateY(${(1 - hk) * 50}px) scale(${0.96 + 0.04 * hk})`;
+
+  // 2 Reveal: home slides up, slow push-in on the real h1
+  if (t >= 3.6 && t <= 6.8) {
+    const up = ease(prog(t, 3.8, 4.4));
+    const push = easeIO(prog(t, 4.3, 6.6));
+    const s = 1 + 0.55 * push;
+    // h1 centre in the 1440-wide page ~ (768, 190) -> scaled 1.2
+    const ox = 768 * 1.2, oy = 190 * 1.2;
+    const el = $('home');
+    el.style.transformOrigin = `${ox}px ${oy}px`;
+    el.style.transform = `translate(${-57 * push}px, ${(1 - up) * 500 + 272 * push}px) scale(${s})`;
+  }
+
+  // 3 Create: typing, dates, click
+  enter($('c3'), t, 6.75);
+  { const fk = ease(prog(t, 6.6, 7.1)); $('form').style.transform = `translateY(${(1 - fk) * 60}px)`; }
+  const chars = Math.floor(clamp(prog(t, 7.0, 8.0)) * 17 + 0.0001);
+  let f = `cap/form_${pad(chars)}.png`;
+  if (t >= 8.25) f = 'cap/form_start.png';
+  if (t >= 8.55) f = 'cap/form_end.png';
+  src($('formImg'), f);
+  if (t >= 8.4 && t < 9.55) {
+    const sc = 874 / 448; // css px -> display px
+    const bx = 966 + META.createBtn.x * sc, by = 115 + META.createBtn.y * sc;
+    const k = easeIO(prog(t, 8.55, 9.0));
+    const x = lerp(1880, bx + 40, k), y = lerp(1040, by + 6, k);
+    const press = t > 9.05 && t < 9.2 ? 1 : 0;
+    placeCursor(x, y, Math.min(1, prog(t, 8.4, 8.55)) * clamp((9.55 - t) / 0.2), press);
+    click(x, y, t, 9.08);
+  }
+
+  // 4 Mark: real drag frames under a moving cursor
+  { const mk = ease(prog(t, 9.6, 10.1)); $('mark').style.transform = `translateY(${(1 - mk) * 60}px)`; }
+  enter($('c4'), t, 9.8);
+  enter($('c4sub'), t, 10.6, 20);
+  const ms = 1070 / META.markBox.width;
+  const cell = (d) => [100 + META.cells[d].x * ms, 100 + META.cells[d].y * ms];
+  let mimg = 'cap/drag_00.png';
+  if (t >= 10.0 && t < 13.35) {
+    let x, y, press = 0;
+    const [x10, y10] = cell(10);
+    if (t < 10.5) { const k = easeIO(prog(t, 10.0, 10.5)); x = lerp(1250, x10, k); y = lerp(1000, y10, k); }
+    else if (t < 11.9) {
+      press = 1;
+      const steps = 6, u = prog(t, 10.6, 11.8) * steps; // 10 -> 16
+      const i = Math.min(steps - 1, Math.floor(u)), fr = u - i;
+      const [ax, ay] = cell(10 + i), [bx, by] = cell(Math.min(16, 11 + i));
+      const kk = easeIO(fr);
+      x = lerp(ax, bx, kk); y = lerp(ay, by, kk);
+      mimg = t < 10.6 ? 'cap/drag_01.png' : `cap/drag_${pad(Math.min(7, 1 + Math.floor(u + 0.5)))}.png`;
+    } else {
+      const [x16, y16] = cell(16); const k = easeIO(prog(t, 12.0, 12.6));
+      x = lerp(x16, x16 + 160, k); y = lerp(y16, y16 + 330, k); mimg = 'cap/drag_final.png';
+    }
+    if (t >= 10.5 && t < 10.6) { press = 1; mimg = 'cap/drag_01.png'; }
+    placeCursor(x, y, prog(t, 10.0, 10.15) * clamp((13.35 - t) / 0.2), press);
+  }
+  src($('markImg'), mimg);
+
+  // 5 Heat: the group fills in, one person at a time
+  { const hk2 = ease(prog(t, 13.4, 13.9)); $('heat').style.transform = `translateY(${(1 - hk2) * 60}px)`; }
+  enter($('c5'), t, 13.6);
+  enter($('chip'), t, 13.9, 20, 0.4);
+  const flips = [13.4, 14.1, 14.5, 14.9, 15.3, 15.7];
+  let n = 1; flips.forEach((ft, i) => { if (t >= ft) n = i + 1; });
+  src($('heatImg'), `cap/heat_${n}.png`);
+  $('count').textContent = n; $('countWord').textContent = n === 1 ? 'person' : 'people';
+  const lastFlip = flips[n - 1], pk = prog(t, lastFlip, lastFlip + 0.3);
+  $('heat').style.scale = n > 1 ? 1 + 0.012 * Math.sin(Math.PI * pk) : 1;
+
+  // 6 Best dates
+  { const bk = ease(prog(t, 16.6, 17.1)); $('best').style.transform = `translateY(${(1 - bk) * 60}px)`; }
+  enter($('c6'), t, 16.8);
+  const bs = 1000 / 739;
+  const g = $('glow');
+  g.style.left = (24 * bs) + 'px'; g.style.top = (60 * bs) + 'px';
+  g.style.width = (689 * bs) + 'px'; g.style.height = (66 * bs) + 'px';
+  const gk = prog(t, 17.4, 18.1);
+  g.style.opacity = ease(prog(t, 17.4, 17.6));
+  g.style.boxShadow = `0 0 0 ${gk * 22}px hsl(16 65% 44% / ${0.35 * (1 - gk)})`;
+
+  // 7 Outro, landing on the strong beats
+  const lk = back(prog(t, 19.64, 20.1));
+  $('logo').style.opacity = clamp(prog(t, 19.64, 19.8)); $('logo').style.transform = `scale(${0.5 + 0.5 * lk})`;
+  enter($('word'), t, 20.19, 40, 0.45);
+  enter($('tag'), t, 20.74, 24, 0.45);
+  const uk = back(prog(t, 21.28, 21.7));
+  $('url').style.opacity = clamp(prog(t, 21.28, 21.4)); $('url').style.transform = `scale(${0.7 + 0.3 * uk})`;
+};
+
+window.ready = (async () => {
+  await document.fonts.ready;
+  const all = [...Array(18).keys()].map((i) => `cap/form_${pad(i)}.png`)
+    .concat(['cap/form_start.png', 'cap/form_end.png', 'cap/drag_final.png'],
+            [...Array(8).keys()].map((i) => `cap/drag_${pad(i)}.png`),
+            [1, 2, 3, 4, 5, 6].map((i) => `cap/heat_${i}.png`));
+  await Promise.all(all.map((s) => new Promise((r) => { const im = new Image(); im.onload = im.onerror = r; im.src = s; })));
+  await Promise.all([...document.images].map((im) => im.decode().catch(() => {})));
+  return true;
+})();
+</script>
+</body>
+</html>
