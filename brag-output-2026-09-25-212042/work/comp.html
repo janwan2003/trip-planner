@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WeGoWhen social cut</title>
+<style>
+@font-face { font-family: 'DM Sans'; font-weight: 400 700; src: url('../../src/assets/fonts/dmsans-latin.woff2') format('woff2'); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0e0e10; }
+body { font-family: 'DM Sans', 'Noto Color Emoji', sans-serif; color: #f2f2f4; position: relative; }
+#chat, #app { position: absolute; inset: 0; overflow: hidden; }
+#chat { background: #0e0e10; z-index: 0; }
+
+/* status bar + header */
+.status { position: absolute; left: 0; right: 0; top: 0; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 56px; font-size: 32px; font-weight: 600; z-index: 3; background: #0e0e10; }
+.header { position: absolute; left: 0; right: 0; top: 70px; height: 150px; display: flex; align-items: center; gap: 24px; padding: 0 36px; background: rgb(22 22 25 / .96); border-bottom: 1px solid #2a2a30; z-index: 3; }
+.header .back { font-size: 64px; color: #7fa4ff; width: 40px; }
+.avatar { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; font-size: 52px; background: linear-gradient(135deg, #ff9a5a, #d9483b); }
+.header .t { font-size: 40px; font-weight: 700; }
+.header .s { font-size: 27px; color: #9a9aa3; margin-top: 4px; }
+
+#list { position: absolute; left: 0; right: 0; top: 0; padding: 0 36px; will-change: transform; }
+.msg { display: flex; flex-direction: column; align-items: flex-start; margin-top: 14px; opacity: 0; }
+.msg.me { align-items: flex-end; }
+.msg .who { font-size: 27px; font-weight: 700; margin: 0 0 6px 28px; }
+.bub { font-size: 46px; line-height: 1.22; padding: 22px 34px; border-radius: 40px; background: #26262c; max-width: 800px; }
+.me .bub { background: #3a6df0; color: white; }
+.msg.gap { margin-top: 34px; }
+.sys { align-self: center !important; align-items: center !important; }
+.sys .pill { font-size: 28px; color: #a4a4ad; background: #1c1c21; padding: 12px 28px; border-radius: 999px; margin: 26px 0 10px; }
+
+.link { padding: 0; overflow: hidden; width: 780px; background: #3a6df0; }
+.link img { display: block; width: 100%; height: auto; }
+.link .meta { padding: 22px 30px 26px; background: #2f5bd0; }
+.link .ttl { font-size: 36px; font-weight: 700; line-height: 1.2; }
+.link .dsc { font-size: 28px; line-height: 1.3; color: #dfe6ff; margin-top: 8px; }
+.link .dom { font-size: 26px; color: #c3d0ff; margin-top: 10px; }
+.link .url { font-size: 40px; padding: 20px 30px; text-decoration: underline; }
+
+.input { position: absolute; left: 0; right: 0; bottom: 0; height: 190px; background: #161619; border-top: 1px solid #2a2a30; display: flex; gap: 22px; align-items: flex-start; padding: 26px 36px 0; z-index: 3; }
+.input .plus { width: 76px; height: 76px; border-radius: 50%; background: #26262c; display: grid; place-items: center; font-size: 50px; color: #9a9aa3; }
+.input .field { flex: 1; height: 76px; border-radius: 40px; border: 2px solid #2e2e35; display: flex; align-items: center; padding: 0 30px; font-size: 34px; color: #6d6d76; }
+
+/* app: the real mobile page, 390 css px -> 1080 */
+#app { background: hsl(40 33% 98%); opacity: 0; z-index: 1; }
+#app img { position: absolute; left: 0; top: 0; width: 1080px; }
+#full { will-change: transform; }
+
+/* caption: social-style text box */
+#caps { position: absolute; left: 0; right: 0; top: 300px; z-index: 20; display: flex; justify-content: center; }
+.cap { position: absolute; max-width: 880px; text-align: center; font-size: 60px; font-weight: 700; line-height: 1.22; color: #111;
+  background: white; padding: 18px 34px 22px; border-radius: 22px; box-shadow: 0 10px 30px rgb(0 0 0 / .35); opacity: 0; }
+
+.touch { position: absolute; width: 110px; height: 110px; border-radius: 50%; background: rgb(120 120 128 / .45); border: 3px solid rgb(255 255 255 / .75); z-index: 15; opacity: 0; }
+.ripple { position: absolute; border-radius: 50%; border: 5px solid rgb(255 255 255 / .9); z-index: 15; opacity: 0; }
+#glow { position: absolute; border-radius: 30px; border: 8px solid hsl(16 65% 44%); opacity: 0; z-index: 5; }
+</style>
+</head>
+<body>
+<div id="chat">
+  <div class="status"><span>9:41</span><span>●●●● 5G ▮</span></div>
+  <div class="header"><span class="back">‹</span><div class="avatar">🇵🇹</div>
+    <div><div class="t">Lisbon 2027</div><div class="s">Tom, Maya, Priya, Leo, Sam, Jess, You</div></div></div>
+  <div id="list"></div>
+  <div class="input"><div class="plus">+</div><div class="field">Message</div></div>
+</div>
+
+<div id="app">
+  <img id="appImg" src="cap/m_join_name.png" alt="">
+  <img id="full" src="cap/m_full.png" alt="" style="opacity:0">
+  <div id="glow"></div>
+</div>
+
+<div class="touch" id="touch"></div>
+<div class="ripple" id="ripple"></div>
+
+<div id="caps">
+  <div class="cap" id="k1">me after saying<br>“we should do a trip in June”</div>
+  <div class="cap" id="k2">day 9. still no dates.</div>
+  <div class="cap" id="k3">so I sent one link instead</div>
+  <div class="cap" id="k4">they just tap the days they're free</div>
+  <div class="cap" id="k5">and it finds the days<br>everyone can actually go</div>
+  <div class="cap" id="k6">lisbon. june 11–15. finally. 🇵🇹</div>
+</div>
+
+<script>
+const META = __META__;
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = (k) => 1 - Math.pow(1 - clamp(k), 3);
+const easeIO = (k) => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+const back = (k) => { k = clamp(k); const c = 1.6; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pad = (n) => String(n).padStart(2, '0');
+const S = 1080 / 390;
+
+const COLORS = { Tom: '#ff8a65', Maya: '#f06292', Priya: '#ffd54f', Leo: '#4dd0e1', Sam: '#aed581', Jess: '#b39ddb' };
+const MSGS = [
+  [0.0, 'me', 'we should do a trip in June 🇵🇹'],
+  [0.35, 'Tom', 'YES'],
+  [0.65, 'Maya', 'omg in'],
+  [0.95, 'Priya', 'which weekend'],
+  [1.25, 'Leo', 'I can do the 12th-ish?'],
+  [1.5, 'Sam', 'not the 19th'],
+  [1.75, 'Tom', 'wait june or july'],
+  [2.0, 'Maya', 'july is bad for me'],
+  [2.2, 'Jess', 'can we do a poll'],
+  [2.4, 'Leo', '👍'],
+  [2.6, 'Priya', 'what about the 5th–9th'],
+  [2.8, 'Sam', "I'm away 5–9"],
+  [3.0, 'Tom', 'ok so july?'],
+  [3.3, 'sys', '9 days later'],
+  [3.6, 'Maya', 'so are we going or not'],
+  [4.1, 'Priya', 'can someone just pick'],
+  [4.6, 'Tom', 'I thought we said the 12th?'],
+  [5.1, 'Jess', 'that was july'],
+  [5.6, 'Sam', 'sorry was muted, what did we decide'],
+  [6.6, 'me', 'LINK'],
+  [14.75, 'Maya', 'wait that was so easy'],
+  [15.15, 'Tom', 'booking flights ✈️'],
+  [15.55, 'Sam', 'who made this??'],
+  [15.95, 'me', 'wegowhen.com'],
+];
+const list = $('list');
+let prev = null;
+MSGS.forEach(([at, who, text], i) => {
+  const m = document.createElement('div');
+  m.className = 'msg' + (who === 'me' ? ' me' : '') + (who === 'sys' ? ' sys' : '');
+  if (who === 'sys') m.innerHTML = `<div class="pill">${text}</div>`;
+  else if (text === 'LINK') m.innerHTML = `<div class="bub link"><div class="url">${META.og.url.replace('https://', '')}</div><img id="og" src="../../public/og-image.png" alt=""><div class="meta"><div class="ttl">${META.og.title}</div><div class="dsc">${META.og.description}</div><div class="dom">wegowhen.com</div></div></div>`;
+  else {
+    const showWho = who !== 'me' && prev !== who;
+    m.innerHTML = (showWho ? `<div class="who" style="color:${COLORS[who]}">${who}</div>` : '') + `<div class="bub">${text}</div>`;
+  }
+  if (prev !== who) m.classList.add('gap');
+  prev = who; list.appendChild(m);
+});
+const BOTTOM = 1540;             // last message's bottom edge, clear of the platform UI
+let bottoms = [];
+function measure() { bottoms = [...list.children].map((m) => m.offsetTop + m.offsetHeight); }
+function targetFor(i) { return BOTTOM - bottoms[i]; }
+
+function caption(id, t, a, b) {
+  const el = $(id);
+  const i = a === 0 ? 1 : ease(prog(t, a, a + 0.22));
+  const o = clamp((b - t) / 0.15);
+  el.style.opacity = Math.min(i, o);
+  el.style.transform = `scale(${0.9 + 0.1 * back(prog(t, a, a + 0.3))})`;
+  if (a === 0) el.style.transform = 'none';
+}
+function touch(x, y, show, press = 1) {
+  const el = $('touch'); el.style.opacity = show;
+  el.style.left = (x - 55) + 'px'; el.style.top = (y - 55) + 'px'; el.style.transform = `scale(${0.85 + 0.15 * press})`;
+}
+function ripple(x, y, t, tc) {
+  const k = prog(t, tc, tc + 0.4), el = $('ripple');
+  el.style.opacity = k > 0 && k < 1 ? (1 - k) : 0;
+  const r = 30 + 70 * ease(k);
+  el.style.left = (x - r) + 'px'; el.style.top = (y - r) + 'px'; el.style.width = el.style.height = 2 * r + 'px';
+}
+
+window.render = function (t) {
+  // chat: messages pop in, the list scrolls to keep the newest at BOTTOM
+  let last = 0;
+  MSGS.forEach(([at], i) => {
+    const el = list.children[i];
+    const k = at === 0 ? 1 : prog(t, at, at + 0.18);
+    el.style.opacity = t >= at ? clamp(k * 1.6) : 0;
+    el.style.transform = `translateY(${(1 - ease(k)) * 30}px) scale(${0.94 + 0.06 * back(k)})`;
+    el.style.transformOrigin = MSGS[i][1] === 'me' ? 'right bottom' : 'left bottom';
+    if (t >= at) last = i;
+  });
+  const from = last > 0 ? targetFor(last - 1) : targetFor(0);
+  const off = lerp(from, targetFor(last), easeIO(prog(t, MSGS[last][0], MSGS[last][0] + 0.25)));
+  list.style.transform = `translateY(${off}px)`;
+
+  // the link bubble's rect, for the zoom in and out of the app
+  const linkEl = list.children[19].querySelector('.link');
+  const lr = linkEl.getBoundingClientRect();
+
+  // app: clip-path grows from the link bubble to the full screen, and back
+  const app = $('app');
+  let open = 0;
+  if (t >= 8.45 && t < 14.55) open = Math.min(easeIO(prog(t, 8.45, 8.85)), 1 - easeIO(prog(t, 14.15, 14.55)));
+  app.style.opacity = open > 0 ? 1 : 0;
+  const ins = [lr.top * (1 - open), (1080 - lr.right) * (1 - open), (1920 - lr.bottom) * (1 - open), lr.left * (1 - open)];
+  app.style.clipPath = `inset(${ins.map((v) => v.toFixed(1) + 'px').join(' ')} round ${40 * (1 - open)}px)`;
+
+  // tap on the link
+  touch(0, 0, 0); $('ripple').style.opacity = 0;
+  if (t >= 7.95 && t < 8.5) {
+    const x = lr.left + lr.width * 0.55, y = lr.top + lr.height * 0.45;
+    touch(x, y, prog(t, 7.95, 8.05) * clamp((8.5 - t) / 0.1), t > 8.15 && t < 8.35 ? 1 : 0.2);
+    ripple(x, y, t, 8.2);
+  }
+
+  // app scenes
+  const img = $('appImg'), full = $('full'), glow = $('glow');
+  let srcName = 'cap/m_join_name.png'; full.style.opacity = 0; glow.style.opacity = 0; img.style.opacity = 1;
+  if (t >= 8.45 && t < 9.25) {
+    // Leo taps "Mark my dates": button centre on the join screen, measured from the capture
+    if (t >= 8.85) { const bx = 540, by = 499 / 711 * 1920; touch(bx, by, prog(t, 8.85, 8.92) * clamp((9.25 - t) / 0.08), t > 9.0 && t < 9.15 ? 1 : .3); ripple(bx, by, t, 9.03); }
+  } else if (t >= 9.25 && t < 11.4) {
+    srcName = 'cap/m_drag_00.png';
+    const days = [11, 12, 13, 14, 15, 16, 17, 18];
+    const c = (d) => [META.cells[d].x * S, META.cells[d].y * S];
+    if (t >= 9.5 && t < 11.1) {
+      let x, y, pr = 1;
+      if (t < 9.7) { [x, y] = c(11); pr = prog(t, 9.5, 9.7); }
+      else {
+        const u = prog(t, 9.75, 10.8) * (days.length - 1);
+        const i = Math.min(days.length - 2, Math.floor(u)), fr = u - i;
+        const [ax, ay] = c(days[i]), [bx, by] = c(days[i + 1]);
+        x = lerp(ax, bx, easeIO(fr)); y = lerp(ay, by, easeIO(fr));
+        srcName = `cap/m_drag_${pad(Math.min(8, 1 + Math.floor(u + 0.5)))}.png`;
+      }
+      if (t >= 9.7 && t < 9.75) srcName = 'cap/m_drag_01.png';
+      touch(x, y, clamp((11.1 - t) / 0.1), pr);
+    }
+    if (t >= 10.8) srcName = t < 10.9 ? 'cap/m_drag_08.png' : 'cap/m_drag_final.png';
+  } else if (t >= 11.4) {
+    const flips = [11.4, 11.75, 12.1, 12.45, 12.8, 13.15];
+    let n = 1; flips.forEach((ft, i) => { if (t >= ft) n = i + 1; });
+    srcName = `cap/m_heat_${n}.png`;
+    if (t >= 13.35) {
+      // scroll up the real page from the heat map to Best Dates
+      img.style.opacity = 0; full.style.opacity = 1;
+      const y = lerp(META.heatY, META.bestY - 170, easeIO(prog(t, 13.35, 13.75)));
+      full.style.transform = `translateY(${-y * S}px)`;
+      const rowTop = (META.bestY + 132 - y) * S;
+      glow.style.left = (36 * S) + 'px'; glow.style.width = ((352 - 36) * S) + 'px';
+      glow.style.top = (rowTop - 4 * S) + 'px'; glow.style.height = (80 * S) + 'px';
+      const gk = prog(t, 13.8, 14.1);
+      glow.style.opacity = ease(gk) * (1 - easeIO(prog(t, 14.15, 14.4)));
+      glow.style.transform = `scale(${1.04 - 0.04 * back(gk)})`;
+    }
+  }
+  if (img.getAttribute('src') !== srcName) img.setAttribute('src', srcName);
+
+  // captions
+  caption('k1', t, 0, 3.2);
+  caption('k2', t, 3.35, 6.35);
+  caption('k3', t, 6.5, 8.55);
+  caption('k4', t, 8.75, 11.35);
+  caption('k5', t, 11.5, 14.15);
+  caption('k6', t, 14.6, 99);
+};
+
+window.ready = (async () => {
+  await document.fonts.ready;
+  const srcs = ['cap/m_join_name.png', 'cap/m_drag_final.png', 'cap/m_full.png', '../../public/og-image.png']
+    .concat([...Array(9).keys()].map((i) => `cap/m_drag_${pad(i)}.png`), [1, 2, 3, 4, 5, 6].map((i) => `cap/m_heat_${i}.png`));
+  await Promise.all(srcs.map((s) => new Promise((r) => { const im = new Image(); im.onload = im.onerror = r; im.src = s; })));
+  await Promise.all([...document.images].map((im) => im.decode().catch(() => {})));
+  measure();
+  return true;
+})();
+</script>
+</body>
+</html>

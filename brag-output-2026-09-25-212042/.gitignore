@@ -1,0 +1,11 @@
+# Intermediate render files; regenerate with work/capture.mjs and work/render.mjs
+work/cap/
+work/stills/
+work/seq/
+work/*.png
+work/*.mp4
+work/*.wav
+work/comp.built.html
+work/ff.path
+work/filt.txt
+work/sheet*.png
