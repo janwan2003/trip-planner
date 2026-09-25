@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WeGoWhen screen recording</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#screen { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+/* Plain app-style text: white on a translucent black box, the default look of in-app captions. */
+#cap { position: absolute; left: 80px; right: 80px; top: 196px; display: flex; justify-content: center; }
+#cap span { font-family: 'Liberation Sans', Arial, sans-serif; font-weight: 700; font-size: 54px; line-height: 1.28;
+  color: #fff; background: rgb(0 0 0 / .72); padding: 14px 26px 16px; border-radius: 16px; text-align: center;
+  box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+</style>
+</head>
+<body>
+<img id="screen" src="" alt="">
+<div id="cap"><span id="capText"></span></div>
+<script>
+const META = __META__;
+// Edit list in recording seconds: [recStart, recEnd]. Output time runs through them back to back.
+const EDIT = [[0.9, 14.9], [15.4, 30.4], [32.6, 40.6]];
+const CAPS = [
+  [0.0, 4.2, 'planning trips in the group chat never works, so i built this'],
+  [4.4, 13.6, 'you name the trip and pick roughly when'],
+  [14.2, 17.8, 'then drop the link in the group chat'],
+  [18.0, 24.0, "everyone adds their name and drags over the days they're free"],
+  [25.0, 28.0, 'no app, no account, nobody has to sign up'],
+  [29.0, 30.6, 'a few days later…'],
+  [30.8, 34.4, 'and it shows you the dates that work for everyone'],
+  [34.6, 99, "it's free btw: wegowhen.com"],
+];
+const frames = META.frames.map(([n, ts]) => [n, ts - META.T0]);
+function recTime(t) {
+  let acc = 0;
+  for (const [a, b] of EDIT) { if (t < acc + (b - a)) return a + (t - acc); acc += b - a; }
+  const [a, b] = EDIT[EDIT.length - 1]; return b;
+}
+function frameAt(rt) {
+  let lo = 0, hi = frames.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (frames[mid][1] <= rt) lo = mid; else hi = mid - 1; }
+  return frames[lo][0];
+}
+const img = document.getElementById('screen'), cap = document.getElementById('cap'), txt = document.getElementById('capText');
+window.render = async function (t) {
+  const s = `rec/frames/${String(frameAt(recTime(t))).padStart(5, '0')}.jpg`;
+  if (img.getAttribute('src') !== s) { img.setAttribute('src', s); await img.decode().catch(() => {}); }
+  const c = CAPS.find(([a, b]) => t >= a && t < b);
+  cap.style.visibility = c ? 'visible' : 'hidden';
+  if (c && txt.textContent !== c[2]) txt.textContent = c[2];
+};
+window.ready = document.fonts.ready.then(() => true);
+</script>
+</body>
+</html>
